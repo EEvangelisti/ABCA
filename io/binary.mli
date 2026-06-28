@@ -13,12 +13,14 @@ type header = {
   cols       : int;
   generation : int;
   frames     : int;
+  metadata   : Metadata.t;
 }
 
 val save_frames :
   filename:string ->
   grid:Abca.Grid.t ->
   generation:int ->
+  metadata:Metadata.t ->
   frames:'state array array array ->
   codec:(module STATE_CODEC with type t = 'state) ->
   unit

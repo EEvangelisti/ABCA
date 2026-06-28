@@ -13,10 +13,11 @@ type header = {
   cols       : int;
   generation : int;
   frames     : int;
+  metadata   : Metadata.t;
 }
 
 let magic = "AUTOMATES"
-let version = 1
+let version = 2
 
 let write_string_fixed oc s =
   output_string oc s
@@ -51,6 +52,7 @@ let save_frames
     ~filename
     ~grid
     ~generation
+    ~metadata
     ~(frames : state array array array)
     ~(codec : (module STATE_CODEC with type t = state)) =
 
@@ -76,6 +78,10 @@ let save_frames
        write_int oc cols;
        write_int oc generation;
        write_int oc (Array.length frames);
+      
+       let metadata_json = Metadata.to_json metadata in
+       write_int oc (String.length metadata_json);
+       output_string oc metadata_json;
 
        Array.iter
          (fun frame ->
@@ -117,6 +123,10 @@ let load_frames
        let generation = read_int ic in
        let frame_count = read_int ic in
 
+       let metadata_len = read_int ic in
+       let metadata_json = really_input_string ic metadata_len in
+       let metadata = Metadata.of_json metadata_json in
+
        if rows <= 0 || cols <= 0 || frame_count < 0 then
          failwith "Io_binary.load_frames: corrupted header";
 
@@ -133,6 +143,7 @@ let load_frames
          cols;
          generation;
          frames = frame_count;
+         metadata
        } in
 
        header, frames)
