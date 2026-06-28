@@ -34,3 +34,6 @@ frames/
 
 # Logs
 *.log
+
+# Scripts
+*.sh
