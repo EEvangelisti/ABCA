@@ -63,6 +63,7 @@ let () =
   let ffmpeg_log = ref true in
   let background = ref "" in
   let skip_background = ref true in
+  let agents = ref 0 in
 
   let specs = Arg.align [
     "--mode", Arg.Set_string mode, " run | xml";
@@ -93,6 +94,7 @@ let () =
     "--background", Arg.Set_string background, " Background color name or #RRGGBB";
     "--skip-background", Arg.Set skip_background, "Do not draw cells with color index 0";
     "--draw-background", Arg.Clear skip_background, "Draw cells with color index 0";
+    "--agents", Arg.Set_int agents, "Number of agents for agent-based models";
   ] in
 
   Arg.parse specs
@@ -149,6 +151,7 @@ let () =
         ~generations:!generations
         ~seed:!seed
         ~density:!density
+        ~agents:(if !agents <= 0 then None else Some !agents)
         ~topology
         ~output:!out;
 
