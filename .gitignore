@@ -1,0 +1,36 @@
+# Dune
+_build/
+
+# OCaml
+*.cmi
+*.cmo
+*.cmx
+*.o
+*.a
+*.cmxa
+*.cmxs
+*.annot
+
+# Editor files
+*~
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+
+# Generated simulations
+*.autbin
+*.bin
+*.xml
+
+# Render output
+renders/
+frames/
+
+# Videos
+*.gif
+*.mp4
+
+# Logs
+*.log
