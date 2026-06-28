@@ -1,3 +1,5 @@
+![image](docs/mazectric.png)
+
 # ABCA
 
 **ABCA** (Agent-Based Cellular Automata) is a modular simulation framework for discrete spatial systems, ranging from classical cellular automata to biologically inspired agent-based models.
