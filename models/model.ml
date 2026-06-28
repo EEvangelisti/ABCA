@@ -30,6 +30,7 @@ type t = {
     generations:int ->
     seed:int ->
     density:float ->
+    agents: int option -> 
     topology:Abca.Grid.topology ->
     output:string ->
     unit;
