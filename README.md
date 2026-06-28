@@ -6,6 +6,8 @@ ABCA was designed as a lightweight but extensible platform for building, running
 
 The guiding idea is simple: a model should describe how a system evolves, while the engine should take care of everything around it — simulation, reproducibility, storage, rendering, palettes, animations, and export formats.
 
+
+
 ## Why ABCA?
 
 Cellular automata are a powerful way to explore how simple local rules can generate complex spatial patterns. They are useful not only as mathematical curiosities, but also as conceptual tools for thinking about growth, propagation, competition, self-organization, and collective behavior.
@@ -20,6 +22,8 @@ It is intended for:
 * prototyping spatial biological models;
 * developing agent-based cellular automata;
 * building reusable model plugins.
+
+
 
 ## Main features
 
@@ -40,6 +44,8 @@ ABCA currently provides:
 
 The current implementation already supports several classical model families, including Life-like automata, Generations, Cyclic automata, Larger-than-Life, and Weighted Life.
 
+
+
 ## Philosophy
 
 ABCA separates concepts that are often mixed together in simulation software.
@@ -55,6 +61,17 @@ A **renderer** turns simulated frames into images or animations.
 The **core engine** remains independent of all of these choices.
 
 This makes it possible to run the same simulation once, save it, and later render it again with different palettes, backgrounds, frame rates, or output formats without recomputing the model.
+
+
+
+## Documentation
+
+- [Architecture](docs/abca-structure.md)
+- [Plugin API](docs/plugins.md)
+- [Built-in palettes](docs/palettes.md)
+- [Examples](examples/)
+
+
 
 ## Example workflow
 
@@ -87,6 +104,7 @@ abca --mode render \
 The simulation and the rendering are separate steps. This makes ABCA suitable for exploratory work: one simulation can produce many visual outputs.
 
 
+
 ## Long-term goal
 
 ABCA is being developed as a general platform for rule-based spatial simulation.
@@ -96,9 +114,9 @@ Its first layer focuses on classical automata. Its next ambition is to support b
 In that sense, ABCA is not only a cellular automaton engine. It is intended as a small, extensible modelling framework for exploring how local rules generate spatial organization.
 
 
+
 ## Status
 
 ABCA is currently an early-stage research and development project. The architecture is functional, but the API and file formats may still evolve.
 
 The project is under active development.
-
