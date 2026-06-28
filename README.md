@@ -66,6 +66,7 @@ This makes it possible to run the same simulation once, save it, and later rende
 
 ## Documentation
 
+- [Command-line interface](docs/command-line.md)
 - [Architecture](docs/abca-structure.md)
 - [Plugin API](docs/plugins.md)
 - [Built-in palettes](docs/palettes.md)
