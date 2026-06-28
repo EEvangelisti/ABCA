@@ -7,6 +7,7 @@ let initialize () =
     Abca_plugin_cyclic.Cyclic.models;
     Abca_plugin_weighted_life.Weighted_life.models;
     Abca_plugin_generations.Generations.models;
+    Abca_plugin_zoospores.Zoospores.models;
   ]
   
 
