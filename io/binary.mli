@@ -1,10 +1,12 @@
-(* io_binary.mli *)
-
 module type STATE_CODEC = sig
   type t
+  (** State type serialized in binary files. *)
 
   val to_int32 : t -> int32
+  (** Converts a state value to its binary [int32] representation. *)
+
   val of_int32 : int32 -> t
+  (** Reconstructs a state value from its binary [int32] representation. *)
 end
 
 type header = {
@@ -15,6 +17,7 @@ type header = {
   frames     : int;
   metadata   : Metadata.t;
 }
+(** Header stored at the beginning of a binary simulation file. *)
 
 val save_frames :
   filename:string ->
@@ -24,8 +27,13 @@ val save_frames :
   frames:'state array array array ->
   codec:(module STATE_CODEC with type t = 'state) ->
   unit
+(** Saves simulation frames to a binary file.
+    All frames must match the dimensions of [grid].
+    Raises [Invalid_argument] if any frame has an invalid shape. *)
 
 val load_frames :
   filename:string ->
   codec:(module STATE_CODEC with type t = 'state) ->
   header * 'state array array array
+(** Loads simulation frames from a binary file.
+    Raises [Failure] if the file format, version, or header is invalid. *)

@@ -1,9 +1,9 @@
-(* io_xml.mli *)
-
 module type STATE_CODEC = sig
   type t
+  (** State type serialized to XML. *)
 
   val to_string : t -> string
+  (** Converts a state value to its XML string representation. *)
 end
 
 val save_frames :
@@ -14,3 +14,7 @@ val save_frames :
   frames:'state array array array ->
   codec:(module STATE_CODEC with type t = 'state) ->
   unit
+(** Saves simulation frames as an XML document.
+    Only non-empty cells are written to the output, reducing file size.
+    All frames must match the dimensions of [grid].
+    Raises [Invalid_argument] if any frame has an invalid shape. *)
