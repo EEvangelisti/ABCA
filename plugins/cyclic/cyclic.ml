@@ -201,6 +201,15 @@ let run_for rule_def ~rows ~cols ~generations ~seed ~density ~topology ~output =
     ~filename:output
     ~grid:(Simulation.grid sim)
     ~generation:(Simulation.generation sim)
+    ~metadata:(Abca_io.Metadata.of_list [
+      "model", rule_def.id;
+      "family", "life-like";
+      "seed", string_of_int seed;
+      "density", string_of_float density;
+      "rows", string_of_int rows;
+      "cols", string_of_int cols;
+      "generations", string_of_int generations;
+    ])
     ~frames
     ~codec:(module Binary_codec)
 
