@@ -85,3 +85,20 @@ abca --mode render \
 ```
 
 The simulation and the rendering are separate steps. This makes ABCA suitable for exploratory work: one simulation can produce many visual outputs.
+
+
+## Long-term goal
+
+ABCA is being developed as a general platform for rule-based spatial simulation.
+
+Its first layer focuses on classical automata. Its next ambition is to support biological and agent-based models, including microbial movement, filamentous growth, tissue colonization, and hybrid systems combining cellular environments with mobile agents.
+
+In that sense, ABCA is not only a cellular automaton engine. It is intended as a small, extensible modelling framework for exploring how local rules generate spatial organization.
+
+
+## Status
+
+ABCA is currently an early-stage research and development project. The architecture is functional, but the API and file formats may still evolve.
+
+The project is under active development.
+
