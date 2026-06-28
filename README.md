@@ -1,9 +1,87 @@
 # ABCA
 
-**ABCA** (Agent-Based Cellular Automata) is an extensible simulation engine for cellular automata and agent-based cellular automata written in **OCaml**.
+**ABCA** (*Agent-Based Cellular Automata*) is a command-line simulation engine for exploring cellular automata, agent-based models, and hybrid spatial systems.
 
-The project aims to provide a lightweight, reusable, and modular framework for developing and simulating discrete spatial models. It separates the simulation engine from input/output formats, rendering utilities, and biological or physical models.
+ABCA was designed as a lightweight but extensible platform for building, running, storing, and rendering discrete spatial simulations. It starts from classical cellular automata, such as Life-like rules, cyclic automata, Generations, Larger-than-Life, and weighted Life variants, but its broader ambition is to support more complex biological and physical models.
 
-Although the current release only includes Conway's Game of Life as an example, the architecture has been designed from the beginning to support much more complex models, including biological tissue simulations, microbial colonization, reaction-diffusion systems, and multi-agent models.
+The guiding idea is simple: a model should describe how a system evolves, while the engine should take care of everything around it — simulation, reproducibility, storage, rendering, palettes, animations, and export formats.
 
+## Why ABCA?
 
+Cellular automata are a powerful way to explore how simple local rules can generate complex spatial patterns. They are useful not only as mathematical curiosities, but also as conceptual tools for thinking about growth, propagation, competition, self-organization, and collective behavior.
+
+ABCA provides a common framework to explore such systems in a reproducible and extensible way.
+
+It is intended for:
+
+* experimenting with classical cellular automata;
+* comparing families of rule-based models;
+* generating visual simulations for teaching or exploration;
+* prototyping spatial biological models;
+* developing agent-based cellular automata;
+* building reusable model plugins.
+
+## Main features
+
+ABCA currently provides:
+
+* a command-line interface;
+* a modular simulation core;
+* support for multiple families of automata;
+* rule definitions stored in external files;
+* reproducible simulations through explicit random seeds;
+* binary storage of complete simulation histories;
+* XML export after simulation;
+* PNG rendering;
+* animated GIF and MP4 generation through `ffmpeg`;
+* configurable color palettes;
+* background color selection;
+* model registration through plugins.
+
+The current implementation already supports several classical model families, including Life-like automata, Generations, Cyclic automata, Larger-than-Life, and Weighted Life.
+
+## Philosophy
+
+ABCA separates concepts that are often mixed together in simulation software.
+
+A **model** defines the states and transition rules.
+
+A **plugin** provides a family of related models.
+
+A **palette** maps numerical states to colors.
+
+A **renderer** turns simulated frames into images or animations.
+
+The **core engine** remains independent of all of these choices.
+
+This makes it possible to run the same simulation once, save it, and later render it again with different palettes, backgrounds, frame rates, or output formats without recomputing the model.
+
+## Example workflow
+
+A typical workflow is:
+
+```bash
+abca --mode run \
+  --model life \
+  --rows 200 \
+  --cols 200 \
+  --generations 1000 \
+  --density 0.25 \
+  --seed 42 \
+  --out life.bin
+```
+
+Then render it:
+
+```bash
+abca --mode render \
+  --model life \
+  --input life.bin \
+  --gif life.gif \
+  --palette fire \
+  --background white \
+  --every 10 \
+  --fps 30
+```
+
+The simulation and the rendering are separate steps. This makes ABCA suitable for exploratory work: one simulation can produce many visual outputs.
