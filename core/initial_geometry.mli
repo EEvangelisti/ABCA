@@ -9,14 +9,23 @@ type shape =
       radius    : float;
       thickness : float;
     }
+(** Initial geometric region from which coordinates can be selected.
+    [Full_grid] selects every coordinate.
+    [Disk] selects coordinates within [radius] of the center.
+    [Ring] selects coordinates whose distance from the center lies within
+    [thickness] around [radius].
+    When [center] is [None], the grid center is used. *)
 
 val select :
   Grid.t ->
   shape ->
   Grid.coord array
+(** Returns all grid coordinates belonging to the requested shape. *)
 
 val random_subset :
   Rng.t ->
   n:int ->
   Grid.coord array ->
   Grid.coord array
+(** Returns up to [n] randomly selected coordinates from an array.
+    The input array is copied before shuffling and is therefore left unchanged. *)
