@@ -1,0 +1,6 @@
+(library
+ (name abca_plugin_generations)
+ (libraries
+  abca
+  abca_io
+  abca_models))

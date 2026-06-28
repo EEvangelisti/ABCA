@@ -1,0 +1,3 @@
+(library
+ (name abca_palette)
+ (libraries abca_render))

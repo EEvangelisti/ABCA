@@ -1,0 +1,9 @@
+(library
+ (name abca_plugin_registry)
+ (libraries
+  abca_models
+  abca_plugin_life
+  abca_plugin_larger_than_life
+  abca_plugin_cyclic
+  abca_plugin_weighted_life
+  abca_plugin_generations))

@@ -1,0 +1,10 @@
+(executable
+ (name abca)
+ (libraries
+  unix
+  abca
+  abca_io
+  abca_render
+  abca_palette
+  abca_models
+  abca_plugin_registry))

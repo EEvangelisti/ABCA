@@ -1,0 +1,6 @@
+(library
+ (name abca_plugin_larger_than_life)
+ (libraries
+  abca
+  abca_io
+  abca_models))

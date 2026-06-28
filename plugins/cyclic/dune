@@ -1,0 +1,6 @@
+(library
+ (name abca_plugin_cyclic)
+ (libraries
+  abca
+  abca_io
+  abca_models))
