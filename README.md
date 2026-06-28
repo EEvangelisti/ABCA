@@ -1,6 +1,6 @@
 # ABCA
 
-**ABCA** (*Agent-Based Cellular Automata*) is a command-line simulation engine for exploring cellular automata, agent-based models, and hybrid spatial systems.
+**ABCA** (Agent-Based Cellular Automata) is a modular simulation framework for discrete spatial systems, ranging from classical cellular automata to biologically inspired agent-based models.
 
 ABCA was designed as a lightweight but extensible platform for building, running, storing, and rendering discrete spatial simulations. It starts from classical cellular automata, such as Life-like rules, cyclic automata, Generations, Larger-than-Life, and weighted Life variants, but its broader ambition is to support more complex biological and physical models.
 
