@@ -1,4 +1,6 @@
-![image](docs/mazectric.png)
+<p align="center">
+  <img src="docs/mazectric.png" alt="Mazectric" />
+</p>
 
 # ABCA
 
