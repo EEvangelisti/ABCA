@@ -1,3 +1,16 @@
+(*
+ * ABCA (Agent-Based Cellular Automata)
+ * A modular simulation framework for discrete spatial systems,
+ * ranging from classical cellular automata to biologically inspired
+ * agent-based models.
+ *
+ * Copyright (c) 2026 Edouard Evangelisti
+ *
+ * Distributed under the MIT License.
+ * This software is provided "as is", without warranty of any kind.
+ * See the LICENSE file for details.
+ *)
+
 let shell_quote s =
   "'" ^ String.concat "'\\''" (String.split_on_char '\'' s) ^ "'"
 
