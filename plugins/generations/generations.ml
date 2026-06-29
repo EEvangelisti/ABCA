@@ -205,21 +205,34 @@ let run_for rule_def ~rows ~cols ~generations ~seed ~density ~agents:_ ~topology
     | None -> failwith "History disabled"
   in
 
-  Abca_io.Binary.save_frames
-    ~filename:output
-    ~grid:(Simulation.grid sim)
-    ~generation:(Simulation.generation sim)
-    ~metadata:(Abca_io.Metadata.of_list [
+  let metadata =
+    Abca_io.Metadata.of_list [
       "model", rule_def.id;
-      "family", "life-like";
+      "family", "generations";
       "seed", string_of_int seed;
       "density", string_of_float density;
       "rows", string_of_int rows;
       "cols", string_of_int cols;
       "generations", string_of_int generations;
-    ])
-    ~frames
-    ~codec:(module Binary_codec) ()
+    ]
+  in
+
+  let binary_simulation =
+    Abca_io.Binary.make_simulation
+      ~rows
+      ~cols
+      ~generation:(Simulation.generation sim)
+      ~metadata
+      ~frames
+      ()
+  in
+
+  Abca_io.Binary.save
+    ~filename:output
+    ~simulation:binary_simulation
+    ~codec:(module Binary_codec)
+
+
 
 let export_xml_for rule_def ~input ~output =
   let header, frames, _agents =
