@@ -198,7 +198,7 @@ let run_for rule_def ~rows ~cols ~generations ~seed ~density ~agents:_ ~topology
     ~codec:(module Binary_codec)
 
 let export_xml_for rule_def ~input ~output =
-  let header, frames =
+  let header, frames, _agents =
     Abca_io.Binary.load_frames
       ~filename:input
       ~codec:(module Binary_codec)
