@@ -78,6 +78,18 @@ This makes it possible to run the same simulation once, save it, and later rende
 
 
 
+## Biological modelling
+
+Although ABCA can be used to explore classical cellular automata, its primary motivation is the development of biologically realistic spatial models.
+
+The current proof of concept is a zoospore model, illustrating how mobile agents with persistent trajectories, stochastic reorientation, and environmental interactions can be integrated into the same simulation framework as classical cellular automata.
+
+This model demonstrates the feasibility of using ABCA for biological modelling and serves as the foundation for future developments involving microbial movement, filamentous growth, tissue colonization, and host–microbe interactions.
+
+- [Zoospore model](docs/zoospore.md)
+
+
+
 ## Example workflow
 
 A typical workflow is:
