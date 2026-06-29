@@ -80,7 +80,7 @@ let () =
   let agents = ref 0 in
 
   let specs = Arg.align [
-    "--mode", Arg.Set_string mode, " run | xml";
+    "--mode", Arg.Set_string mode, " run | render | xml";
     "--model", Arg.Set_string model, " Model name";
     "--rows", Arg.Set_int rows, " Number of rows";
     "--cols", Arg.Set_int cols, " Number of columns";
