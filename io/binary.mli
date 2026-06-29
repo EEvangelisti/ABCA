@@ -39,6 +39,18 @@ type 'state simulation = {
 }
 (** Complete simulation record stored in a binary file. *)
 
+val make_simulation :
+  rows:int ->
+  cols:int ->
+  generation:int ->
+  metadata:Metadata.t ->
+  frames:'state array array array ->
+  ?agents:Agent_trace.t ->
+  unit -> 'state simulation
+(** Builds a complete simulation record from simulation frames, metadata,
+    and optional agent trajectories.
+    If omitted, [agents] defaults to an empty agent trace. *)
+
 val version : int
 (** Binary file format version. *)
 

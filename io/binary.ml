@@ -36,6 +36,27 @@ type 'state simulation = {
 let magic = "AUTOMATES"
 let version = 3
 
+let make_simulation
+    ~rows
+    ~cols
+    ~generation
+    ~metadata
+    ~frames
+    ?(agents = Agent_trace.empty)
+    () =
+  {
+    header = {
+      version;
+      rows;
+      cols;
+      generation;
+      frames = Array.length frames;
+      metadata;
+    };
+    frames;
+    agents;
+  }
+
 let write_string_fixed oc s =
   output_string oc s
 

@@ -568,31 +568,26 @@ let run_for rule_def ~rows ~cols ~generations ~seed ~density ~agents ~topology ~
   let grid = Grid.create ~topology ~rows ~cols () in
   let frames, agents = simulate params grid generations in
 
-  let header : Abca_io.Binary.header =
-    {
-      version = Abca_io.Binary.version;
-      rows;
-      cols;
-      generation = generations;
-      frames = Array.length frames;
-      metadata =
-        metadata rule_def
-          ~rows
-          ~cols
-          ~generations
-          ~seed
-          ~density
-          ~agents:agent_count
-          ~topology;
-    }
+  let metadata =
+    metadata rule_def
+      ~rows
+      ~cols
+      ~generations
+      ~seed
+      ~density
+      ~agents:agent_count
+      ~topology
   in
 
   let simulation : state Abca_io.Binary.simulation =
-    {
-      header;
-      frames;
-      agents;
-    }
+    Abca_io.Binary.make_simulation
+      ~rows
+      ~cols
+      ~generation:generations
+      ~metadata
+      ~frames
+      ~agents
+      ()
   in
 
   Abca_io.Binary.save
