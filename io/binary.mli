@@ -32,6 +32,14 @@ type header = {
 }
 (** Header stored at the beginning of a binary simulation file. *)
 
+(* type 'state simulation = {
+  header : header;
+  frames : 'state array array array;
+  agents : Agent_trace.t;
+}
+(** Complete simulation record stored in a binary file. *)
+*)
+
 val save_frames :
   filename:string ->
   grid:Abca.Grid.t ->
