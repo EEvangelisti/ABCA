@@ -1,5 +1,6 @@
 (executable
  (name abca)
+ (public_name abca)
  (libraries
   unix
   abca
