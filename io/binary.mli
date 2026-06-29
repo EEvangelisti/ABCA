@@ -37,9 +37,10 @@ val save_frames :
   grid:Abca.Grid.t ->
   generation:int ->
   metadata:Metadata.t ->
+  ?agents:Agent_trace.t ->
   frames:'state array array array ->
   codec:(module STATE_CODEC with type t = 'state) ->
-  unit
+  unit -> unit
 (** Saves simulation frames to a binary file.
     All frames must match the dimensions of [grid].
     Raises [Invalid_argument] if any frame has an invalid shape. *)
@@ -47,6 +48,6 @@ val save_frames :
 val load_frames :
   filename:string ->
   codec:(module STATE_CODEC with type t = 'state) ->
-  header * 'state array array array
+  header * 'state array array array * Agent_trace.t
 (** Loads simulation frames from a binary file.
     Raises [Failure] if the file format, version, or header is invalid. *)

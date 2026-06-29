@@ -28,7 +28,7 @@ type header = {
 }
 
 let magic = "AUTOMATES"
-let version = 2
+let version = 3
 
 let write_string_fixed oc s =
   output_string oc s
@@ -64,8 +64,9 @@ let save_frames
     ~grid
     ~generation
     ~metadata
+    ?(agents = Agent_trace.empty)
     ~(frames : state array array array)
-    ~(codec : (module STATE_CODEC with type t = state)) =
+    ~(codec : (module STATE_CODEC with type t = state)) () =
 
   let module Codec =
     (val codec : STATE_CODEC with type t = state)
@@ -103,7 +104,22 @@ let save_frames
                       write_int32 oc (Codec.to_int32 state))
                    row)
               frame)
-         frames)
+         frames;
+
+         write_int oc (Array.length agents);
+
+         Array.iter
+           (fun r ->
+              write_int oc r.Agent_trace.frame;
+              write_int oc r.id;
+              write_int oc r.row;
+              write_int oc r.col;
+              write_int oc r.angle;
+              write_int oc r.age;
+              write_int oc r.state)
+           agents
+    )
+
 
 let load_frames
     (type state)
@@ -148,6 +164,24 @@ let load_frames
                      Codec.of_int32 (read_int32 ic))))
        in
 
+       let agents =
+         let n =
+           try read_int ic
+           with End_of_file -> 0
+         in
+
+         Array.init n (fun _ ->
+             {
+               Agent_trace.frame = read_int ic;
+               id = read_int ic;
+               row = read_int ic;
+               col = read_int ic;
+               angle = read_int ic;
+               age = read_int ic;
+               state = read_int ic;
+             })
+       in
+
        let header = {
          version = file_version;
          rows;
@@ -157,4 +191,4 @@ let load_frames
          metadata
        } in
 
-       header, frames)
+       header, frames, agents)
