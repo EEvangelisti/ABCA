@@ -62,6 +62,19 @@ type agent = {
   angle : int;
 }
 
+let state_of_agent (params : params) (ag : agent) = 1 + min ag.age params.max_age
+
+let trace_record (params : params) frame (ag : agent) : Abca_io.Agent_trace.record =
+  {
+    frame;
+    id = ag.id;
+    row = ag.row;
+    col = ag.col;
+    age = ag.age;
+    angle = ag.angle;
+    state = state_of_agent params ag;
+  }
+
 let rules_file =
   Filename.concat "plugins/zoospores" "zoospores.rules"
 
@@ -462,6 +475,7 @@ let step_agents rng (params : params) grid agents =
 
   proposals
 
+
 let simulate params grid generations =
   let rng =
     Rng.create params.seed
@@ -471,19 +485,32 @@ let simulate params grid generations =
     Array.make (generations + 1) [||]
   in
 
+  let trace =
+    ref []
+  in
+
   let agents =
     ref (initial_agents params grid)
   in
 
+  let record generation =
+    Array.iter
+      (fun ag ->
+         trace := trace_record params generation ag :: !trace)
+      !agents
+  in
+
   frames.(0) <- frame_of_agents params grid !agents;
+  record 0;
 
   for generation = 1 to generations do
-    ignore generation;
     agents := step_agents rng params grid !agents;
-    frames.(generation) <- frame_of_agents params grid !agents
+    frames.(generation) <- frame_of_agents params grid !agents;
+    record generation
   done;
 
-  frames
+  frames, Array.of_list (List.rev !trace)
+
 
 let metadata (rule_def : rule_def) ~rows ~cols ~generations ~seed ~density ~agents ~topology =
   Abca_io.Metadata.of_list [
@@ -563,7 +590,7 @@ let run_for rule_def ~rows ~cols ~generations ~seed ~density ~agents ~topology ~
     ~codec:(module Binary_codec) ()
 
 let export_xml_for (rule_def : rule_def) ~input ~output =
-  let header, frames =
+  let header, frames, _agent_trace =
     Abca_io.Binary.load_frames
       ~filename:input
       ~codec:(module Binary_codec)
