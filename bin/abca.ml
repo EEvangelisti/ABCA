@@ -245,7 +245,7 @@ let () =
           None
       in
 
-      let _header, frames =
+      let _header, frames, _agents =
         Abca_io.Binary.load_frames
           ~filename:!input
           ~codec:(module struct
