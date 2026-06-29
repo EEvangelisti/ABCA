@@ -27,6 +27,12 @@ type header = {
   metadata   : Metadata.t;
 }
 
+type 'state simulation = {
+  header : header;
+  frames : 'state array array array;
+  agents : Agent_trace.t;
+}
+
 let magic = "AUTOMATES"
 let version = 3
 
@@ -121,6 +127,31 @@ let save_frames
     )
 
 
+let save
+    (type state)
+    ~filename
+    ~(simulation : state simulation)
+    ~(codec : (module STATE_CODEC with type t = state)) =
+
+  let grid =
+    Abca.Grid.create
+      ~rows:simulation.header.rows
+      ~cols:simulation.header.cols
+      ()
+  in
+
+  save_frames
+    ~filename
+    ~grid
+    ~generation:simulation.header.generation
+    ~metadata:simulation.header.metadata
+    ~agents:simulation.agents
+    ~frames:simulation.frames
+    ~codec
+    ()
+
+
+
 let load_frames
     (type state)
     ~filename
@@ -192,3 +223,19 @@ let load_frames
        } in
 
        header, frames, agents)
+
+
+let load
+    (type state)
+    ~filename
+    ~(codec : (module STATE_CODEC with type t = state)) =
+
+  let header, frames, agents =
+    load_frames ~filename ~codec
+  in
+
+  {
+    header;
+    frames;
+    agents;
+  }

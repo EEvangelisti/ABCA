@@ -32,13 +32,25 @@ type header = {
 }
 (** Header stored at the beginning of a binary simulation file. *)
 
-(* type 'state simulation = {
+type 'state simulation = {
   header : header;
   frames : 'state array array array;
   agents : Agent_trace.t;
 }
 (** Complete simulation record stored in a binary file. *)
-*)
+
+val save :
+  filename:string ->
+  simulation:'state simulation ->
+  codec:(module STATE_CODEC with type t = 'state) ->
+  unit
+(** Saves a complete simulation to a binary file. *)
+
+val load :
+  filename:string ->
+  codec:(module STATE_CODEC with type t = 'state) ->
+  'state simulation
+(** Loads a complete simulation from a binary file. *)
 
 val save_frames :
   filename:string ->
