@@ -39,6 +39,9 @@ type 'state simulation = {
 }
 (** Complete simulation record stored in a binary file. *)
 
+val version : int
+(** Binary file format version. *)
+
 val save :
   filename:string ->
   simulation:'state simulation ->

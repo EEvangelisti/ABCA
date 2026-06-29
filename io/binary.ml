@@ -64,22 +64,26 @@ let check_frame_shape ~rows ~cols frame =
          invalid_arg "Io_binary: invalid frame column count")
     frame
 
-let save_frames
+
+
+let save
     (type state)
     ~filename
-    ~grid
-    ~generation
-    ~metadata
-    ?(agents = Agent_trace.empty)
-    ~(frames : state array array array)
-    ~(codec : (module STATE_CODEC with type t = state)) () =
+    ~(simulation : state simulation)
+    ~(codec : (module STATE_CODEC with type t = state)) =
 
   let module Codec =
     (val codec : STATE_CODEC with type t = state)
   in
 
-  let rows = Abca.Grid.rows grid in
-  let cols = Abca.Grid.cols grid in
+  let header = simulation.header in
+  let rows = header.rows in
+  let cols = header.cols in
+  let frames = simulation.frames in
+  let agents = simulation.agents in
+
+  if header.frames <> Array.length frames then
+    invalid_arg "Binary.save: header.frames does not match frame array length";
 
   Array.iter
     (check_frame_shape ~rows ~cols)
@@ -91,13 +95,13 @@ let save_frames
     ~finally:(fun () -> close_out_noerr oc)
     (fun () ->
        write_string_fixed oc magic;
-       write_int oc version;
+       write_int oc header.version;
        write_int oc rows;
        write_int oc cols;
-       write_int oc generation;
+       write_int oc header.generation;
        write_int oc (Array.length frames);
       
-       let metadata_json = Metadata.to_json metadata in
+       let metadata_json = Metadata.to_json header.metadata in
        write_int oc (String.length metadata_json);
        output_string oc metadata_json;
 
@@ -127,28 +131,20 @@ let save_frames
     )
 
 
-let save
-    (type state)
-    ~filename
-    ~(simulation : state simulation)
-    ~(codec : (module STATE_CODEC with type t = state)) =
 
-  let grid =
-    Abca.Grid.create
-      ~rows:simulation.header.rows
-      ~cols:simulation.header.cols
-      ()
+let save_frames ~filename ~grid ~generation ~metadata ?(agents = Agent_trace.empty)
+    ~frames ~codec () =
+  let header =
+    {
+      version;
+      rows = Abca.Grid.rows grid;
+      cols = Abca.Grid.cols grid;
+      generation;
+      frames = Array.length frames;
+      metadata;
+    }
   in
-
-  save_frames
-    ~filename
-    ~grid
-    ~generation:simulation.header.generation
-    ~metadata:simulation.header.metadata
-    ~agents:simulation.agents
-    ~frames:simulation.frames
-    ~codec
-    ()
+  save ~filename ~simulation:{ header; frames; agents } ~codec
 
 
 
