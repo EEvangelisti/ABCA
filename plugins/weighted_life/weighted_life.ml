@@ -305,8 +305,8 @@ let run_for rule_def ~rows ~cols ~generations ~seed ~density ~agents:_ ~topology
     ]
   in
 
-  let binary_simulation =
-    Abca_io.Binary.make_simulation
+  let archive =
+    Abca_io.Binary.make_archive
       ~rows
       ~cols
       ~generation:(Simulation.generation sim)
@@ -317,7 +317,7 @@ let run_for rule_def ~rows ~cols ~generations ~seed ~density ~agents:_ ~topology
 
   Abca_io.Binary.save
     ~filename:output
-    ~simulation:binary_simulation
+    ~archive
     ~codec:(module Binary_codec)
 
 

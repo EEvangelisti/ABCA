@@ -579,8 +579,8 @@ let run_for rule_def ~rows ~cols ~generations ~seed ~density ~agents ~topology ~
       ~topology
   in
 
-  let simulation : state Abca_io.Binary.simulation =
-    Abca_io.Binary.make_simulation
+  let archive =
+    Abca_io.Binary.make_archive
       ~rows
       ~cols
       ~generation:generations
@@ -592,7 +592,7 @@ let run_for rule_def ~rows ~cols ~generations ~seed ~density ~agents ~topology ~
 
   Abca_io.Binary.save
     ~filename:output
-    ~simulation
+    ~archive
     ~codec:(module Binary_codec)
 
 

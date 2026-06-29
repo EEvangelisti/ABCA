@@ -27,7 +27,7 @@ type header = {
   metadata   : Metadata.t;
 }
 
-type 'state simulation = {
+type 'state archive = {
   header : header;
   frames : 'state array array array;
   agents : Agent_trace.t;
@@ -36,7 +36,7 @@ type 'state simulation = {
 let magic = "AUTOMATES"
 let version = 3
 
-let make_simulation
+let make_archive
     ~rows
     ~cols
     ~generation
@@ -90,18 +90,18 @@ let check_frame_shape ~rows ~cols frame =
 let save
     (type state)
     ~filename
-    ~(simulation : state simulation)
+    ~(archive : state archive)
     ~(codec : (module STATE_CODEC with type t = state)) =
 
   let module Codec =
     (val codec : STATE_CODEC with type t = state)
   in
 
-  let header = simulation.header in
+  let header = archive.header in
   let rows = header.rows in
   let cols = header.cols in
-  let frames = simulation.frames in
-  let agents = simulation.agents in
+  let frames = archive.frames in
+  let agents = archive.agents in
 
   if header.frames <> Array.length frames then
     invalid_arg "Binary.save: header.frames does not match frame array length";
@@ -165,7 +165,7 @@ let save_frames ~filename ~grid ~generation ~metadata ?(agents = Agent_trace.emp
       metadata;
     }
   in
-  save ~filename ~simulation:{ header; frames; agents } ~codec
+  save ~filename ~archive:{ header; frames; agents } ~codec
 
 
 

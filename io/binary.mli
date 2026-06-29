@@ -32,21 +32,21 @@ type header = {
 }
 (** Header stored at the beginning of a binary simulation file. *)
 
-type 'state simulation = {
+type 'state archive = {
   header : header;
   frames : 'state array array array;
   agents : Agent_trace.t;
 }
 (** Complete simulation record stored in a binary file. *)
 
-val make_simulation :
+val make_archive :
   rows:int ->
   cols:int ->
   generation:int ->
   metadata:Metadata.t ->
   frames:'state array array array ->
   ?agents:Agent_trace.t ->
-  unit -> 'state simulation
+  unit -> 'state archive
 (** Builds a complete simulation record from simulation frames, metadata,
     and optional agent trajectories.
     If omitted, [agents] defaults to an empty agent trace. *)
@@ -56,7 +56,7 @@ val version : int
 
 val save :
   filename:string ->
-  simulation:'state simulation ->
+  archive:'state archive ->
   codec:(module STATE_CODEC with type t = 'state) ->
   unit
 (** Saves a complete simulation to a binary file. *)
@@ -64,7 +64,7 @@ val save :
 val load :
   filename:string ->
   codec:(module STATE_CODEC with type t = 'state) ->
-  'state simulation
+  'state archive
 (** Loads a complete simulation from a binary file. *)
 
 val save_frames :
