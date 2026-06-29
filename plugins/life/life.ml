@@ -195,7 +195,7 @@ let run_for rule_def ~rows ~cols ~generations ~seed ~density ~agents:_ ~topology
       "generations", string_of_int generations;
     ])
     ~frames
-    ~codec:(module Binary_codec)
+    ~codec:(module Binary_codec) ()
 
 let export_xml_for rule_def ~input ~output =
   let header, frames, _agents =

@@ -542,7 +542,7 @@ let run_for rule_def ~rows ~cols ~generations ~seed ~density ~agents ~topology ~
     Grid.create ~topology ~rows ~cols ()
   in
 
-  let frames =
+  let frames, agent_trace =
     simulate params grid generations
   in
 
@@ -558,8 +558,9 @@ let run_for rule_def ~rows ~cols ~generations ~seed ~density ~agents ~topology ~
                  ~density
                  ~agents:agent_count
                  ~topology)
+    ~agents:agent_trace
     ~frames
-    ~codec:(module Binary_codec)
+    ~codec:(module Binary_codec) ()
 
 let export_xml_for (rule_def : rule_def) ~input ~output =
   let header, frames =
