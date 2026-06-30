@@ -18,11 +18,14 @@ type mode =
   | Run
   | Xml
   | Render
+  | Analyze
 
-let mode_of_string = function
+let mode_of_string s =
+  match String.lowercase_ascii s with
   | "run" -> Run
   | "xml" -> Xml
   | "render" -> Render
+  | "analyze" -> Analyze
   | s -> invalid_arg ("Unknown mode: " ^ s)
 
 let timestamp () =
@@ -46,8 +49,25 @@ let ensure_dir dirname =
   end else
     Unix.mkdir dirname 0o755
 
-let path_join =
-  Filename.concat
+
+let export_agent_trace_csv ~filename (agents : Abca_io.Agent_trace.t) =
+  let oc = open_out filename in
+  Fun.protect
+    ~finally:(fun () -> close_out_noerr oc)
+    (fun () ->
+       output_string oc "frame,id,row,col,angle,age,state\n";
+       Array.iter
+         (fun r ->
+            Printf.fprintf oc "%d,%d,%d,%d,%d,%d,%d\n"
+              r.Abca_io.Agent_trace.frame
+              r.id
+              r.row
+              r.col
+              r.angle
+              r.age
+              r.state)
+         agents)
+
 
 
 let () =
@@ -78,9 +98,10 @@ let () =
   let background = ref "" in
   let skip_background = ref true in
   let agents = ref 0 in
+  let csv = ref "trajectories.csv" in
 
   let specs = Arg.align [
-    "--mode", Arg.Set_string mode, " run | render | xml";
+    "--mode", Arg.Set_string mode, " run | render | xml | analyze";
     "--model", Arg.Set_string model, " Model name";
     "--rows", Arg.Set_int rows, " Number of rows";
     "--cols", Arg.Set_int cols, " Number of columns";
@@ -109,6 +130,7 @@ let () =
     "--skip-background", Arg.Set skip_background, "Do not draw cells with color index 0";
     "--draw-background", Arg.Clear skip_background, "Draw cells with color index 0";
     "--agents", Arg.Set_int agents, "Number of agents for agent-based models";
+    "--csv", Arg.Set_string csv, " CSV output file for analysis mode";
   ] in
 
   Arg.parse specs
@@ -189,6 +211,32 @@ let () =
 
       Printf.printf "Exported XML -> %s\n%!" !xml
 
+  | Analyze ->
+      if !input = "" then begin
+        prerr_endline "--input is required in analyze mode";
+        exit 1
+      end;
+
+      let module Binary_codec = struct
+        type t = int
+        let to_int32 = Int32.of_int
+        let of_int32 = Int32.to_int
+      end in
+
+      let open Abca_io.Binary in
+      let { agents; _ } =
+        load
+          ~filename:!input
+          ~codec:(module Binary_codec)
+      in
+
+      export_agent_trace_csv
+        ~filename:!csv
+        agents;
+
+      Printf.printf "Exported agent trajectories -> %s\n%!" !csv
+
+
   | Render ->
       if !input = "" then begin
         prerr_endline "--input is required in render mode";
@@ -212,35 +260,35 @@ let () =
       ensure_dir !render_root;
 
       let render_dir =
-        path_join !render_root base_name
+        Filename.concat !render_root base_name
       in
 
       ensure_dir render_dir;
 
       let png_dir =
         if !png <> "" then
-          path_join render_dir !png
+          Filename.concat render_dir !png
         else
-          path_join render_dir "frames"
+          Filename.concat render_dir "frames"
       in
 
       let gif_output =
         if !gif = "" then
           None
         else
-          Some (path_join render_dir !gif)
+          Some (Filename.concat render_dir !gif)
       in
 
       let mp4_output =
         if !mp4 = "" then
           None
         else
-          Some (path_join render_dir !mp4)
+          Some (Filename.concat render_dir !mp4)
       in
 
       let log_file =
         if !ffmpeg_log then
-          Some (path_join render_dir "ffmpeg.log")
+          Some (Filename.concat render_dir "ffmpeg.log")
         else
           None
       in
