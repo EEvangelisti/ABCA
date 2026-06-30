@@ -106,9 +106,7 @@ let save
   if header.frames <> Array.length frames then
     invalid_arg "Binary.save: header.frames does not match frame array length";
 
-  Array.iter
-    (check_frame_shape ~rows ~cols)
-    frames;
+  Array.iter (check_frame_shape ~rows ~cols) frames;
 
   let oc = open_out_bin filename in
 
@@ -137,19 +135,40 @@ let save
               frame)
          frames;
 
-         write_int oc (Array.length agents);
+      write_int oc (Array.length agents);
 
-         Array.iter
-           (fun r ->
-              write_int oc r.Agent_trace.frame;
-              write_int oc r.id;
-              write_int oc r.row;
-              write_int oc r.col;
-              write_int oc r.angle;
-              write_int oc r.age;
-              write_int oc r.state)
-           agents
-    )
+       Array.iter
+        (fun (r : Agent_trace.record) ->
+           write_int oc r.frame;
+           write_int oc r.id;
+           write_int oc r.row;
+           write_int oc r.col;
+           write_int oc r.angle;
+           write_int oc r.age;
+           write_int oc r.state)
+        agents
+  )
+
+
+
+let read_agent_record ic : Agent_trace.record =
+  let frame = read_int ic in
+  let id = read_int ic in
+  let row = read_int ic in
+  let col = read_int ic in
+  let angle = read_int ic in
+  let age = read_int ic in
+  let state = read_int ic in
+  {
+    Agent_trace.frame;
+    id;
+    row;
+    col;
+    angle;
+    age;
+    state;
+  }
+
 
 
 
@@ -197,21 +216,8 @@ let load
        in
 
        let agents =
-         let n =
-           try read_int ic
-           with End_of_file -> 0
-         in
-
-         Array.init n (fun _ ->
-             {
-               Agent_trace.frame = read_int ic;
-               id = read_int ic;
-               row = read_int ic;
-               col = read_int ic;
-               angle = read_int ic;
-               age = read_int ic;
-               state = read_int ic;
-             })
+         let n = read_int ic in
+         Array.init n (fun _ -> read_agent_record ic)
        in
 
        let header = {
