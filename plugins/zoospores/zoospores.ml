@@ -260,31 +260,114 @@ let random_signed rng amplitude =
   else
     Rng.range_int rng ~min:(-amplitude) ~max:amplitude
 
-let offset_of_angle dirs angle =
-  let tau =
-    2.0 *. Float.pi
-  in
 
+let angular_distance dirs a b =
+  let d =
+    abs (a - b) mod dirs
+  in
+  min d (dirs - d)
+
+
+let angle_of_offset dirs dr dc =
   let theta =
-    tau *. float angle /. float dirs
+    atan2 (float_of_int dr) (float_of_int dc)
   in
-
-  let dc =
-    int_of_float (Float.round (cos theta))
+  let a =
+    int_of_float
+      (Float.round
+         (float_of_int dirs *. theta /. (2.0 *. Float.pi)))
   in
+  (a mod dirs + dirs) mod dirs
 
+
+let target_of_angle rng grid (ag : agent) dirs angle steps =
+  if steps <= 0 then
+    None
+  else
+    let r =
+      max 1 steps
+    in
+
+    let candidates =
+      ref []
+    in
+
+    for dr = -r to r do
+      for dc = -r to r do
+        if not (dr = 0 && dc = 0) then begin
+          let dist2 =
+            dr * dr + dc * dc
+          in
+          let dist =
+            sqrt (float_of_int dist2)
+          in
+
+          if abs_float (dist -. float_of_int steps) <= 0.5 then begin
+            let a =
+              angle_of_offset dirs dr dc
+            in
+            let score =
+              angular_distance dirs angle a
+            in
+            candidates := (score, dr, dc) :: !candidates
+          end
+        end
+      done
+    done;
+
+    match !candidates with
+    | [] ->
+        None
+
+    | candidates ->
+        let best_score =
+          candidates
+          |> List.map (fun (score, _, _) -> score)
+          |> List.fold_left min max_int
+        in
+
+        let best =
+          List.filter
+            (fun (score, _, _) -> score = best_score)
+            candidates
+        in
+
+        let _, dr, dc =
+          Rng.choose rng (Array.of_list best)
+        in
+
+        Grid.normalize grid {
+          Grid.row = ag.row + dr;
+          col = ag.col + dc;
+        }
+
+
+let path_between (start : Grid.coord) (target : Grid.coord) =
   let dr =
-    int_of_float (Float.round (sin theta))
+    target.Grid.row - start.Grid.row
+  in
+  let dc =
+    target.Grid.col - start.Grid.col
   in
 
-  let dr, dc =
-    if dr = 0 && dc = 0 then
-      0, 1
-    else
-      dr, dc
+  let n =
+    max (abs dr) (abs dc)
   in
 
-  dr, dc
+  if n = 0 then
+    [||]
+  else
+    Array.init n (fun i ->
+        let k =
+          i + 1
+        in
+        {
+          Grid.row =
+            start.row + int_of_float (Float.round (float_of_int k *. float_of_int dr /. float_of_int n));
+          col =
+            start.col + int_of_float (Float.round (float_of_int k *. float_of_int dc /. float_of_int n));
+        })
+
 
 let drift_angle rng (params : params) angle =
   normalize_angle params.dirs
@@ -393,40 +476,35 @@ let occupied_table agents =
 
   table
 
-let normalize_coord grid row col =
-  Grid.normalize grid { Grid.row; col }
 
-let target_after_steps grid occupied reserved ag dr dc steps =
-  let rec loop row col k =
-    if k = 0 then
-      normalize_coord grid row col
-    else
-      match normalize_coord grid (row + dr) (col + dc) with
-      | None ->
-          None
+let normalize_coord grid row col = Grid.normalize grid { Grid.row; col }
 
-      | Some coord ->
-          let key =
-            coord.Grid.row, coord.Grid.col
-          in
 
-          let blocked_by_old_agent =
-            match Hashtbl.find_opt occupied key with
-            | None -> false
-            | Some id -> id <> ag.id
-          in
-
-          let blocked_by_new_agent =
-            Hashtbl.mem reserved key
-          in
-
-          if blocked_by_old_agent || blocked_by_new_agent then
-            None
-          else
-            loop coord.Grid.row coord.Grid.col (k - 1)
+let target_after_steps rng grid occupied reserved (params : params) ag angle steps =
+  let start =
+    { Grid.row = ag.row; col = ag.col }
   in
 
-  loop ag.row ag.col steps
+  match target_of_angle rng grid ag params.dirs angle steps with
+  | None ->
+      None
+
+  | Some target ->
+      let path =
+        path_between start target
+      in
+
+      let free coord =
+        not (Hashtbl.mem occupied (coord.Grid.row, coord.col))
+        && not (Hashtbl.mem reserved (coord.row, coord.col))
+      in
+
+      if Array.for_all free path then
+        Some target
+      else
+        None
+
+
 
 let step_agents rng (params : params) grid agents =
   let occupied =
@@ -444,15 +522,11 @@ let step_agents rng (params : params) grid agents =
            spontaneous_angle rng params ag.angle
          in
 
-         let dr, dc =
-           offset_of_angle params.dirs angle
-         in
+        let steps =
+          speed rng params
+        in
 
-         let steps =
-           speed rng params
-         in
-
-         match target_after_steps grid occupied reserved ag dr dc steps with
+        match target_after_steps rng grid occupied reserved params ag angle steps with
          | Some target ->
              Hashtbl.replace reserved (target.Grid.row, target.Grid.col) ag.id;
 
