@@ -14,19 +14,31 @@
 
 open Abca
 
-type mode =
-  | Run
-  | Xml
-  | Render
-  | Analyze
+module Mode = struct
+  type t =
+    | Run
+    | Xml
+    | Render
+    | Analyze
 
-let mode_of_string s =
-  match String.lowercase_ascii s with
-  | "run" -> Run
-  | "xml" -> Xml
-  | "render" -> Render
-  | "analyze" -> Analyze
-  | s -> invalid_arg ("Unknown mode: " ^ s)
+  let all = [ 
+    "run", Run;
+    "xml", Xml;
+    "render", Render;
+    "analyze", Analyze;
+  ]
+
+  let of_string s =
+    match List.assoc_opt (String.lowercase_ascii s) all with
+    | Some mode -> mode
+    | None -> invalid_arg ("Unknown mode: " ^ s)
+
+  let help =
+    all
+    |> List.map fst
+    |> String.concat " | "
+end
+
 
 let timestamp () =
   let tm =
@@ -101,7 +113,7 @@ let () =
   let csv = ref "trajectories.csv" in
 
   let specs = Arg.align [
-    "--mode", Arg.Set_string mode, " run | render | xml | analyze";
+    "--mode", Arg.Set_string mode, " " ^ Mode.help;
     "--model", Arg.Set_string model, " Model name";
     "--rows", Arg.Set_int rows, " Number of rows";
     "--cols", Arg.Set_int cols, " Number of columns";
@@ -175,8 +187,8 @@ let () =
       exit 1
   in
 
-  match mode_of_string !mode with
-  | Run ->
+  match Mode.of_string !mode with
+  | Mode.Run ->
       let topology =
         if !toroidal then Grid.Toroidal else Grid.Bounded
       in
@@ -199,7 +211,7 @@ let () =
         !generations
         !out
 
-  | Xml ->
+  | Mode.Xml ->
       if !input = "" then begin
         prerr_endline "--input is required in XML mode";
         exit 1
@@ -211,7 +223,7 @@ let () =
 
       Printf.printf "Exported XML -> %s\n%!" !xml
 
-  | Analyze ->
+  | Mode.Analyze ->
       if !input = "" then begin
         prerr_endline "--input is required in analyze mode";
         exit 1
@@ -237,7 +249,7 @@ let () =
       Printf.printf "Exported agent trajectories -> %s\n%!" !csv
 
 
-  | Render ->
+  | Mode.Render ->
       if !input = "" then begin
         prerr_endline "--input is required in render mode";
         exit 1
