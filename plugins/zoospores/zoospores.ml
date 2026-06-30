@@ -76,6 +76,35 @@ let coord_of_agent ag =
     col = col_of_agent ag;
   }
 
+let find_arg key plugin_args =
+  List.assoc_opt (String.uppercase_ascii key) plugin_args
+
+let override_int key current plugin_args =
+  match find_arg key plugin_args with
+  | None -> current
+  | Some s -> int_of_string s
+
+let override_float key current plugin_args =
+  match find_arg key plugin_args with
+  | None -> current
+  | Some s -> float_of_string s
+
+let apply_plugin_args plugin_args (p : params) =
+  {
+    p with
+    dirs = override_int "DIRS" p.dirs plugin_args;
+    base_step = override_int "BASE_STEP" p.base_step plugin_args;
+    fast_step = override_int "FAST_STEP" p.fast_step plugin_args;
+    fast_prob = override_float "FAST_PROB" p.fast_prob plugin_args;
+    wiggle = override_int "WIGGLE" p.wiggle plugin_args;
+    persistence = override_int "PERSISTENCE" p.persistence plugin_args;
+    min_turn = override_int "MIN_TURN" p.min_turn plugin_args;
+    max_age = override_int "MAX_AGE" p.max_age plugin_args;
+    agents = override_int "AGENTS" p.agents plugin_args;
+    radius = override_float "RADIUS" p.radius plugin_args;
+    thickness = override_float "THICKNESS" p.thickness plugin_args;
+  }
+
 let move_continuous (params : params) (ag : agent) angle steps =
   let theta =
     2.0 *. Float.pi *. float_of_int angle /. float_of_int params.dirs
@@ -510,7 +539,7 @@ let metadata (rule_def : rule_def) ~rows ~cols ~generations ~seed ~density ~agen
     "max_age", string_of_int rule_def.max_age;
   ]
 
-let run_for rule_def ~rows ~cols ~generations ~seed ~density ~agents ~topology ~output =
+let run_for rule_def ~rows ~cols ~generations ~seed ~density ~agents ~topology ~plugin_args ~output =
   let agent_count =
     match agents with
     | Some n -> n
@@ -532,7 +561,7 @@ let run_for rule_def ~rows ~cols ~generations ~seed ~density ~agents ~topology ~
       init_shape = rule_def.init_shape;
       radius = rule_def.radius;
       thickness = rule_def.thickness;
-    }
+    } |> apply_plugin_args plugin_args
   in
 
   let grid = Grid.create ~topology ~rows ~cols () in

@@ -260,7 +260,7 @@ let make_rule rule_def =
         next
     end)
 
-let run_for rule_def ~rows ~cols ~generations ~seed ~density ~agents:_ ~topology ~output =
+let run_for rule_def ~rows ~cols ~generations ~seed ~density ~agents:_ ~topology ~plugin_args:_ ~output =
   let grid =
     Grid.create ~topology ~rows ~cols ()
   in

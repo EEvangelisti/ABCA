@@ -114,7 +114,8 @@ module Settings =
     let skip_background = ref true
     let agents = ref 0
     let csv = ref "trajectories.csv"
-    let tracking_xml = ref "" 
+    let tracking_xml = ref ""
+    let plugin_args = ref []
 
     open Arg
     let spec_list = align [
@@ -149,6 +150,15 @@ module Settings =
       "--agents", Set_int agents, "Number of agents for agent-based models";
       "--csv", Set_string csv, " CSV output file for analysis mode";
       "--tracking-xml", Set_string tracking_xml, " XML particle-tracking output file for analysis mode";
+      "--plugin-arg",
+      Arg.String
+        (fun s ->
+           match String.split_on_char '=' s with
+           | [ key; value ] ->
+               plugin_args := (String.uppercase_ascii key, value) :: !plugin_args
+           | _ ->
+               invalid_arg "--plugin-arg expects KEY=VALUE"),
+      " Override a plugin parameter, e.g. --plugin-arg RADIUS=35";
     ]
 
     let ensure_input () =
@@ -174,6 +184,7 @@ module Action =
         ~density:!density
         ~agents:(if !agents <= 0 then None else Some !agents)
         ~topology
+        ~plugin_args:(List.rev !plugin_args)
         ~output:!out;
       Printf.printf
       "Saved %s: %d x %d, %d generations -> %s\n%!"

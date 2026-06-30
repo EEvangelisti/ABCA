@@ -43,6 +43,7 @@ type t = {
     density:float ->
     agents: int option -> 
     topology:Abca.Grid.topology ->
+    plugin_args:(string * string) list ->
     output:string ->
     unit;
 
