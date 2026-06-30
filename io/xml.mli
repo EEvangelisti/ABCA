@@ -31,3 +31,11 @@ val save_frames :
     Only non-empty cells are written to the output, reducing file size.
     All frames must match the dimensions of [grid].
     Raises [Invalid_argument] if any frame has an invalid shape. *)
+
+val save_agent_trace_trackmate :
+  filename:string ->
+  Agent_trace.t ->
+  unit
+(** Saves an agent trace as a simple particle-tracking XML file.
+    The output uses [particle] elements containing [detection] elements
+    with [t], [x], and [y] attributes, suitable for trajectory-analysis scripts. *)

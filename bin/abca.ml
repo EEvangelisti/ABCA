@@ -114,6 +114,7 @@ module Settings =
     let skip_background = ref true
     let agents = ref 0
     let csv = ref "trajectories.csv"
+    let tracking_xml = ref "" 
 
     open Arg
     let spec_list = align [
@@ -147,13 +148,14 @@ module Settings =
       "--draw-background", Clear skip_background, "Draw cells with color index 0";
       "--agents", Set_int agents, "Number of agents for agent-based models";
       "--csv", Set_string csv, " CSV output file for analysis mode";
+      "--tracking-xml", Set_string tracking_xml, " XML particle-tracking output file for analysis mode";
     ]
 
     let ensure_input () =
       if !input = "" then begin
         prerr_endline ("--input is required in " ^ !mode ^ " mode");
         exit 1
-      end;
+      end
   end
 
 
@@ -206,14 +208,21 @@ module Action =
       export_agent_trace_csv
         ~filename:!csv
         agents;
-      Printf.printf "Exported agent trajectories -> %s\n%!" !csv
+      Printf.printf "Exported agent trajectories -> %s\n%!" !csv;
+      if !tracking_xml <> "" then begin
+        Abca_io.Xml.save_agent_trace_trackmate
+          ~filename:!tracking_xml
+          agents;
+
+        Printf.printf
+          "Exported particle-tracking XML -> %s\n%!"
+          !tracking_xml
+      end
+
 
 
     let render selected_model =
-      if !input = "" then begin
-        prerr_endline "--input is required in render mode";
-        exit 1
-      end;
+      ensure_input ();
 
       if !png = "" && !gif = "" && !mp4 = "" then begin
         prerr_endline "Nothing to render: use --png, --gif, or --mp4";
@@ -279,27 +288,20 @@ module Action =
           ~filename:!input
           ~codec:(module Binary_codec)
       in
-
-      let palette_generator =
-        Abca_palette.Register.get !palette
-      in
-
+      let palette_generator = Abca_palette.Register.get !palette in
       let render_palette =
         palette_generator.Abca_palette.Register.make
           ~states:selected_model.Abca_models.Model.state_count
       in
-
       let background_color =
         if !background = "" then
           None
         else
           Some (Abca_palette.Color.parse !background)
       in
-
       let skip_index =
         if !skip_background then Some 0 else None
       in
-
       Abca_render.Png.save_frames
         ~dirname:png_dir
         ~prefix:!prefix
@@ -310,7 +312,6 @@ module Action =
         ~palette:render_palette
         ~to_color_index:selected_model.Abca_models.Model.to_color_index
         frames;
-
       Option.iter
         (fun output ->
            Abca_render.Video.make_gif
@@ -320,7 +321,6 @@ module Action =
              ~prefix:!prefix
              ~output ())
         gif_output;
-
       Option.iter
         (fun output ->
            Abca_render.Video.make_mp4
@@ -330,7 +330,6 @@ module Action =
              ~prefix:!prefix
              ~output ())
         mp4_output;
-
       Printf.printf "Render directory -> %s\n%!" render_dir
       
     let choose mode selected_model =

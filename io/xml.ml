@@ -98,3 +98,62 @@ let save_frames
          frames;
 
        Printf.fprintf oc "</automates>\n")
+ 
+ 
+let save_agent_trace_trackmate ~filename (agents : Agent_trace.t) =
+  let by_id =
+    let table = Hashtbl.create 257 in
+    Array.iter
+      (fun r ->
+         let previous =
+           match Hashtbl.find_opt table r.Agent_trace.id with
+           | None -> []
+           | Some xs -> xs
+         in
+         Hashtbl.replace table r.id (r :: previous))
+      agents;
+    table
+  in
+
+  let ids =
+    Hashtbl.fold (fun id _ acc -> id :: acc) by_id []
+    |> List.sort compare
+  in
+
+  let oc = open_out filename in
+
+  Fun.protect
+    ~finally:(fun () -> close_out_noerr oc)
+    (fun () ->
+       output_string oc "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+       output_string oc "<root>\n";
+
+       List.iter
+         (fun id ->
+            let records =
+              Hashtbl.find by_id id
+              |> List.sort
+                   (fun a b ->
+                      compare
+                        (a.Agent_trace.frame, a.id)
+                        (b.Agent_trace.frame, b.id))
+            in
+
+            output_string oc "  <particle>\n";
+
+            List.iter
+              (fun r ->
+                 Printf.fprintf oc
+                   "    <detection t=\"%d\" x=\"%d\" y=\"%d\" />\n"
+                   r.Agent_trace.frame
+                   r.col
+                   r.row)
+              records;
+
+            output_string oc "  </particle>\n")
+         ids;
+
+       output_string oc "</root>\n")
+ 
+ 
+ 
