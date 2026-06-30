@@ -67,19 +67,6 @@ val load :
   'state archive
 (** Loads a complete simulation from a binary file. *)
 
-val save_frames :
-  filename:string ->
-  grid:Abca.Grid.t ->
-  generation:int ->
-  metadata:Metadata.t ->
-  ?agents:Agent_trace.t ->
-  frames:'state array array array ->
-  codec:(module STATE_CODEC with type t = 'state) ->
-  unit -> unit
-(** Saves simulation frames to a binary file.
-    All frames must match the dimensions of [grid].
-    Raises [Invalid_argument] if any frame has an invalid shape. *)
-
 val load_frames :
   filename:string ->
   codec:(module STATE_CODEC with type t = 'state) ->

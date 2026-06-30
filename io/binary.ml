@@ -153,20 +153,6 @@ let save
 
 
 
-let save_frames ~filename ~grid ~generation ~metadata ?(agents = Agent_trace.empty)
-    ~frames ~codec () =
-  let header =
-    {
-      version;
-      rows = Abca.Grid.rows grid;
-      cols = Abca.Grid.cols grid;
-      generation;
-      frames = Array.length frames;
-      metadata;
-    }
-  in
-  save ~filename ~archive:{ header; frames; agents } ~codec
-
 
 
 let load_frames
