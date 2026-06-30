@@ -66,10 +66,3 @@ val load :
   codec:(module STATE_CODEC with type t = 'state) ->
   'state archive
 (** Loads a complete simulation from a binary file. *)
-
-val load_frames :
-  filename:string ->
-  codec:(module STATE_CODEC with type t = 'state) ->
-  header * 'state array array array * Agent_trace.t
-(** Loads simulation frames from a binary file.
-    Raises [Failure] if the file format, version, or header is invalid. *)

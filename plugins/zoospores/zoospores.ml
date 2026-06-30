@@ -598,16 +598,17 @@ let run_for rule_def ~rows ~cols ~generations ~seed ~density ~agents ~topology ~
 
 
 let export_xml_for (rule_def : rule_def) ~input ~output =
-  let header, frames, _agent_trace =
-    Abca_io.Binary.load_frames
+  let open Abca_io.Binary in
+  let { header; frames; _ } =
+    load
       ~filename:input
       ~codec:(module Binary_codec)
   in
 
   let grid =
     Grid.create
-      ~rows:header.Abca_io.Binary.rows
-      ~cols:header.Abca_io.Binary.cols
+      ~rows:header.rows
+      ~cols:header.cols
       ()
   in
 
@@ -615,7 +616,7 @@ let export_xml_for (rule_def : rule_def) ~input ~output =
     ~filename:output
     ~model:rule_def.id
     ~grid
-    ~generation:header.Abca_io.Binary.generation
+    ~generation:header.generation
     ~frames
     ~codec:(module Xml_codec)
 

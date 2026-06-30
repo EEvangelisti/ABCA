@@ -245,18 +245,19 @@ let () =
           None
       in
 
-      let _header, frames, _agents =
-        Abca_io.Binary.load_frames
+      let module Binary_codec =
+        struct
+          type t = int
+          let to_int32 = Int32.of_int
+          let of_int32 = Int32.to_int
+        end
+      in
+
+      let open Abca_io.Binary in
+      let { frames; _ } =
+        load
           ~filename:!input
-          ~codec:(module struct
-            type t = int
-
-            let to_int32 x =
-              Int32.of_int x
-
-            let of_int32 x =
-              Int32.to_int x
-          end)
+          ~codec:(module Binary_codec)
       in
 
       let palette_generator =

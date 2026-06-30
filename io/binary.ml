@@ -153,9 +153,7 @@ let save
 
 
 
-
-
-let load_frames
+let load
     (type state)
     ~filename
     ~(codec : (module STATE_CODEC with type t = state)) =
@@ -172,12 +170,12 @@ let load_frames
        let found_magic = read_string_fixed ic (String.length magic) in
 
        if found_magic <> magic then
-         failwith "Io_binary.load_frames: invalid file format";
+         failwith "Binary.load: invalid file format";
 
        let file_version = read_int ic in
 
        if file_version <> version then
-         failwith "Io_binary.load_frames: unsupported file version";
+         failwith "Binary.load: unsupported file version";
 
        let rows = read_int ic in
        let cols = read_int ic in
@@ -189,7 +187,7 @@ let load_frames
        let metadata = Metadata.of_json metadata_json in
 
        if rows <= 0 || cols <= 0 || frame_count < 0 then
-         failwith "Io_binary.load_frames: corrupted header";
+         failwith "Binary.load: corrupted header";
 
        let frames =
          Array.init frame_count (fun _ ->
@@ -225,20 +223,8 @@ let load_frames
          metadata
        } in
 
-       header, frames, agents)
-
-
-let load
-    (type state)
-    ~filename
-    ~(codec : (module STATE_CODEC with type t = state)) =
-
-  let header, frames, agents =
-    load_frames ~filename ~codec
-  in
-
-  {
-    header;
-    frames;
-    agents;
-  }
+       {
+         header;
+         frames;
+         agents;
+       })
