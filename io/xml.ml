@@ -105,12 +105,13 @@ let save_agent_trace_trackmate ~filename (agents : Agent_trace.t) =
     let table = Hashtbl.create 257 in
     Array.iter
       (fun r ->
+         let id = r.Agent_trace.id in
          let previous =
-           match Hashtbl.find_opt table r.Agent_trace.id with
+           match Hashtbl.find_opt table id with
            | None -> []
            | Some xs -> xs
          in
-         Hashtbl.replace table r.id (r :: previous))
+         Hashtbl.replace table id (r :: previous))
       agents;
     table
   in
@@ -121,7 +122,6 @@ let save_agent_trace_trackmate ~filename (agents : Agent_trace.t) =
   in
 
   let oc = open_out filename in
-
   Fun.protect
     ~finally:(fun () -> close_out_noerr oc)
     (fun () ->
@@ -130,13 +130,11 @@ let save_agent_trace_trackmate ~filename (agents : Agent_trace.t) =
 
        List.iter
          (fun id ->
-            let records =
+            let trajectory =
               Hashtbl.find by_id id
               |> List.sort
                    (fun a b ->
-                      compare
-                        (a.Agent_trace.frame, a.id)
-                        (b.Agent_trace.frame, b.id))
+                      compare a.Agent_trace.frame b.Agent_trace.frame)
             in
 
             output_string oc "  <particle>\n";
@@ -148,12 +146,10 @@ let save_agent_trace_trackmate ~filename (agents : Agent_trace.t) =
                    r.Agent_trace.frame
                    r.col
                    r.row)
-              records;
+              trajectory;
 
             output_string oc "  </particle>\n")
          ids;
 
        output_string oc "</root>\n")
- 
- 
  
