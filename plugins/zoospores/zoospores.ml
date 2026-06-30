@@ -56,22 +56,48 @@ type rule_def = {
 
 type agent = {
   id    : int;
-  row   : int;
-  col   : int;
+  x     : float;
+  y     : float;
   age   : int;
   angle : int;
 }
 
 let state_of_agent (params : params) (ag : agent) = 1 + min ag.age params.max_age
 
+let row_of_agent ag =
+  int_of_float (Float.floor ag.y)
+
+let col_of_agent ag =
+  int_of_float (Float.floor ag.x)
+
+let coord_of_agent ag =
+  {
+    Grid.row = row_of_agent ag;
+    col = col_of_agent ag;
+  }
+
+let move_continuous (params : params) (ag : agent) angle steps =
+  let theta =
+    2.0 *. Float.pi *. float_of_int angle /. float_of_int params.dirs
+  in
+  {
+    ag with
+    x = ag.x +. float_of_int steps *. cos theta;
+    y = ag.y +. float_of_int steps *. sin theta;
+    angle;
+    age = min params.max_age (ag.age + 1);
+  }
+
 let trace_record (params : params) frame (ag : agent) : Abca_io.Agent_trace.record =
   {
     frame;
     id = ag.id;
-    row = ag.row;
-    col = ag.col;
-    age = ag.age;
+    x = ag.x;
+    y = ag.y;
+    row = row_of_agent ag;
+    col = col_of_agent ag;
     angle = ag.angle;
+    age = ag.age;
     state = state_of_agent params ag;
   }
 
@@ -261,112 +287,9 @@ let random_signed rng amplitude =
     Rng.range_int rng ~min:(-amplitude) ~max:amplitude
 
 
-let angular_distance dirs a b =
-  let d =
-    abs (a - b) mod dirs
-  in
-  min d (dirs - d)
 
 
-let angle_of_offset dirs dr dc =
-  let theta =
-    atan2 (float_of_int dr) (float_of_int dc)
-  in
-  let a =
-    int_of_float
-      (Float.round
-         (float_of_int dirs *. theta /. (2.0 *. Float.pi)))
-  in
-  (a mod dirs + dirs) mod dirs
 
-
-let target_of_angle rng grid (ag : agent) dirs angle steps =
-  if steps <= 0 then
-    None
-  else
-    let r =
-      max 1 steps
-    in
-
-    let candidates =
-      ref []
-    in
-
-    for dr = -r to r do
-      for dc = -r to r do
-        if not (dr = 0 && dc = 0) then begin
-          let dist2 =
-            dr * dr + dc * dc
-          in
-          let dist =
-            sqrt (float_of_int dist2)
-          in
-
-          if abs_float (dist -. float_of_int steps) <= 0.5 then begin
-            let a =
-              angle_of_offset dirs dr dc
-            in
-            let score =
-              angular_distance dirs angle a
-            in
-            candidates := (score, dr, dc) :: !candidates
-          end
-        end
-      done
-    done;
-
-    match !candidates with
-    | [] ->
-        None
-
-    | candidates ->
-        let best_score =
-          candidates
-          |> List.map (fun (score, _, _) -> score)
-          |> List.fold_left min max_int
-        in
-
-        let best =
-          List.filter
-            (fun (score, _, _) -> score = best_score)
-            candidates
-        in
-
-        let _, dr, dc =
-          Rng.choose rng (Array.of_list best)
-        in
-
-        Grid.normalize grid {
-          Grid.row = ag.row + dr;
-          col = ag.col + dc;
-        }
-
-
-let path_between (start : Grid.coord) (target : Grid.coord) =
-  let dr =
-    target.Grid.row - start.Grid.row
-  in
-  let dc =
-    target.Grid.col - start.Grid.col
-  in
-
-  let n =
-    max (abs dr) (abs dc)
-  in
-
-  if n = 0 then
-    [||]
-  else
-    Array.init n (fun i ->
-        let k =
-          i + 1
-        in
-        {
-          Grid.row =
-            start.row + int_of_float (Float.round (float_of_int k *. float_of_int dr /. float_of_int n));
-          col =
-            start.col + int_of_float (Float.round (float_of_int k *. float_of_int dc /. float_of_int n));
-        })
 
 
 let drift_angle rng (params : params) angle =
@@ -435,8 +358,8 @@ let initial_agents (params : params) grid =
     (fun id coord ->
        {
          id;
-         row = coord.Grid.row;
-         col = coord.Grid.col;
+         x = float_of_int coord.Grid.col +. 0.5;
+         y = float_of_int coord.Grid.row +. 0.5;
          age = 1;
          angle = Rng.int rng params.dirs;
        })
@@ -446,63 +369,36 @@ let empty_frame grid =
   Array.init (Grid.rows grid) (fun _ ->
       Array.make (Grid.cols grid) 0)
 
+
 let frame_of_agents (params : params) grid agents =
   let frame =
     empty_frame grid
   in
-
   Array.iter
     (fun ag ->
-       if ag.row >= 0
-          && ag.row < Grid.rows grid
-          && ag.col >= 0
-          && ag.col < Grid.cols grid
-       then
-         frame.(ag.row).(ag.col) <-
+       let coord =
+         coord_of_agent ag
+       in
+       if Grid.valid grid coord then
+         frame.(coord.Grid.row).(coord.col) <-
            1 + clamp_int 0 params.max_age ag.age)
     agents;
-
   frame
 
-let occupied_table agents =
-  let table =
-    Hashtbl.create (Array.length agents * 2)
-  in
 
+let occupied_table agents =
+  let table = Hashtbl.create (Array.length agents * 2) in
   Array.iter
     (fun ag ->
-       Hashtbl.replace table (ag.row, ag.col) ag.id)
+       let coord = coord_of_agent ag in
+       Hashtbl.replace table (coord.Grid.row, coord.col) ag.id)
     agents;
-
   table
 
 
 let normalize_coord grid row col = Grid.normalize grid { Grid.row; col }
 
 
-let target_after_steps rng grid occupied reserved (params : params) ag angle steps =
-  let start =
-    { Grid.row = ag.row; col = ag.col }
-  in
-
-  match target_of_angle rng grid ag params.dirs angle steps with
-  | None ->
-      None
-
-  | Some target ->
-      let path =
-        path_between start target
-      in
-
-      let free coord =
-        not (Hashtbl.mem occupied (coord.Grid.row, coord.col))
-        && not (Hashtbl.mem reserved (coord.row, coord.col))
-      in
-
-      if Array.for_all free path then
-        Some target
-      else
-        None
 
 
 
@@ -510,44 +406,44 @@ let step_agents rng (params : params) grid agents =
   let occupied =
     occupied_table agents
   in
-
   let reserved =
     Hashtbl.create (Array.length agents * 2)
   in
-
-  let proposals =
-    Array.map
-      (fun ag ->
-         let angle =
-           spontaneous_angle rng params ag.angle
-         in
-
-        let steps =
-          speed rng params
-        in
-
-        match target_after_steps rng grid occupied reserved params ag angle steps with
-         | Some target ->
-             Hashtbl.replace reserved (target.Grid.row, target.Grid.col) ag.id;
-
-             {
-               ag with
-               row = target.Grid.row;
-               col = target.Grid.col;
-               angle;
-               age = min params.max_age (ag.age + 1);
-             }
-
-         | None ->
+  Array.map
+    (fun ag ->
+       let angle =
+         spontaneous_angle rng params ag.angle
+       in
+       let steps =
+         speed rng params
+       in
+       let candidate =
+         move_continuous params ag angle steps
+       in
+       let target =
+         coord_of_agent candidate
+       in
+       match Grid.normalize grid target with
+       | None ->
+           {
+             ag with
+             angle = collision_angle rng params angle;
+             age = min params.max_age (ag.age + 1);
+           }
+       | Some coord ->
+           if Hashtbl.mem occupied (coord.Grid.row, coord.col)
+              || Hashtbl.mem reserved (coord.row, coord.col)
+           then
              {
                ag with
                angle = collision_angle rng params angle;
                age = min params.max_age (ag.age + 1);
-             })
-      agents
-  in
-
-  proposals
+             }
+           else begin
+             Hashtbl.replace reserved (coord.row, coord.col) ag.id;
+             candidate
+           end)
+    agents
 
 
 let simulate params grid generations =

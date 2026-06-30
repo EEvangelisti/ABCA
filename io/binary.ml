@@ -34,7 +34,7 @@ type 'state archive = {
 }
 
 let magic = "AUTOMATES"
-let version = 3
+let version = 4
 
 let make_archive
     ~rows
@@ -139,13 +139,15 @@ let save
 
        Array.iter
         (fun (r : Agent_trace.record) ->
-           write_int oc r.frame;
-           write_int oc r.id;
-           write_int oc r.row;
-           write_int oc r.col;
-           write_int oc r.angle;
-           write_int oc r.age;
-           write_int oc r.state)
+          write_int oc r.frame;
+          write_int oc r.id;
+          output_value oc r.x;
+          output_value oc r.y;
+          write_int oc r.row;
+          write_int oc r.col;
+          write_int oc r.angle;
+          write_int oc r.age;
+          write_int oc r.state)
         agents
   )
 
@@ -154,6 +156,8 @@ let save
 let read_agent_record ic : Agent_trace.record =
   let frame = read_int ic in
   let id = read_int ic in
+  let x = input_value ic in
+  let y = input_value ic in
   let row = read_int ic in
   let col = read_int ic in
   let angle = read_int ic in
@@ -162,13 +166,14 @@ let read_agent_record ic : Agent_trace.record =
   {
     Agent_trace.frame;
     id;
+    x;
+    y;
     row;
     col;
     angle;
     age;
     state;
   }
-
 
 
 

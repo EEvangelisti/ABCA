@@ -14,6 +14,8 @@
 type record = {
   frame : int;
   id    : int;
+  x     : float;
+  y     : float;
   row   : int;
   col   : int;
   angle : int;

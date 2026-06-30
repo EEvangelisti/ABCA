@@ -14,13 +14,14 @@
 type record = {
   frame : int;
   id    : int;
+  x     : float;
+  y     : float;
   row   : int;
   col   : int;
   angle : int;
   age   : int;
   state : int;
 }
-
 type t = record array
 
 let empty =

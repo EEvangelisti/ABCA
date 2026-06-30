@@ -141,11 +141,11 @@ let save_agent_trace_trackmate ~filename (agents : Agent_trace.t) =
 
             List.iter
               (fun r ->
-                 Printf.fprintf oc
-                   "    <detection t=\"%d\" x=\"%d\" y=\"%d\" />\n"
-                   r.Agent_trace.frame
-                   r.col
-                   r.row)
+                Printf.fprintf oc
+                  "    <detection t=\"%d\" x=\"%.6f\" y=\"%.6f\" />\n"
+                  r.Agent_trace.frame
+                  r.x
+                  r.y)
               trajectory;
 
             output_string oc "  </particle>\n")
