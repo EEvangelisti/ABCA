@@ -17,6 +17,15 @@ source "${VENV_DIR}/bin/activate"
 python -m pip install --upgrade pip
 python -m pip install numpy matplotlib
 
-python "${SCRIPT_DIR}/characterize_zoospore_trajectories.py" --direction-window 6 "$@"
+python "${SCRIPT_DIR}/characterize_zoospore_trajectories.py" \
+  --min-spots 50 \
+  --max-spots 50 \
+  --crop-mode random \
+  --outdir "$(basename "$@" .xml)" \
+  --random-seed 42 \
+  "$@"
+
+# --dt 0.0700506
+# --unit micron
 
 deactivate

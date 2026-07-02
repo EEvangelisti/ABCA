@@ -48,6 +48,9 @@ class Parameters:
     coord_scale: float
     unit: str
     min_spots: int
+    max_spots: int | None
+    crop_mode: str
+    random_seed: int | None
     max_tracks_plot: int | None
     direction_threshold_deg: float
     speed_rel_change_threshold: float
@@ -125,20 +128,50 @@ class Track:
     track_id: int
     frames: np.ndarray
     xy: np.ndarray
+    original_n_spots: int
+    crop_start_index: int = 0
 
     @property
     def n_spots(self) -> int:
         return int(self.xy.shape[0])
 
 
+def crop_track(
+    frames: np.ndarray,
+    xy: np.ndarray,
+    max_spots: int | None,
+    crop_mode: str,
+    rng: np.random.Generator,
+) -> tuple[np.ndarray, np.ndarray, int]:
+    """Optionally crop one trajectory to at most max_spots detections.
+
+    The crop is contiguous in time. With crop_mode="start", the first max_spots
+    detections are kept. With crop_mode="random", the start index is sampled so
+    the cropped track always contains exactly max_spots detections.
+    """
+    if max_spots is None or xy.shape[0] <= max_spots:
+        return frames, xy, 0
+
+    if crop_mode == "start":
+        start = 0
+    elif crop_mode == "random":
+        start = int(rng.integers(0, xy.shape[0] - max_spots + 1))
+    else:
+        raise ValueError(f"Unsupported crop mode: {crop_mode!r}")
+
+    end = start + max_spots
+    return frames[start:end], xy[start:end], start
+
+
 def read_tracks_xml(params: Parameters) -> list[Track]:
     tree = ET.parse(params.xml_path)
     root = tree.getroot()
     tracks: list[Track] = []
+    rng = np.random.default_rng(params.random_seed)
 
     for track_id, particle in enumerate(root.findall("particle"), start=1):
         detections = particle.findall("detection")
-        if len(detections) < params.min_spots:
+        if len(detections) <= params.min_spots:
             continue
 
         try:
@@ -163,12 +196,34 @@ def read_tracks_xml(params: Parameters) -> list[Track]:
         frames = frames[keep]
         xy = xy[keep]
 
-        if xy.shape[0] >= params.min_spots:
-            tracks.append(Track(track_id=track_id, frames=frames, xy=xy))
+        # Selection is applied before cropping, so --min-spots refers to the
+        # original usable trajectory length after duplicate-frame removal.
+        # The comparison is strict: only tracks with > --min-spots are kept.
+        original_n_spots = int(xy.shape[0])
+        if original_n_spots <= params.min_spots:
+            continue
+
+        frames, xy, crop_start_index = crop_track(
+            frames=frames,
+            xy=xy,
+            max_spots=params.max_spots,
+            crop_mode=params.crop_mode,
+            rng=rng,
+        )
+
+        tracks.append(
+            Track(
+                track_id=track_id,
+                frames=frames,
+                xy=xy,
+                original_n_spots=original_n_spots,
+                crop_start_index=crop_start_index,
+            )
+        )
 
     if not tracks:
         raise ValueError(
-            f"No trajectory with at least {params.min_spots} detections was found in {params.xml_path}."
+            f"No trajectory with more than {params.min_spots} detections was found in {params.xml_path}."
         )
     return tracks
 
@@ -314,6 +369,8 @@ def compute_metrics(params: Parameters, tracks: list[Track]) -> tuple[list[dict]
             {
                 "track_id": track.track_id,
                 "n_spots": track.n_spots,
+                "original_n_spots": track.original_n_spots,
+                "crop_start_index": track.crop_start_index,
                 "n_steps": int(distance.size),
                 "duration_s": duration,
                 f"path_length_{params.unit}": path_length,
@@ -414,6 +471,11 @@ def global_summary(params: Parameters, tracks: list[Track], track_rows: list[dic
         "speed_rel_change_threshold": params.speed_rel_change_threshold,
         "speed_abs_change_threshold": params.speed_abs_change_threshold if params.speed_abs_change_threshold is not None else "",
         "stop_speed_threshold": params.stop_speed_threshold if params.stop_speed_threshold is not None else "",
+        "min_spots_strictly_more_than": params.min_spots,
+        "max_spots_after_crop": params.max_spots if params.max_spots is not None else "",
+        "crop_mode": params.crop_mode,
+        "random_seed": params.random_seed if params.random_seed is not None else "",
+        "n_spots_before_crop": int(sum(t.original_n_spots for t in tracks)),
         f"global_mean_speed_{params.speed_unit}": nanmean(values(speed_key, step_rows)),
         f"median_instant_speed_{params.speed_unit}": nanmedian(values(speed_key, step_rows)),
         f"median_track_mean_speed_{params.speed_unit}": nanmedian(values(mean_speed_key, track_rows)),
@@ -718,7 +780,30 @@ def parse_args(argv: Iterable[str] | None = None) -> Parameters:
         help="Multiplier applied to x/y coordinates. Use 10 for simulated grid cells of 10 µm.",
     )
     parser.add_argument("--unit", default="px", help="Spatial unit after scaling, e.g. px, µm, um, cell.")
-    parser.add_argument("--min-spots", type=int, default=10, help="Minimum number of detections per trajectory.")
+    parser.add_argument(
+        "--min-spots",
+        type=int,
+        default=10,
+        help="Keep only trajectories with strictly more than this number of detections before optional cropping.",
+    )
+    parser.add_argument(
+        "--max-spots",
+        type=int,
+        default=None,
+        help="Optional maximum number of detections kept per trajectory after filtering.",
+    )
+    parser.add_argument(
+        "--crop-mode",
+        choices=("start", "random"),
+        default="start",
+        help="Cropping strategy used when --max-spots is set: keep the start, or sample a valid contiguous window.",
+    )
+    parser.add_argument(
+        "--random-seed",
+        type=int,
+        default=42,
+        help="Random seed used with --crop-mode random. Use a fixed value for reproducible crops.",
+    )
     parser.add_argument(
         "--max-tracks-plot",
         type=int,
@@ -775,6 +860,8 @@ def parse_args(argv: Iterable[str] | None = None) -> Parameters:
         parser.error("--coord-scale must be > 0")
     if args.min_spots < 3:
         parser.error("--min-spots must be at least 3 to compute turning angles")
+    if args.max_spots is not None and args.max_spots < 3:
+        parser.error("--max-spots must be at least 3 when set")
     if args.max_lag < 1:
         parser.error("--max-lag must be at least 1")
     if args.direction_window < 1:
@@ -787,6 +874,9 @@ def parse_args(argv: Iterable[str] | None = None) -> Parameters:
         coord_scale=args.coord_scale,
         unit=args.unit,
         min_spots=args.min_spots,
+        max_spots=args.max_spots,
+        crop_mode=args.crop_mode,
+        random_seed=args.random_seed,
         max_tracks_plot=max_tracks_plot,
         direction_threshold_deg=args.direction_threshold_deg,
         speed_rel_change_threshold=args.speed_rel_change_threshold,
@@ -824,7 +914,9 @@ def main(argv: Iterable[str] | None = None) -> int:
 
     make_plots(params, tracks, track_rows, step_rows, turn_rows, msd_rows, autocorr_rows)
 
-    print(f"Analyzed {len(tracks)} trajectories.")
+    print(f"Analyzed {len(tracks)} trajectories after filtering.")
+    if params.max_spots is not None:
+        print(f"Cropped trajectories to at most {params.max_spots} points using mode: {params.crop_mode}.")
     print(f"Tables and figures written to: {params.outdir}")
     return 0
 
