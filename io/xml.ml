@@ -11,6 +11,8 @@
  * See the LICENSE file for details.
  *)
 
+open Printf
+
 module type STATE_CODEC = sig
   type t
 
@@ -18,27 +20,34 @@ module type STATE_CODEC = sig
 end
 
 let xml_escape s =
-  let b = Buffer.create (String.length s) in
+  let open Buffer in
+  let b = create (String.length s) in
   String.iter
     (function
-      | '&'  -> Buffer.add_string b "&amp;"
-      | '<'  -> Buffer.add_string b "&lt;"
-      | '>'  -> Buffer.add_string b "&gt;"
-      | '"'  -> Buffer.add_string b "&quot;"
-      | '\'' -> Buffer.add_string b "&apos;"
-      | c    -> Buffer.add_char b c)
+      | '&'  -> add_string b "&amp;"
+      | '<'  -> add_string b "&lt;"
+      | '>'  -> add_string b "&gt;"
+      | '"'  -> add_string b "&quot;"
+      | '\'' -> add_string b "&apos;"
+      | c    -> add_char b c)
     s;
-  Buffer.contents b
+  contents b
+
+
 
 let check_frame_shape ~rows ~cols frame =
-  if Array.length frame <> rows then
-    invalid_arg "Io_xml: invalid frame row count";
+  (Array.length frame = rows 
+    || invalid_arg "Io_xml: invalid frame row count")
+    |> ignore;
 
   Array.iter
     (fun row ->
-       if Array.length row <> cols then
-         invalid_arg "Io_xml: invalid frame column count")
-    frame
+      (Array.length row = cols 
+        || invalid_arg "Io_xml: invalid frame column count")
+        |> ignore)
+  frame
+
+
 
 let save_frames
     (type state)
@@ -65,9 +74,9 @@ let save_frames
   Fun.protect
     ~finally:(fun () -> close_out_noerr oc)
     (fun () ->
-       Printf.fprintf oc "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+       fprintf oc "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
 
-       Printf.fprintf oc
+       fprintf oc
          "<automates model=\"%s\" rows=\"%d\" cols=\"%d\" generation=\"%d\" frames=\"%d\">\n"
          (xml_escape model)
          rows
@@ -77,7 +86,7 @@ let save_frames
 
        Array.iteri
          (fun frame_index frame ->
-            Printf.fprintf oc "  <frame index=\"%d\">\n" frame_index;
+            fprintf oc "  <frame index=\"%d\">\n" frame_index;
 
             Array.iteri
               (fun row cells ->
@@ -86,7 +95,7 @@ let save_frames
                       let s = Codec.to_string state in
 
                       if s <> "0" && s <> "." && s <> "" then
-                        Printf.fprintf oc
+                        fprintf oc
                           "    <cell row=\"%d\" col=\"%d\" state=\"%s\" />\n"
                           row
                           col
@@ -94,10 +103,10 @@ let save_frames
                    cells)
               frame;
 
-            Printf.fprintf oc "  </frame>\n")
+            fprintf oc "  </frame>\n")
          frames;
 
-       Printf.fprintf oc "</automates>\n")
+       fprintf oc "</automates>\n")
  
  
 let save_agent_trace_trackmate ~filename (agents : Agent_trace.t) =
@@ -141,7 +150,7 @@ let save_agent_trace_trackmate ~filename (agents : Agent_trace.t) =
 
             List.iter
               (fun r ->
-                Printf.fprintf oc
+                fprintf oc
                   "    <detection t=\"%d\" x=\"%.6f\" y=\"%.6f\" />\n"
                   r.Agent_trace.frame
                   r.x
@@ -153,3 +162,4 @@ let save_agent_trace_trackmate ~filename (agents : Agent_trace.t) =
 
        output_string oc "</root>\n")
  
+
