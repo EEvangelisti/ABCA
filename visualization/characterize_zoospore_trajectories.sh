@@ -18,14 +18,14 @@ python -m pip install --upgrade pip
 python -m pip install numpy matplotlib
 
 python "${SCRIPT_DIR}/characterize_zoospore_trajectories.py" \
-  --min-spots 50 \
-  --max-spots 50 \
+  --outdir "$(basename "$1" .xml)" \
+  --min-spots 100 \
+  --max-spots 100 \
   --crop-mode random \
-  --outdir "$(basename "$@" .xml)" \
   --random-seed 42 \
-  "$@"
-
-# --dt 0.0700506
-# --unit micron
+  --dt 0.07005 \
+  --coord-scale "${2-1}" \
+  --unit micron \
+  "$1"
 
 deactivate
