@@ -1,20 +1,15 @@
 (*
-   ABCA hyphae plugin.
-
-   Local-rule principle
-   --------------------
-   The dense grid stores deposited hyphal material.
-   The sparse list of agents stores only active apices.
-
-   At each generation, each apex decides locally:
-   - whether it elongates;
-   - whether it branches;
-   - which nearby forward cell it can occupy;
-   - whether local congestion inhibits branching.
-
-   No rule uses global morphology, total colony size, distance to the colony edge,
-   or any future state. Global patterns therefore emerge from local tip decisions.
-*)
+ * ABCA (Agent-Based Cellular Automata)
+ * A modular simulation framework for discrete spatial systems,
+ * ranging from classical cellular automata to biologically inspired
+ * agent-based models.
+ *
+ * Copyright (c) 2026 Edouard Evangelisti
+ *
+ * Distributed under the MIT License.
+ * This software is provided "as is", without warranty of any kind.
+ * See the LICENSE file for details.
+ *)
 
 open Abca
 
