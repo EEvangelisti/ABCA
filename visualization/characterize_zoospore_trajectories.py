@@ -532,6 +532,14 @@ def hist_plot(
     savefig(params, fig, stem)
 
 
+def clean_axes(ax: mpl.axes.Axes) -> None:
+    ax.set_axis_off()
+    ax.set_xticks([])
+    ax.set_yticks([])
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+
+
 def plot_centered_trajectories(params: Parameters, tracks: list[Track], track_rows: list[dict]) -> None:
     speed_key = f"mean_speed_{params.speed_unit}"
     speed_by_id = {int(row["track_id"]): float(row[speed_key]) for row in track_rows}
@@ -571,6 +579,34 @@ def plot_centered_trajectories(params: Parameters, tracks: list[Track], track_ro
     cbar.set_label(f"Mean speed ({params.speed_unit})")
     ax.autoscale()
     savefig(params, fig, "01_centered_trajectories_mean_speed")
+
+    # Clean display version: trajectories only, no axis, no title, no colorbar.
+    fig, ax = plt.subplots(figsize=(7.5, 7.5))
+    lc = LineCollection(
+        segs,
+        cmap=plt.get_cmap("viridis"),
+        norm=mpl.colors.Normalize(vmin=vmin, vmax=vmax),
+        linewidths=0.5,
+    )
+    lc.set_array(vals)
+    ax.add_collection(lc)
+    ax.set_aspect("equal", adjustable="box")
+    ax.autoscale()
+    clean_axes(ax)
+
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+    fig.savefig(
+        params.outdir / "01_centered_trajectories_mean_speed_clean.png",
+        dpi=params.dpi,
+        bbox_inches="tight",
+        pad_inches=0,
+    )
+    fig.savefig(
+        params.outdir / "01_centered_trajectories_mean_speed_clean.pdf",
+        bbox_inches="tight",
+        pad_inches=0,
+    )
+    plt.close(fig)
 
 
 def plot_turn_angle_signed(params: Parameters, turn_rows: list[dict]) -> None:
