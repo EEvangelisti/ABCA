@@ -1,0 +1,3 @@
+(library
+ (name abca_plugin_hyphae)
+ (libraries abca abca_io abca_models))

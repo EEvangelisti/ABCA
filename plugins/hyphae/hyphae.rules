@@ -1,0 +1,26 @@
+# ABCA hyphae rules.
+#
+# All rules are local: each active apex reads only its own state, the target cell,
+# and its Moore neighbourhood. Colony-scale morphology is never measured by the rule.
+#
+# Parameters
+# GROWTH      probability that an apex elongates at one generation
+# BRANCH      basal probability that an eligible apex emits one lateral branch
+# AGE         minimum apex age / distance before lateral branching is allowed
+# DIRS        angular discretisation
+# WIGGLE      local angular noise at the apex
+# ANGLE       mean lateral branch angle in DIRS units
+# JITTER      random noise around the branch angle
+# DISTANCE    distance over which BRANCH ramps up to its full value
+# CONGESTION  Moore-neighbour threshold inhibiting branching; <=0 disables it
+# MAX_AGE     maximal displayed hyphal age
+# APICES      initial number of active apices; CLI --agents overrides it
+# INIT        POINT, LINE, DISK, or RADIAL
+# RADIUS      initial disk radius, when INIT=DISK
+
+AUTOMATON "HYPHA-STRAIGHT": GROWTH=1.00/BRANCH=0.000/AGE=999/DIRS=64/WIGGLE=0/ANGLE=12/JITTER=0/DISTANCE=1/CONGESTION=0/MAX_AGE=180/APICES=1/INIT=POINT/RADIUS=1
+AUTOMATON "HYPHA-RADIAL":   GROWTH=1.00/BRANCH=0.000/AGE=999/DIRS=64/WIGGLE=0/ANGLE=12/JITTER=0/DISTANCE=1/CONGESTION=0/MAX_AGE=180/APICES=16/INIT=RADIAL/RADIUS=1
+AUTOMATON "HYPHA-FAN":      GROWTH=0.98/BRANCH=0.020/AGE=10/DIRS=64/WIGGLE=2/ANGLE=10/JITTER=2/DISTANCE=18/CONGESTION=4/MAX_AGE=180/APICES=3/INIT=LINE/RADIUS=1
+AUTOMATON "HYPHA-MYCELIUM": GROWTH=0.96/BRANCH=0.045/AGE=8/DIRS=64/WIGGLE=4/ANGLE=11/JITTER=5/DISTANCE=14/CONGESTION=5/MAX_AGE=180/APICES=1/INIT=POINT/RADIUS=1
+AUTOMATON "HYPHA-DENSE":    GROWTH=0.98/BRANCH=0.070/AGE=6/DIRS=64/WIGGLE=5/ANGLE=10/JITTER=7/DISTANCE=10/CONGESTION=6/MAX_AGE=180/APICES=1/INIT=POINT/RADIUS=1
+AUTOMATON "HYPHA-CURVED":   GROWTH=0.95/BRANCH=0.030/AGE=12/DIRS=64/WIGGLE=8/ANGLE=9/JITTER=8/DISTANCE=18/CONGESTION=5/MAX_AGE=180/APICES=1/INIT=POINT/RADIUS=1
