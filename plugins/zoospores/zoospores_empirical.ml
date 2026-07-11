@@ -609,17 +609,12 @@ let run ~rows ~cols ~generations ~seed ~density ~agents ~topology ~plugin_args ~
 
 let export_xml ~input ~output =
   let open Abca_io.Binary in
-  let { header; frames; _ } =
+  let archive =
     load ~filename:input ~codec:(module Binary_codec)
   in
-  let grid = Grid.create ~rows:header.rows ~cols:header.cols () in
-  Abca_io.Xml.save_frames
+  Abca_io.Xml.save_agent_trace_trackmate
     ~filename:output
-    ~model:model_name
-    ~grid
-    ~generation:header.generation
-    ~frames
-    ~codec:(module Xml_codec)
+    archive.agents
 
 let model = {
   Abca_models.Model.name = model_name;
