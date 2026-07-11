@@ -1,0 +1,78 @@
+section,parameter,value,unit,rationale
+0_simulation_scale,time_step,0.22,s,Natural local update interval from acquisition.
+0_simulation_scale,continuous_position,true,boolean,Continuous agent; grid cell used only for display/interactions.
+1_motion_states,run_stop_speed_threshold,113.64427326111048,micron/s,histogram valley between two dominant speed modes
+1_motion_states,initial_run_fraction,0.6033876310487314,fraction,Observed step occupancy.
+1_motion_states,initial_stop_fraction,0.39661236895126867,fraction,Observed step occupancy.
+1_motion_states,P_RUN_to_RUN,0.9421251217137293,probability/update,Empirical local transition probability.
+1_motion_states,P_RUN_to_STOP,0.05787487828627069,probability/update,Empirical local transition probability.
+1_motion_states,P_STOP_to_STOP,0.9169748195104772,probability/update,Empirical local transition probability.
+1_motion_states,P_STOP_to_RUN,0.0830251804895228,probability/update,Empirical local transition probability.
+2_episode_statistics,run_duration_median,1.54,s,Empirical contiguous-state duration.
+2_episode_statistics,run_length_median,314.80383149081354,micron,Empirical distance covered within state.
+2_episode_statistics,run_duration_q25,0.66,s,Empirical contiguous-state duration.
+2_episode_statistics,run_length_q25,105.32065159848827,micron,Empirical distance covered within state.
+2_episode_statistics,run_duration_q75,2.64,s,Empirical contiguous-state duration.
+2_episode_statistics,run_length_q75,570.7046905258127,micron,Empirical distance covered within state.
+2_episode_statistics,run_duration_q90,3.52,s,Empirical contiguous-state duration.
+2_episode_statistics,run_length_q90,779.0599538228026,micron,Empirical distance covered within state.
+2_episode_statistics,stop_duration_median,0.44,s,Empirical contiguous-state duration.
+2_episode_statistics,stop_length_median,24.646861820888596,micron,Empirical distance covered within state.
+2_episode_statistics,stop_duration_q25,0.22,s,Empirical contiguous-state duration.
+2_episode_statistics,stop_length_q25,19.030103266812763,micron,Empirical distance covered within state.
+2_episode_statistics,stop_duration_q75,1.1,s,Empirical contiguous-state duration.
+2_episode_statistics,stop_length_q75,75.5907905257962,micron,Empirical distance covered within state.
+2_episode_statistics,stop_duration_q90,4.88400000000001,s,Empirical contiguous-state duration.
+2_episode_statistics,stop_length_q90,214.38447430446362,micron,Empirical distance covered within state.
+3_kinematics,all_speed_median,169.03640720233133,micron/s,Overall instantaneous speed.
+3_kinematics,all_speed_q10,23.612967433372283,micron/s,Overall instantaneous speed.
+3_kinematics,all_speed_q25,48.59073505578686,micron/s,Overall instantaneous speed.
+3_kinematics,all_speed_q75,221.41684716601654,micron/s,Overall instantaneous speed.
+3_kinematics,all_speed_q90,246.5341507944258,micron/s,Overall instantaneous speed.
+3_kinematics,run_speed_median,213.36991027647187,micron/s,RUN-conditional speed.
+3_kinematics,run_speed_q10,151.14391997528685,micron/s,RUN-conditional speed.
+3_kinematics,run_speed_q25,184.53538187441984,micron/s,RUN-conditional speed.
+3_kinematics,run_speed_q75,236.979469506584,micron/s,RUN-conditional speed.
+3_kinematics,run_speed_q90,257.1389933769475,micron/s,RUN-conditional speed.
+3_kinematics,stop_speed_median,39.35123203304235,micron/s,STOP-conditional speed.
+3_kinematics,stop_speed_q10,14.191186508642046,micron/s,STOP-conditional speed.
+3_kinematics,stop_speed_q25,23.51431094260653,micron/s,STOP-conditional speed.
+3_kinematics,stop_speed_q75,60.13379138306386,micron/s,STOP-conditional speed.
+3_kinematics,stop_speed_q90,85.47617776072093,micron/s,STOP-conditional speed.
+3_kinematics,signed_acceleration_median,0.38639523301316325,micron/s2,Signed local speed change.
+3_kinematics,signed_acceleration_q10,-139.84428647830597,micron/s2,Signed local speed change.
+3_kinematics,signed_acceleration_q25,-52.6825523255491,micron/s2,Signed local speed change.
+3_kinematics,signed_acceleration_q75,53.28559236322567,micron/s2,Signed local speed change.
+3_kinematics,signed_acceleration_q90,143.1060749116223,micron/s2,Signed local speed change.
+3_kinematics,absolute_acceleration_median,52.94594228333399,micron/s2,Magnitude of local speed change.
+3_kinematics,absolute_acceleration_q10,8.58777845264759,micron/s2,Magnitude of local speed change.
+3_kinematics,absolute_acceleration_q25,22.601677431375062,micron/s2,Magnitude of local speed change.
+3_kinematics,absolute_acceleration_q75,115.39809638208754,micron/s2,Magnitude of local speed change.
+3_kinematics,absolute_acceleration_q90,248.1201749283941,micron/s2,Magnitude of local speed change.
+3_kinematics,speed_lag1_correlation,0.9056546646645851,correlation,Preserve speed memory between successive updates.
+3_kinematics,speed_memory_1_over_e_time,nan,s,Approximate speed-memory timescale.
+4_steering,signed_turn_angle_median,-0.5352692136646908,degree,Signed local turn-angle distribution.
+4_steering,absolute_turn_angle_median,8.17614778080332,degree,Magnitude of directional correction.
+4_steering,signed_turn_angle_q25,-9.177796471020635,degree,Signed local turn-angle distribution.
+4_steering,absolute_turn_angle_q25,3.2568433661871765,degree,Magnitude of directional correction.
+4_steering,signed_turn_angle_q75,7.249567896255215,degree,Signed local turn-angle distribution.
+4_steering,absolute_turn_angle_q75,21.675194339650723,degree,Magnitude of directional correction.
+4_steering,signed_turn_angle_q90,26.308555000258558,degree,Signed local turn-angle distribution.
+4_steering,absolute_turn_angle_q90,58.6288509680401,degree,Magnitude of directional correction.
+4_steering,direction_memory_1_over_e_time,1.54,s,Approximate directional-persistence time.
+4_steering,heading_resultant_length_R,0.08897777171599303,0_to_1,Near zero implies isotropy; do not impose global heading bias.
+5_variable_coupling,spearman_speed_vs_abs_turn,-0.45611968721357693,rho,Condition turning on current speed.
+5_variable_coupling,spearman_speed_vs_acceleration,0.19183655132007907,rho,Condition acceleration on current speed.
+5_variable_coupling,spearman_mean_speed_vs_straightness,0.545551033469707,rho,Check speed-directional persistence coupling.
+6_validation_targets,straightness_median,0.8377356281597658,0_to_1,Emergent validation target; do not impose directly.
+6_validation_targets,straightness_q25,0.5060662577004807,0_to_1,Emergent validation target; do not impose directly.
+6_validation_targets,straightness_q75,0.989974580237102,0_to_1,Emergent validation target; do not impose directly.
+6_validation_targets,tortuosity_median,1.1936940084507048,ratio,Emergent validation target; do not impose directly.
+6_validation_targets,tortuosity_q25,1.010126946654021,ratio,Emergent validation target; do not impose directly.
+6_validation_targets,tortuosity_q75,1.9760258361106893,ratio,Emergent validation target; do not impose directly.
+6_validation_targets,net_displacement_median,455.31087702045437,micron,Emergent validation target; do not impose directly.
+6_validation_targets,net_displacement_q25,242.06228483955476,micron,Emergent validation target; do not impose directly.
+6_validation_targets,net_displacement_q75,600.7366732663928,micron,Emergent validation target; do not impose directly.
+6_validation_targets,path_length_median,574.1228449549357,micron,Emergent validation target; do not impose directly.
+6_validation_targets,path_length_q25,453.2945385575572,micron,Emergent validation target; do not impose directly.
+6_validation_targets,path_length_q75,740.8922323287777,micron,Emergent validation target; do not impose directly.
