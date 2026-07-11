@@ -7,5 +7,5 @@
   abca_plugin_cyclic
   abca_plugin_weighted_life
   abca_plugin_generations
-  abca_plugin_zoospores
+  abca_plugin_zoospores_empirical
   abca_plugin_hyphae))

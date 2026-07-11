@@ -1,5 +1,5 @@
 (library
- (name abca_plugin_zoospores)
+ (name abca_plugin_zoospores_empirical)
  (libraries
   abca
   abca_io
