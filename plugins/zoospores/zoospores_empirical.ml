@@ -1,8 +1,9 @@
 (*
  * Empirical zoospore plugin for ABCA.
  *
- * Biological movement parameters are loaded from
- * abca_local_parameters.csv. No global trajectory statistic (MSD,
+ * Biological movement parameters, including the complete latent VAR(1)
+ * matrices A, Q and R, are loaded from abca_local_parameters.csv.
+ * No global trajectory statistic (MSD,
  * straightness, tortuosity or net displacement) is imposed.
  *
  * Distributional assumptions are documented in
@@ -33,19 +34,43 @@ type empirical = {
   p_run_stop : float;
   p_stop_stop : float;
   p_stop_run : float;
-  speed_rho : float;
-  direction_tau : float;
-  speed_turn_rho : float;
+
+  (* Parameters of the stationary latent bivariate Gaussian VAR(1)
+       Z_(t+1) = A Z_t + epsilon_t, epsilon_t ~ N(0,Q).
+
+     The Python extraction script estimates A and Q jointly from consecutive
+     latent pairs (speed, |turn|), while R is the stationary covariance of Z_t.
+     The OCaml plugin uses these exported values directly; it does not rebuild
+     them from separate pairwise correlations. *)
+  a11 : float;
+  a12 : float;
+  a21 : float;
+  a22 : float;
+
+  q11 : float;
+  q12 : float;
+  q22 : float;
+
+  r11 : float;
+  r12 : float;
+  r22 : float;
+
+  positive_turn_probability : float;
+  negative_turn_probability : float;
+
+  absolute_acceleration_q90 : float;
+  default_accel_cap_multiplier : float;
+  default_microns_per_cell : float;
+
   run_speed : quantile_dist;
   stop_speed : quantile_dist;
   abs_turn : quantile_dist;
-  signed_acceleration : quantile_dist;
-  absolute_acceleration : quantile_dist;
 }
 
 type params = {
   empirical : empirical;
   parameter_file : string;
+  quantile_file : string;
   agents : int;
   init_shape : init_shape;
   radius : float;
@@ -64,14 +89,19 @@ type agent = {
   age : int;
   heading_deg : float;
   speed_um_s : float;
+
+  (* Latent standard-normal variables used by the Gaussian copulas. *)
   speed_z : float;
   turn_z : float;
+
   motion : motion_state;
 }
 
 let model_name = "zoospores-empirical"
 let default_parameter_file =
   Filename.concat "plugins/zoospores" "abca_local_parameters.csv"
+
+let default_quantile_basename = "abca_empirical_quantiles.csv"
 
 let clamp lo hi x = max lo (min hi x)
 let clamp01 x = clamp 0.0 1.0 x
@@ -185,56 +215,90 @@ let optional table key default =
   | None -> default
   | Some s -> (match finite_float s with Some x -> x | None -> default)
 
-let make_quantile_dist ~q10 ~q25 ~median ~q75 ~q90 ~nonnegative =
-  let lower = q10 -. 1.5 *. (q25 -. q10) in
-  let upper = q90 +. 1.5 *. (q90 -. q75) in
-  let lower = if nonnegative then max 0.0 lower else lower in
-  {
-    probs = [| 0.0; 0.10; 0.25; 0.50; 0.75; 0.90; 1.0 |];
-    values = [| lower; q10; q25; median; q75; q90; upper |];
-  }
+let dirname filename =
+  let d = Filename.dirname filename in
+  if d = "" then "." else d
 
-let load_empirical filename =
-  let t = read_parameter_table filename in
-  let speed_dist prefix =
-    make_quantile_dist
-      ~q10:(required t (prefix ^ "_q10"))
-      ~q25:(required t (prefix ^ "_q25"))
-      ~median:(required t (prefix ^ "_median"))
-      ~q75:(required t (prefix ^ "_q75"))
-      ~q90:(required t (prefix ^ "_q90"))
-      ~nonnegative:true
+let quantile_file_from_parameter_file parameter_file =
+  Filename.concat (dirname parameter_file) default_quantile_basename
+
+let read_quantile_table filename =
+  let ic = open_in filename in
+  Fun.protect
+    ~finally:(fun () -> close_in_noerr ic)
+    (fun () ->
+       let table = Hashtbl.create 16 in
+       let first = ref true in
+       (try
+          while true do
+            let line = input_line ic in
+            if !first then
+              first := false
+            else if String.trim line <> "" then
+              match parse_csv_line line with
+              | distribution :: condition :: probability :: value :: _unit :: _ ->
+                  let key =
+                    String.uppercase_ascii (String.trim distribution) ^ "|" ^
+                    String.uppercase_ascii (String.trim condition)
+                  in
+                  let p =
+                    match finite_float (String.trim probability) with
+                    | Some x -> x
+                    | None ->
+                        failwith
+                          ("Zoospore empirical: non-finite quantile probability in " ^
+                           filename)
+                  in
+                  let v =
+                    match finite_float (String.trim value) with
+                    | Some x -> x
+                    | None ->
+                        failwith
+                          ("Zoospore empirical: non-finite quantile value in " ^
+                           filename)
+                  in
+                  let previous =
+                    match Hashtbl.find_opt table key with
+                    | Some xs -> xs
+                    | None -> []
+                  in
+                  Hashtbl.replace table key ((p, v) :: previous)
+              | _ ->
+                  failwith
+                    ("Zoospore empirical: malformed quantile CSV line: " ^ line)
+          done
+        with End_of_file -> ());
+       table)
+
+let required_quantile table ~distribution ~condition =
+  let key =
+    String.uppercase_ascii distribution ^ "|" ^
+    String.uppercase_ascii condition
   in
-  let signed_acceleration =
-    make_quantile_dist
-      ~q10:(required t "signed_acceleration_q10")
-      ~q25:(required t "signed_acceleration_q25")
-      ~median:(required t "signed_acceleration_median")
-      ~q75:(required t "signed_acceleration_q75")
-      ~q90:(required t "signed_acceleration_q90")
-      ~nonnegative:false
-  in
-  let absolute_acceleration =
-    make_quantile_dist
-      ~q10:(required t "absolute_acceleration_q10")
-      ~q25:(required t "absolute_acceleration_q25")
-      ~median:(required t "absolute_acceleration_median")
-      ~q75:(required t "absolute_acceleration_q75")
-      ~q90:(required t "absolute_acceleration_q90")
-      ~nonnegative:true
-  in
-  let abs_turn =
-    (* The CSV has no q10 for turning. We infer it from q25 and the origin;
-       this is deliberately conservative and is recorded in metadata. *)
-    let q25 = required t "absolute_turn_angle_q25" in
-    make_quantile_dist
-      ~q10:(0.4 *. q25)
-      ~q25
-      ~median:(required t "absolute_turn_angle_median")
-      ~q75:(required t "absolute_turn_angle_q75")
-      ~q90:(required t "absolute_turn_angle_q90")
-      ~nonnegative:true
-  in
+  match Hashtbl.find_opt table key with
+  | None ->
+      failwith
+        ("Zoospore empirical: missing empirical quantile distribution " ^ key)
+  | Some pairs ->
+      let pairs =
+        List.sort (fun (p1, _) (p2, _) -> compare p1 p2) pairs
+      in
+      let probs = Array.of_list (List.map fst pairs) in
+      let values = Array.of_list (List.map snd pairs) in
+      if Array.length probs < 2 then
+        failwith
+          ("Zoospore empirical: quantile distribution " ^ key ^
+           " contains fewer than two points");
+      for i = 1 to Array.length probs - 1 do
+        if probs.(i) < probs.(i - 1) then
+          failwith
+            ("Zoospore empirical: unsorted probabilities in " ^ key)
+      done;
+      { probs; values }
+
+let load_empirical parameter_file quantile_file =
+  let t = read_parameter_table parameter_file in
+  let q = read_quantile_table quantile_file in
   {
     dt = required t "time_step";
     initial_run_fraction = required t "initial_run_fraction";
@@ -242,14 +306,42 @@ let load_empirical filename =
     p_run_stop = required t "P_RUN_to_STOP";
     p_stop_stop = required t "P_STOP_to_STOP";
     p_stop_run = required t "P_STOP_to_RUN";
-    speed_rho = required t "speed_lag1_correlation";
-    direction_tau = required t "direction_memory_1_over_e_time";
-    speed_turn_rho = required t "spearman_speed_vs_abs_turn";
-    run_speed = speed_dist "run_speed";
-    stop_speed = speed_dist "stop_speed";
-    abs_turn;
-    signed_acceleration;
-    absolute_acceleration;
+
+    (* Exact matrices exported by extract_abca_local_parameters_var1.py.
+       A governs temporal memory and cross-lag effects; Q is the covariance of
+       the Gaussian innovations; R is the stationary covariance used both for
+       validation and for initialisation of the latent population. *)
+    a11 = required t "latent_var_a11";
+    a12 = required t "latent_var_a12";
+    a21 = required t "latent_var_a21";
+    a22 = required t "latent_var_a22";
+
+    q11 = required t "latent_var_q11";
+    q12 = required t "latent_var_q12";
+    q22 = required t "latent_var_q22";
+
+    r11 = required t "latent_var_r11";
+    r12 = required t "latent_var_r12";
+    r22 = required t "latent_var_r22";
+
+    positive_turn_probability =
+      optional t "positive_turn_probability" 0.5;
+    negative_turn_probability =
+      optional t "negative_turn_probability" 0.5;
+
+    absolute_acceleration_q90 =
+      required t "absolute_acceleration_q90";
+    default_accel_cap_multiplier =
+      optional t "accel_cap_multiplier" 3.0;
+    default_microns_per_cell =
+      optional t "microns_per_cell" 10.0;
+
+    run_speed =
+      required_quantile q ~distribution:"speed" ~condition:"RUN";
+    stop_speed =
+      required_quantile q ~distribution:"speed" ~condition:"STOP";
+    abs_turn =
+      required_quantile q ~distribution:"turn_angle_absolute" ~condition:"ALL";
   }
 
 let interpolate x0 y0 x1 y1 x =
@@ -337,8 +429,12 @@ let distribution_for_state empirical = function
   | Stop -> empirical.stop_speed
 
 let transition_state rng empirical = function
-  | Run -> if Rng.chance rng empirical.p_run_stop then Stop else Run
-  | Stop -> if Rng.chance rng empirical.p_stop_run then Run else Stop
+  | Run ->
+      (* The RUN row of the empirical transition matrix is used directly. *)
+      if Rng.chance rng empirical.p_run_run then Run else Stop
+  | Stop ->
+      (* The STOP row of the empirical transition matrix is used directly. *)
+      if Rng.chance rng empirical.p_stop_stop then Stop else Run
 
 let geometry_of_params params =
   match params.init_shape with
@@ -351,6 +447,38 @@ let geometry_of_params params =
         thickness = params.thickness;
       }
 
+let stratified_uniforms rng n =
+  if n <= 0 then [||]
+  else begin
+    let nf = float_of_int n in
+    let values =
+      Array.init n (fun i ->
+          (* Midpoint stratification, exactly as documented:
+             u_i = (i + 1/2) / N. *)
+          (float_of_int i +. 0.5) /. nf)
+    in
+    Rng.shuffle_array rng values;
+    values
+  end
+
+let initial_motion_states rng n initial_run_fraction =
+  let n_run =
+    int_of_float
+      (Float.round
+         (clamp01 initial_run_fraction *. float_of_int n))
+    |> min n
+    |> max 0
+  in
+  let states =
+    Array.init n (fun i -> if i < n_run then Run else Stop)
+  in
+  Rng.shuffle_array rng states;
+  states
+
+let correlated_standard_normals rho z1 independent_z2 =
+  let rho = clamp (-0.999999) 0.999999 rho in
+  rho *. z1 +. sqrt (1.0 -. rho *. rho) *. independent_z2
+
 let initial_agents params grid =
   let rng = Rng.create params.seed in
   let coords =
@@ -358,23 +486,78 @@ let initial_agents params grid =
     |> Initial_geometry.random_subset rng ~n:params.agents
   in
   let n = Array.length coords in
-  let latent = Array.init n (fun i ->
-      inverse_normal_cdf ((float_of_int i +. 0.5) /. float_of_int n)) in
-  let headings = Array.init n (fun i ->
-      360.0 *. (float_of_int i +. 0.5) /. float_of_int n) in
-  let motions = Array.init n (fun i ->
-      if float_of_int i < params.empirical.initial_run_fraction *. float_of_int n
-      then Run else Stop) in
-  Rng.shuffle_array rng latent;
-  Rng.shuffle_array rng headings;
-  Rng.shuffle_array rng motions;
+
+  (* Initial motion states reproduce the observed RUN/STOP occupancy while
+     avoiding unnecessary binomial sampling noise. *)
+  let motions =
+    initial_motion_states rng n params.empirical.initial_run_fraction
+  in
+
+  (* Each state-specific speed distribution is stratified separately.  This
+     ensures that both empirical conditional marginals are evenly represented
+     at t = 0, rather than letting a small initial sample omit their tails. *)
+  let run_count =
+    Array.fold_left
+      (fun acc state -> if state = Run then acc + 1 else acc)
+      0 motions
+  in
+  let stop_count = n - run_count in
+  let run_u = stratified_uniforms rng run_count in
+  let stop_u = stratified_uniforms rng stop_count in
+  let run_index = ref 0 in
+  let stop_index = ref 0 in
+
+  (* Initial headings are uniformly stratified over the circle, then shuffled.
+     This implements theta_i = 2 pi u_i and is consistent with isotropy. *)
+  let headings =
+    stratified_uniforms rng n
+    |> Array.map (fun u -> 360.0 *. u)
+  in
+
+  (* A second stratified Gaussian rank is used to construct turn_z.  The
+     speed-turn Gaussian-copula coefficient is imposed already at
+     initialization, so the initial population starts with the documented
+     contemporaneous dependence rather than acquiring it only later. *)
+  let turn_noise_z =
+    stratified_uniforms rng n
+    |> Array.map inverse_normal_cdf
+  in
+
   Array.mapi
     (fun id coord ->
        let motion = motions.(id) in
-       let speed_z = latent.(id) in
+       let u_speed =
+         match motion with
+         | Run ->
+             let u = run_u.(!run_index) in
+             incr run_index;
+             u
+         | Stop ->
+             let u = stop_u.(!stop_index) in
+             incr stop_index;
+             u
+       in
+       let speed_z = inverse_normal_cdf u_speed in
+       (* The initial latent pair is drawn from the stationary covariance R.
+          In the exported model R_11 = R_22 = 1 and R_12 is the Gaussian-copula
+          correlation between speed and |turn|.  Starting from R is essential:
+          if Z_0 has covariance R, the exported VAR(1) keeps that covariance at
+          every later time because R = A R A^T + Q. *)
+       let rho0 =
+         params.empirical.r12 /.
+         sqrt (params.empirical.r11 *. params.empirical.r22)
+       in
+       let turn_z =
+         correlated_standard_normals
+           rho0
+           (speed_z /. sqrt params.empirical.r11)
+           turn_noise_z.(id)
+         *. sqrt params.empirical.r22
+       in
        let speed_um_s =
-         quantile (distribution_for_state params.empirical motion)
-           (normal_cdf speed_z)
+         quantile
+           (distribution_for_state params.empirical motion)
+           u_speed
        in
        {
          id;
@@ -384,49 +567,106 @@ let initial_agents params grid =
          heading_deg = headings.(id);
          speed_um_s;
          speed_z;
-         turn_z = standard_normal rng;
+         turn_z;
          motion;
        })
     coords
 
 let max_acceleration empirical multiplier =
-  multiplier *. quantile empirical.absolute_acceleration 0.90
+  multiplier *. empirical.absolute_acceleration_q90
 
-let update_speed rng params ag next_motion =
-  let e = params.empirical in
-  let rho = clamp (-0.999) 0.999 e.speed_rho in
-  let z = rho *. ag.speed_z +. sqrt (1.0 -. rho *. rho) *. standard_normal rng in
-  let target =
-    quantile (distribution_for_state e next_motion) (normal_cdf z)
-  in
-  (* The empirical speed marginals and lag-1 correlation drive the update.
-     Acceleration summaries are used only as a generous winsorisation guard
-     against unbounded extrapolation from summary quantiles. *)
-  let max_dv = max_acceleration e params.accel_cap_multiplier *. e.dt in
-  let dv = clamp (-.max_dv) max_dv (target -. ag.speed_um_s) in
-  max 0.0 (ag.speed_um_s +. dv), z
+let gaussian_innovation_2d rng empirical =
+  (* Draw epsilon_t ~ N(0,Q) using the Cholesky factor of the exact innovation
+     covariance exported by Python:
 
-let update_turn rng params speed_z previous_turn_z =
-  let e = params.empirical in
-  let rho_direction =
-    if e.direction_tau <= 0.0 then 0.0
-    else exp (-. e.dt /. e.direction_tau)
-  in
-  let rho_coupling = clamp (-0.95) 0.95 e.speed_turn_rho in
-  let noise = standard_normal rng in
-  let coupled_noise =
-    rho_coupling *. speed_z +.
-    sqrt (1.0 -. rho_coupling *. rho_coupling) *. noise
+       Q = [ q11 q12 ]
+           [ q12 q22 ].
+
+     For independent standard normals n1,n2:
+       eps_v    = sqrt(q11) n1
+       eps_turn = q12/sqrt(q11) n1
+                  + sqrt(q22-q12^2/q11) n2.
+
+     This is the point where q11, q12 and q22 are used directly. *)
+  let n1 = standard_normal rng in
+  let n2 = standard_normal rng in
+  if empirical.q11 > 1e-15 then begin
+    let l11 = sqrt empirical.q11 in
+    let l21 = empirical.q12 /. l11 in
+    let residual = max 0.0 (empirical.q22 -. l21 *. l21) in
+    let l22 = sqrt residual in
+    l11 *. n1, l21 *. n1 +. l22 *. n2
+  end else begin
+    (* Positive semidefiniteness then requires q12 = 0.  This branch also
+       supports a degenerate innovation in the speed component. *)
+    0.0, sqrt (max 0.0 empirical.q22) *. n2
+  end
+
+let joint_latent_update rng empirical ag =
+  (* Apply exactly the stationary bivariate Gaussian VAR(1) fitted in Python:
+
+       [Z_v,t+1]   [a11 a12] [Z_v,t   ]   [epsilon_v,t   ]
+       [Z_a,t+1] = [a21 a22] [Z_|turn|,t] + [epsilon_turn,t].
+
+     The diagonal entries of A carry the principal temporal memories.
+     The off-diagonal entries are equally important: a12 allows the previous
+     turn magnitude to affect the next latent speed, while a21 allows the
+     previous speed to affect the next latent turn magnitude.  Thus speed
+     memory, turn memory and speed-turn coupling are represented jointly,
+     rather than imposed as three potentially incompatible scalar AR(1)s. *)
+  let eps_v, eps_turn = gaussian_innovation_2d rng empirical in
+  let speed_z =
+    empirical.a11 *. ag.speed_z
+    +. empirical.a12 *. ag.turn_z
+    +. eps_v
   in
   let turn_z =
-    rho_direction *. previous_turn_z +.
-    sqrt (1.0 -. rho_direction *. rho_direction) *. coupled_noise
+    empirical.a21 *. ag.speed_z
+    +. empirical.a22 *. ag.turn_z
+    +. eps_turn
   in
-  let magnitude = quantile e.abs_turn (normal_cdf turn_z) in
-  (* The observed signed median is close to zero and no handedness parameter
-     was estimated; signs are therefore symmetric. *)
-  let signed = if Rng.bool rng then magnitude else -.magnitude in
-  signed, turn_z
+  speed_z, turn_z
+
+let update_speed params ag next_motion speed_z =
+  let e = params.empirical in
+  let target =
+    quantile
+      (distribution_for_state e next_motion)
+      (normal_cdf speed_z)
+  in
+
+  (* Acceleration is not sampled independently.  It is derived from the speed
+     update and bounded only by the documented numerical guard
+       |a_t| <= ACCEL_CAP_MULTIPLIER * q90(|a|).
+     q90(|a|) comes from the Python-generated scalar parameter CSV. *)
+  let max_dv =
+    max_acceleration e params.accel_cap_multiplier *. e.dt
+  in
+  let dv =
+    clamp (-.max_dv) max_dv (target -. ag.speed_um_s)
+  in
+  max 0.0 (ag.speed_um_s +. dv)
+
+let turn_sign rng empirical =
+  let positive = max 0.0 empirical.positive_turn_probability in
+  let negative = max 0.0 empirical.negative_turn_probability in
+  let total = positive +. negative in
+  if total <= 0.0 then
+    if Rng.bool rng then 1.0 else -1.0
+  else if Rng.float rng total < positive then
+    1.0
+  else
+    -1.0
+
+let update_turn rng empirical turn_z =
+  (* turn_z is the second component of the jointly updated latent VAR(1).
+     It is transformed through Phi and the full empirical inverse CDF of
+     |Delta theta| exported in abca_empirical_quantiles.csv.  The sign is then
+     sampled separately from the empirical left/right balance. *)
+  let magnitude =
+    quantile empirical.abs_turn (normal_cdf turn_z)
+  in
+  turn_sign rng empirical *. magnitude
 
 let wrap_coordinate size x =
   let s = float_of_int size in
@@ -466,9 +706,22 @@ let move_agent params grid ag heading speed =
 
 let step_agent rng params grid ag =
   let next_motion = transition_state rng params.empirical ag.motion in
-  let speed_um_s, speed_z = update_speed rng params ag next_motion in
-  let delta_heading, turn_z = update_turn rng params speed_z ag.turn_z in
-  let proposed_heading = normalize_degrees (ag.heading_deg +. delta_heading) in
+
+  (* One joint VAR(1) update uses the complete A and Q matrices exported by
+     Python.  This simultaneously propagates temporal memory and cross-variable
+     dependence in a mathematically coherent stationary process. *)
+  let speed_z, turn_z =
+    joint_latent_update rng params.empirical ag
+  in
+  let speed_um_s =
+    update_speed params ag next_motion speed_z
+  in
+  let delta_heading =
+    update_turn rng params.empirical turn_z
+  in
+  let proposed_heading =
+    normalize_degrees (ag.heading_deg +. delta_heading)
+  in
   let x, y, heading_deg = move_agent params grid ag proposed_heading speed_um_s in
   {
     ag with
@@ -559,40 +812,161 @@ let metadata params ~rows ~cols ~generations ~density =
     "agents", string_of_int params.agents;
     "topology", (match params.topology with Grid.Bounded -> "bounded" | Grid.Toroidal -> "toroidal");
     "parameter_file", params.parameter_file;
+    "quantile_file", params.quantile_file;
     "time_step_s", string_of_float e.dt;
     "microns_per_cell", string_of_float params.microns_per_cell;
     "init", string_of_init_shape params.init_shape;
     "radius", string_of_float params.radius;
     "thickness", string_of_float params.thickness;
-    "distribution_speed", "piecewise-linear inverse empirical quantiles";
-    "dependence_speed", "Gaussian copula AR(1)";
-    "distribution_turn", "piecewise-linear inverse empirical absolute-turn quantiles";
-    "dependence_turn", "Gaussian copula with directional memory and speed coupling";
-    "signed_turn", "symmetric Bernoulli sign";
+    "distribution_speed", "full inverse empirical CDF from abca_empirical_quantiles.csv";
+    "dependence_model", "stationary bivariate Gaussian VAR(1): Z(t+1)=A Z(t)+epsilon, epsilon~N(0,Q)";
+    "distribution_turn", "full inverse empirical CDF of absolute turn angle";
+    "latent_A_11", string_of_float e.a11;
+    "latent_A_12", string_of_float e.a12;
+    "latent_A_21", string_of_float e.a21;
+    "latent_A_22", string_of_float e.a22;
+    "latent_Q_11", string_of_float e.q11;
+    "latent_Q_12", string_of_float e.q12;
+    "latent_Q_22", string_of_float e.q22;
+    "latent_R_11", string_of_float e.r11;
+    "latent_R_12", string_of_float e.r12;
+    "latent_R_22", string_of_float e.r22;
+    "signed_turn", "empirical positive/negative probabilities";
+    "initialisation", "stratified state-conditional speed ranks and uniform headings";
     "agent_cell_exclusion", "false";
-    "acceleration_guard", "3x empirical q90 by default";
+    "acceleration_q90_um_s2", string_of_float e.absolute_acceleration_q90;
+    "acceleration_cap_multiplier", string_of_float params.accel_cap_multiplier;
   ]
+
+let validate_latent_var1 empirical =
+  let tolerance = 1e-7 in
+
+  (* Validate R as a positive-definite covariance matrix. *)
+  if empirical.r11 <= 0.0 || empirical.r22 <= 0.0 then
+    invalid_arg
+      "Zoospore empirical: latent stationary variances R11 and R22 must be positive";
+  let det_r =
+    empirical.r11 *. empirical.r22 -. empirical.r12 *. empirical.r12
+  in
+  if det_r <= 0.0 then
+    invalid_arg
+      "Zoospore empirical: stationary latent covariance R must be positive definite";
+
+  (* Validate Q as positive semidefinite. *)
+  if empirical.q11 < -.tolerance || empirical.q22 < -.tolerance then
+    invalid_arg
+      "Zoospore empirical: innovation covariance Q has a negative diagonal";
+  let det_q =
+    empirical.q11 *. empirical.q22 -. empirical.q12 *. empirical.q12
+  in
+  if det_q < -.tolerance then
+    invalid_arg
+      "Zoospore empirical: innovation covariance Q is not positive semidefinite";
+
+  (* Check the defining stationarity identity R = A R A^T + Q. *)
+  let ar11 =
+    empirical.a11 *. empirical.r11 +. empirical.a12 *. empirical.r12
+  in
+  let ar12 =
+    empirical.a11 *. empirical.r12 +. empirical.a12 *. empirical.r22
+  in
+  let ar21 =
+    empirical.a21 *. empirical.r11 +. empirical.a22 *. empirical.r12
+  in
+  let ar22 =
+    empirical.a21 *. empirical.r12 +. empirical.a22 *. empirical.r22
+  in
+  let predicted_r11 =
+    ar11 *. empirical.a11 +. ar12 *. empirical.a12 +. empirical.q11
+  in
+  let predicted_r12 =
+    ar11 *. empirical.a21 +. ar12 *. empirical.a22 +. empirical.q12
+  in
+  let predicted_r22 =
+    ar21 *. empirical.a21 +. ar22 *. empirical.a22 +. empirical.q22
+  in
+  if abs_float (predicted_r11 -. empirical.r11) > 1e-5
+     || abs_float (predicted_r12 -. empirical.r12) > 1e-5
+     || abs_float (predicted_r22 -. empirical.r22) > 1e-5
+  then
+    invalid_arg
+      "Zoospore empirical: exported A, Q and R do not satisfy R = A R A^T + Q";
+
+  (* For a 2x2 matrix, both eigenvalues must lie inside the unit disk. *)
+  let trace = empirical.a11 +. empirical.a22 in
+  let determinant =
+    empirical.a11 *. empirical.a22 -. empirical.a12 *. empirical.a21
+  in
+  let discriminant = trace *. trace -. 4.0 *. determinant in
+  let spectral_radius =
+    if discriminant >= 0.0 then begin
+      let root = sqrt discriminant in
+      max
+        (abs_float ((trace +. root) /. 2.0))
+        (abs_float ((trace -. root) /. 2.0))
+    end else
+      sqrt (abs_float determinant)
+  in
+  if spectral_radius >= 1.0 -. tolerance then
+    invalid_arg
+      "Zoospore empirical: latent VAR(1) transition matrix A is not stationary"
 
 let run ~rows ~cols ~generations ~seed ~density ~agents ~topology ~plugin_args ~output =
   let parameter_file =
     arg_string "PARAMS" default_parameter_file plugin_args
   in
-  let empirical = load_empirical parameter_file in
+  let quantile_file =
+    arg_string
+      "QUANTILES"
+      (quantile_file_from_parameter_file parameter_file)
+      plugin_args
+  in
+  let empirical = load_empirical parameter_file quantile_file in
+  validate_latent_var1 empirical;
   let params = {
     empirical;
     parameter_file;
+    quantile_file;
     agents = (match agents with Some n -> n | None -> arg_int "AGENTS" 200 plugin_args);
     init_shape = parse_init_shape (arg_string "INIT" "FULL" plugin_args);
     radius = arg_float "RADIUS" 60.0 plugin_args;
     thickness = arg_float "THICKNESS" 4.0 plugin_args;
-    microns_per_cell = arg_float "MICRONS_PER_CELL" 10.0 plugin_args;
+    microns_per_cell =
+      arg_float
+        "MICRONS_PER_CELL"
+        empirical.default_microns_per_cell
+        plugin_args;
     max_age = arg_int "MAX_AGE" 255 plugin_args;
-    accel_cap_multiplier = arg_float "ACCEL_CAP_MULTIPLIER" 3.0 plugin_args;
+    accel_cap_multiplier =
+      arg_float
+        "ACCEL_CAP_MULTIPLIER"
+        empirical.default_accel_cap_multiplier
+        plugin_args;
     seed;
     topology;
   } in
   if params.microns_per_cell <= 0.0 then
     invalid_arg "Zoospore empirical: MICRONS_PER_CELL must be positive";
+  if params.accel_cap_multiplier <= 0.0 then
+    invalid_arg "Zoospore empirical: ACCEL_CAP_MULTIPLIER must be positive";
+  let check_probability name p =
+    if p < 0.0 || p > 1.0 then
+      invalid_arg
+        ("Zoospore empirical: " ^ name ^ " must lie in [0,1]")
+  in
+  List.iter
+    (fun (name, p) -> check_probability name p)
+    [
+      "P_RUN_to_RUN", empirical.p_run_run;
+      "P_RUN_to_STOP", empirical.p_run_stop;
+      "P_STOP_to_STOP", empirical.p_stop_stop;
+      "P_STOP_to_RUN", empirical.p_stop_run;
+    ];
+  if abs_float (empirical.p_run_run +. empirical.p_run_stop -. 1.0) > 1e-6
+     || abs_float (empirical.p_stop_stop +. empirical.p_stop_run -. 1.0) > 1e-6
+  then
+    invalid_arg
+      "Zoospore empirical: each RUN/STOP transition-matrix row must sum to 1";
   let grid = Grid.create ~topology ~rows ~cols () in
   let frames, agent_trace = simulate params grid generations in
   let archive =

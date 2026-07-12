@@ -1,78 +1,106 @@
 section,parameter,value,unit,rationale
-0_simulation_scale,time_step,0.22,s,Natural local update interval from acquisition.
-0_simulation_scale,continuous_position,true,boolean,Continuous agent; grid cell used only for display/interactions.
+0_simulation_scale,time_step,0.22,s,Natural local update interval inferred from the acquisition.
+0_simulation_scale,continuous_position,true,boolean,Agents move in continuous coordinates; the lattice is used for display and local interactions.
+0_simulation_scale,microns_per_cell,10.0,micron/cell,Configurable conversion between physical distance and lattice units.
+0_simulation_scale,initialization_scheme,stratified_midpoint_quantiles,categorical,"For N agents, use u_i=(i+1/2)/N and randomly permute assignments."
+0_simulation_scale,initial_heading_distribution,uniform_0_2pi,categorical,"Initial headings are stratified over [0,2pi) and randomly permuted."
 1_motion_states,run_stop_speed_threshold,113.64427326111048,micron/s,histogram valley between two dominant speed modes
-1_motion_states,initial_run_fraction,0.6033876310487314,fraction,Observed step occupancy.
-1_motion_states,initial_stop_fraction,0.39661236895126867,fraction,Observed step occupancy.
-1_motion_states,P_RUN_to_RUN,0.9421251217137293,probability/update,Empirical local transition probability.
-1_motion_states,P_RUN_to_STOP,0.05787487828627069,probability/update,Empirical local transition probability.
+1_motion_states,initial_run_fraction,0.6033876310487314,fraction,Observed occupancy used to initialize the population.
+1_motion_states,initial_stop_fraction,0.39661236895126867,fraction,Observed occupancy used to initialize the population.
 1_motion_states,P_STOP_to_STOP,0.9169748195104772,probability/update,Empirical local transition probability.
 1_motion_states,P_STOP_to_RUN,0.0830251804895228,probability/update,Empirical local transition probability.
-2_episode_statistics,run_duration_median,1.54,s,Empirical contiguous-state duration.
-2_episode_statistics,run_length_median,314.80383149081354,micron,Empirical distance covered within state.
-2_episode_statistics,run_duration_q25,0.66,s,Empirical contiguous-state duration.
-2_episode_statistics,run_length_q25,105.32065159848827,micron,Empirical distance covered within state.
-2_episode_statistics,run_duration_q75,2.64,s,Empirical contiguous-state duration.
-2_episode_statistics,run_length_q75,570.7046905258127,micron,Empirical distance covered within state.
-2_episode_statistics,run_duration_q90,3.52,s,Empirical contiguous-state duration.
-2_episode_statistics,run_length_q90,779.0599538228026,micron,Empirical distance covered within state.
-2_episode_statistics,stop_duration_median,0.44,s,Empirical contiguous-state duration.
-2_episode_statistics,stop_length_median,24.646861820888596,micron,Empirical distance covered within state.
-2_episode_statistics,stop_duration_q25,0.22,s,Empirical contiguous-state duration.
-2_episode_statistics,stop_length_q25,19.030103266812763,micron,Empirical distance covered within state.
-2_episode_statistics,stop_duration_q75,1.1,s,Empirical contiguous-state duration.
-2_episode_statistics,stop_length_q75,75.5907905257962,micron,Empirical distance covered within state.
-2_episode_statistics,stop_duration_q90,4.88400000000001,s,Empirical contiguous-state duration.
-2_episode_statistics,stop_length_q90,214.38447430446362,micron,Empirical distance covered within state.
-3_kinematics,all_speed_median,169.03640720233133,micron/s,Overall instantaneous speed.
-3_kinematics,all_speed_q10,23.612967433372283,micron/s,Overall instantaneous speed.
-3_kinematics,all_speed_q25,48.59073505578686,micron/s,Overall instantaneous speed.
-3_kinematics,all_speed_q75,221.41684716601654,micron/s,Overall instantaneous speed.
-3_kinematics,all_speed_q90,246.5341507944258,micron/s,Overall instantaneous speed.
-3_kinematics,run_speed_median,213.36991027647187,micron/s,RUN-conditional speed.
-3_kinematics,run_speed_q10,151.14391997528685,micron/s,RUN-conditional speed.
-3_kinematics,run_speed_q25,184.53538187441984,micron/s,RUN-conditional speed.
-3_kinematics,run_speed_q75,236.979469506584,micron/s,RUN-conditional speed.
-3_kinematics,run_speed_q90,257.1389933769475,micron/s,RUN-conditional speed.
-3_kinematics,stop_speed_median,39.35123203304235,micron/s,STOP-conditional speed.
-3_kinematics,stop_speed_q10,14.191186508642046,micron/s,STOP-conditional speed.
-3_kinematics,stop_speed_q25,23.51431094260653,micron/s,STOP-conditional speed.
-3_kinematics,stop_speed_q75,60.13379138306386,micron/s,STOP-conditional speed.
-3_kinematics,stop_speed_q90,85.47617776072093,micron/s,STOP-conditional speed.
-3_kinematics,signed_acceleration_median,0.38639523301316325,micron/s2,Signed local speed change.
-3_kinematics,signed_acceleration_q10,-139.84428647830597,micron/s2,Signed local speed change.
-3_kinematics,signed_acceleration_q25,-52.6825523255491,micron/s2,Signed local speed change.
-3_kinematics,signed_acceleration_q75,53.28559236322567,micron/s2,Signed local speed change.
-3_kinematics,signed_acceleration_q90,143.1060749116223,micron/s2,Signed local speed change.
-3_kinematics,absolute_acceleration_median,52.94594228333399,micron/s2,Magnitude of local speed change.
-3_kinematics,absolute_acceleration_q10,8.58777845264759,micron/s2,Magnitude of local speed change.
-3_kinematics,absolute_acceleration_q25,22.601677431375062,micron/s2,Magnitude of local speed change.
-3_kinematics,absolute_acceleration_q75,115.39809638208754,micron/s2,Magnitude of local speed change.
-3_kinematics,absolute_acceleration_q90,248.1201749283941,micron/s2,Magnitude of local speed change.
-3_kinematics,speed_lag1_correlation,0.9056546646645851,correlation,Preserve speed memory between successive updates.
-3_kinematics,speed_memory_1_over_e_time,nan,s,Approximate speed-memory timescale.
-4_steering,signed_turn_angle_median,-0.5352692136646908,degree,Signed local turn-angle distribution.
-4_steering,absolute_turn_angle_median,8.17614778080332,degree,Magnitude of directional correction.
-4_steering,signed_turn_angle_q25,-9.177796471020635,degree,Signed local turn-angle distribution.
-4_steering,absolute_turn_angle_q25,3.2568433661871765,degree,Magnitude of directional correction.
-4_steering,signed_turn_angle_q75,7.249567896255215,degree,Signed local turn-angle distribution.
-4_steering,absolute_turn_angle_q75,21.675194339650723,degree,Magnitude of directional correction.
-4_steering,signed_turn_angle_q90,26.308555000258558,degree,Signed local turn-angle distribution.
-4_steering,absolute_turn_angle_q90,58.6288509680401,degree,Magnitude of directional correction.
-4_steering,direction_memory_1_over_e_time,1.54,s,Approximate directional-persistence time.
-4_steering,heading_resultant_length_R,0.08897777171599303,0_to_1,Near zero implies isotropy; do not impose global heading bias.
-5_variable_coupling,spearman_speed_vs_abs_turn,-0.45611968721357693,rho,Condition turning on current speed.
-5_variable_coupling,spearman_speed_vs_acceleration,0.19183655132007907,rho,Condition acceleration on current speed.
-5_variable_coupling,spearman_mean_speed_vs_straightness,0.545551033469707,rho,Check speed-directional persistence coupling.
-6_validation_targets,straightness_median,0.8377356281597658,0_to_1,Emergent validation target; do not impose directly.
-6_validation_targets,straightness_q25,0.5060662577004807,0_to_1,Emergent validation target; do not impose directly.
-6_validation_targets,straightness_q75,0.989974580237102,0_to_1,Emergent validation target; do not impose directly.
-6_validation_targets,tortuosity_median,1.1936940084507048,ratio,Emergent validation target; do not impose directly.
-6_validation_targets,tortuosity_q25,1.010126946654021,ratio,Emergent validation target; do not impose directly.
-6_validation_targets,tortuosity_q75,1.9760258361106893,ratio,Emergent validation target; do not impose directly.
-6_validation_targets,net_displacement_median,455.31087702045437,micron,Emergent validation target; do not impose directly.
-6_validation_targets,net_displacement_q25,242.06228483955476,micron,Emergent validation target; do not impose directly.
-6_validation_targets,net_displacement_q75,600.7366732663928,micron,Emergent validation target; do not impose directly.
-6_validation_targets,path_length_median,574.1228449549357,micron,Emergent validation target; do not impose directly.
-6_validation_targets,path_length_q25,453.2945385575572,micron,Emergent validation target; do not impose directly.
-6_validation_targets,path_length_q75,740.8922323287777,micron,Emergent validation target; do not impose directly.
+1_motion_states,P_RUN_to_STOP,0.05787487828627069,probability/update,Empirical local transition probability.
+1_motion_states,P_RUN_to_RUN,0.9421251217137293,probability/update,Empirical local transition probability.
+2_episode_statistics,run_duration_median,1.54,s,Observed contiguous-state duration; descriptive consequence of the Markov chain.
+2_episode_statistics,run_length_median,314.80383149081354,micron,Observed distance covered within a contiguous state episode.
+2_episode_statistics,run_duration_q25,0.66,s,Observed contiguous-state duration; descriptive consequence of the Markov chain.
+2_episode_statistics,run_length_q25,105.32065159848827,micron,Observed distance covered within a contiguous state episode.
+2_episode_statistics,run_duration_q75,2.64,s,Observed contiguous-state duration; descriptive consequence of the Markov chain.
+2_episode_statistics,run_length_q75,570.7046905258127,micron,Observed distance covered within a contiguous state episode.
+2_episode_statistics,run_duration_q90,3.52,s,Observed contiguous-state duration; descriptive consequence of the Markov chain.
+2_episode_statistics,run_length_q90,779.0599538228026,micron,Observed distance covered within a contiguous state episode.
+2_episode_statistics,stop_duration_median,0.44,s,Observed contiguous-state duration; descriptive consequence of the Markov chain.
+2_episode_statistics,stop_length_median,24.646861820888596,micron,Observed distance covered within a contiguous state episode.
+2_episode_statistics,stop_duration_q25,0.22,s,Observed contiguous-state duration; descriptive consequence of the Markov chain.
+2_episode_statistics,stop_length_q25,19.030103266812763,micron,Observed distance covered within a contiguous state episode.
+2_episode_statistics,stop_duration_q75,1.1,s,Observed contiguous-state duration; descriptive consequence of the Markov chain.
+2_episode_statistics,stop_length_q75,75.5907905257962,micron,Observed distance covered within a contiguous state episode.
+2_episode_statistics,stop_duration_q90,4.88400000000001,s,Observed contiguous-state duration; descriptive consequence of the Markov chain.
+2_episode_statistics,stop_length_q90,214.38447430446362,micron,Observed distance covered within a contiguous state episode.
+3_latent_bivariate_var1,latent_var_a11,0.8699277833712544,coefficient,Entry of A in Z_(t+1)=A Z_t+epsilon_t; use directly in the plugin.
+3_latent_bivariate_var1,latent_var_a12,-0.002537197027798427,coefficient,Entry of A in Z_(t+1)=A Z_t+epsilon_t; use directly in the plugin.
+3_latent_bivariate_var1,latent_var_a21,-0.20527892851403046,coefficient,Entry of A in Z_(t+1)=A Z_t+epsilon_t; use directly in the plugin.
+3_latent_bivariate_var1,latent_var_a22,0.29399036496537456,coefficient,Entry of A in Z_(t+1)=A Z_t+epsilon_t; use directly in the plugin.
+3_latent_bivariate_var1,latent_var_q11,0.24113069506189086,variance,Innovation variance for latent speed.
+3_latent_bivariate_var1,latent_var_q12,-0.17254903753954506,covariance,Innovation covariance coupling latent speed and latent turn magnitude.
+3_latent_bivariate_var1,latent_var_q22,0.8143246444734435,variance,Innovation variance for latent turn magnitude.
+3_latent_bivariate_var1,latent_var_r11,1.0,variance,Stationary latent-speed variance; fixed to one.
+3_latent_bivariate_var1,latent_var_r12,-0.473119773705961,correlation,Stationary Gaussian-copula correlation between speed and |turn|.
+3_latent_bivariate_var1,latent_var_r22,1.0,variance,Stationary latent-turn variance; fixed to one.
+3_latent_bivariate_var1,latent_var_pair_count,26297,pairs,"Number of complete consecutive (speed, |turn|) vector pairs."
+3_latent_bivariate_var1,latent_var_observation_count,27790,observations,Number of complete contemporaneous speed-turn observations.
+3_latent_bivariate_var1,latent_var_shrinkage_factor,1.0,multiplier,Uniform factor applied to raw A only when required for stationarity and Q >= 0.
+3_latent_bivariate_var1,latent_var_spectral_radius,0.8708306902320995,0_to_1,Spectral radius of A; must remain below one.
+3_latent_bivariate_var1,latent_var_spectral_radius_raw,0.8708306902320995,ratio,Spectral radius before any transparent stationarity shrinkage.
+4_copula_diagnostics,speed_lag1_spearman_rho,0.9001474517520295,rho_S,"Rank correlation between v_t and v_(t+1); diagnostic, not an independent AR coefficient."
+4_copula_diagnostics,speed_lag1_gaussian_copula_rho,0.9081185780825215,rho_G,Bivariate lag-one Gaussian-copula diagnostic for speed.
+4_copula_diagnostics,speed_lag1_pair_count,27790,pairs,Number of valid within-track consecutive speed pairs.
+4_copula_diagnostics,turn_lag1_spearman_rho,0.4271808766914895,rho_S,Rank correlation between successive absolute turning angles.
+4_copula_diagnostics,turn_lag1_gaussian_copula_rho,0.44362207708858575,rho_G,Bivariate lag-one Gaussian-copula diagnostic for |turn|.
+4_copula_diagnostics,turn_lag1_pair_count,26297,pairs,Number of valid within-track consecutive turn-magnitude pairs.
+4_copula_diagnostics,speed_vs_abs_turn_spearman_rho,-0.45611968721357693,rho_S,Contemporaneous rank correlation between speed and turning magnitude.
+4_copula_diagnostics,speed_vs_abs_turn_gaussian_copula_rho,-0.473119773705961,rho_G,Off-diagonal entry R_12 of the stationary latent covariance.
+4_copula_diagnostics,speed_vs_abs_turn_pair_count,27790,pairs,Number of valid contemporaneous speed-turn pairs.
+4_copula_diagnostics,latent_empirical_speed_turn_rho,-0.4062920489871823,correlation,Empirical Pearson correlation after rank-to-Gaussian transformation.
+4_copula_diagnostics,speed_memory_1_over_e_time,nan,s,Descriptive speed-memory timescale.
+4_copula_diagnostics,direction_memory_1_over_e_time,1.54,s,Descriptive directional-persistence timescale.
+4_copula_diagnostics,heading_resultant_length_R,0.08897777171599303,0_to_1,Near zero supports uniformly distributed initial headings.
+4_copula_diagnostics,positive_turn_probability,0.4782295789852465,probability,Empirical sign balance used after sampling turning magnitude.
+4_copula_diagnostics,negative_turn_probability,0.521266642677222,probability,Empirical sign balance used after sampling turning magnitude.
+6_acceleration_guard,absolute_acceleration_q90,248.1201749283941,micron/s2,Empirical q90(|a|) used only as a numerical guard.
+6_acceleration_guard,accel_cap_multiplier,3.0,multiplier,Configurable plugin argument ACCEL_CAP_MULTIPLIER.
+6_acceleration_guard,absolute_acceleration_cap,744.3605247851823,micron/s2,Numerical cap m_a*q90(|a|); not a biological distribution.
+6_acceleration_guard,speed_vs_acceleration_spearman_rho,-0.18119608027921794,rho_S,Diagnostic dependence only; acceleration is derived from successive speeds.
+6_acceleration_guard,speed_vs_acceleration_pair_count,27790,pairs,Number of valid speed-acceleration pairs.
+7_distribution_summaries,all_speed_median,169.03640720233133,micron/s,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,all_speed_q10,23.612967433372283,micron/s,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,all_speed_q25,48.59073505578686,micron/s,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,all_speed_q75,221.41684716601654,micron/s,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,all_speed_q90,246.5341507944258,micron/s,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,run_speed_median,213.36991027647187,micron/s,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,run_speed_q10,151.14391997528685,micron/s,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,run_speed_q25,184.53538187441984,micron/s,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,run_speed_q75,236.979469506584,micron/s,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,run_speed_q90,257.1389933769475,micron/s,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,stop_speed_median,39.35123203304235,micron/s,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,stop_speed_q10,14.191186508642046,micron/s,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,stop_speed_q25,23.51431094260653,micron/s,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,stop_speed_q75,60.13379138306386,micron/s,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,stop_speed_q90,85.47617776072093,micron/s,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,signed_turn_angle_median,-0.5352692136646908,degree,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,signed_turn_angle_q10,-30.501097898117,degree,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,signed_turn_angle_q25,-9.177796471020635,degree,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,signed_turn_angle_q75,7.249567896255215,degree,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,signed_turn_angle_q90,26.308555000258558,degree,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,absolute_turn_angle_median,8.17614778080332,degree,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,absolute_turn_angle_q10,1.2201016944397312,degree,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,absolute_turn_angle_q25,3.2568433661871765,degree,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,absolute_turn_angle_q75,21.675194339650723,degree,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,absolute_turn_angle_q90,58.6288509680401,degree,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,signed_acceleration_median,0.38639523301316325,micron/s2,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,signed_acceleration_q10,-139.84428647830597,micron/s2,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,signed_acceleration_q25,-52.6825523255491,micron/s2,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,signed_acceleration_q75,53.28559236322567,micron/s2,Human-readable summary; simulation uses the full exported empirical quantile function.
+7_distribution_summaries,signed_acceleration_q90,143.1060749116223,micron/s2,Human-readable summary; simulation uses the full exported empirical quantile function.
+8_validation_targets,straightness_median,0.8377356281597658,0_to_1,Emergent validation target; never imposed as a local rule.
+8_validation_targets,straightness_q25,0.5060662577004807,0_to_1,Emergent validation target; never imposed as a local rule.
+8_validation_targets,straightness_q75,0.989974580237102,0_to_1,Emergent validation target; never imposed as a local rule.
+8_validation_targets,tortuosity_median,1.1936940084507048,ratio,Emergent validation target; never imposed as a local rule.
+8_validation_targets,tortuosity_q25,1.010126946654021,ratio,Emergent validation target; never imposed as a local rule.
+8_validation_targets,tortuosity_q75,1.9760258361106893,ratio,Emergent validation target; never imposed as a local rule.
+8_validation_targets,net_displacement_median,455.31087702045437,micron,Emergent validation target; never imposed as a local rule.
+8_validation_targets,net_displacement_q25,242.06228483955476,micron,Emergent validation target; never imposed as a local rule.
+8_validation_targets,net_displacement_q75,600.7366732663928,micron,Emergent validation target; never imposed as a local rule.
+8_validation_targets,path_length_median,574.1228449549357,micron,Emergent validation target; never imposed as a local rule.
+8_validation_targets,path_length_q25,453.2945385575572,micron,Emergent validation target; never imposed as a local rule.
+8_validation_targets,path_length_q75,740.8922323287777,micron,Emergent validation target; never imposed as a local rule.
