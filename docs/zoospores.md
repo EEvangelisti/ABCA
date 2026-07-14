@@ -2,12 +2,14 @@
 
 ## Overview
 
-This plugin implements an **agent-based cellular automaton (ABCA)** describing the swimming behaviour of individual oomycete zoospores.
+This directory contains two **agent-based cellular automaton (ABCA)** models describing the swimming behaviour of individual oomycete zoospores.
 
-Unlike purely theoretical models, the current implementation is calibrated from **single-cell tracking experiments**. Local behavioural rules are inferred directly from experimental trajectories and subsequently used to simulate large populations of independent agents.
+Both models are calibrated from **single-cell tracking experiments**, but they differ in the way local behavioural rules are generated:
 
-The objective is not to reproduce individual trajectories exactly, but to generate realistic population-level behaviours emerging from experimentally measured local rules.
+- **Empirical model**: movement rules are sampled directly from experimentally measured trajectory metrics (speed, turning angle, persistence, etc.).
+- **Hidden Markov Model (HMM)**: local behaviour is represented by a discrete-state Hidden Markov Model inferred from experimental trajectories, allowing agents to switch probabilistically between behavioural states.
 
+Both approaches aim to reproduce realistic population-level dynamics emerging from experimentally measured single-cell behaviours, while providing complementary modelling strategies.
 ---
 
 ## Model
