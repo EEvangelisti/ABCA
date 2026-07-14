@@ -63,8 +63,6 @@ The simulator should not introduce directional bias.
 
 Experimental and simulated trajectories can be translated so that every track starts at the origin. This visualization provides a qualitative assessment of the global exploration pattern while removing positional effects.
 
-*Figure placeholder*
-
 ![Centered trajectories](02_centered_trajectories_viridis.png)
 
 ---
@@ -91,4 +89,4 @@ Several additional biological mechanisms are being implemented and validated.
 
 ## Citation
 
-If you use this model, please cite the ABCA framework together with the corresponding biological publication describing the calibration procedure (currently in preparation).
+If you use this model, please cite the ABCA framework. Please note that a publication is currently in preparation.
