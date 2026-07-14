@@ -55,7 +55,10 @@ Several independent analyses are performed to verify that the simulated trajecto
 
 The simulator should not introduce directional bias.
 
-![Angular isotropy](01_heading_isotropy.png)
+<p align="center">
+  <img src="01_heading_isotropy.png" width="600">
+</p>
+
 
 ---
 
@@ -63,7 +66,9 @@ The simulator should not introduce directional bias.
 
 Experimental and simulated trajectories can be translated so that every track starts at the origin. This visualization provides a qualitative assessment of the global exploration pattern while removing positional effects.
 
-![Centered trajectories](02_centered_trajectories_viridis.png)
+<p align="center">
+  <img src="02_centered_trajectories_viridis.png" width="600">
+</p>
 
 ---
 
