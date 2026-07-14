@@ -10,6 +10,7 @@ Both models are calibrated from **single-cell tracking experiments**, but they d
 - **Hidden Markov Model (HMM)**: local behaviour is represented by a discrete-state Hidden Markov Model inferred from experimental trajectories, allowing agents to switch probabilistically between behavioural states.
 
 Both approaches aim to reproduce realistic population-level dynamics emerging from experimentally measured single-cell behaviours, while providing complementary modelling strategies.
+
 ---
 
 ## Model
