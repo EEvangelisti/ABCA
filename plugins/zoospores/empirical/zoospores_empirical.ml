@@ -11,8 +11,8 @@
  *)
 
 open Abca
-module Data = Zoospore_empirical_data
-module Model = Zoospore_empirical_model
+module Data = Zoospores_empirical_data
+module Model = Zoospores_empirical_model
 
 type state = Model.state
 

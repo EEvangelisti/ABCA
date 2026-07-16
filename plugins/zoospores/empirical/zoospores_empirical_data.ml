@@ -11,7 +11,7 @@
  * See the LICENSE file for details.
  *)
 
-module Utils = Zoospore_empirical_utils
+module Utils = Zoospores_empirical_utils
 
 type quantile_dist = {
   probs : float array;

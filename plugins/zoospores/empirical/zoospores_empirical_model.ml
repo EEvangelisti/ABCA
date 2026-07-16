@@ -11,8 +11,8 @@
  *)
 
 open Abca
-module Data = Zoospore_empirical_data
-module Utils = Zoospore_empirical_utils
+module Data = Zoospores_empirical_data
+module Utils = Zoospores_empirical_utils
 
 type state = int
 (* 0 = empty; 1 = STOP; 2 = RUN *)
