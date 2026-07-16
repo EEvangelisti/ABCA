@@ -1,5 +1,10 @@
 (library
  (name abca_plugin_zoospores_empirical)
+ (modules
+ zoospore_empirical_utils
+  zoospore_empirical_data
+  zoospore_empirical_model
+  zoospores_empirical)
  (libraries
   abca
   abca_io
