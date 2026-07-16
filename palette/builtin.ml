@@ -20,4 +20,10 @@ let initialize () =
   Register.register Magma.generator;
   Register.register Plasma.generator;
   Register.register Inferno.generator;
-  Register.register Cividis.generator
+  Register.register Cividis.generator;
+  (* Paul Tol's discrete palettes.
+     Check: https://sronpersonalpages.nl/~pault/ *)
+  Register.register Tol_bright.generator;
+  Register.register Tol_high_contrast.generator;
+  Register.register Tol_vibrant.generator;
+  Register.register Tol_muted.generator
