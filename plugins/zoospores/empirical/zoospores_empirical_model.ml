@@ -25,7 +25,7 @@ type init_shape =
   | Init_ring
 
 type params = {
-  empirical : Zoospore_empirical_data.empirical;
+  empirical : Data.empirical;
   parameter_file : string;
   quantile_file : string;
   agents : int;
