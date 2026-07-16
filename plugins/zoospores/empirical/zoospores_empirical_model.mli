@@ -44,7 +44,7 @@ type init_shape =
     This record combines empirically calibrated biological parameters with
     simulation-specific settings supplied through the ABCA command line. *)
 type params = {
-  empirical : Zoospore_empirical_data.empirical;
+  empirical : Zoospores_empirical_data.empirical;
       (** Empirically inferred parameters governing zoospore motion. *)
 
   parameter_file : string;
