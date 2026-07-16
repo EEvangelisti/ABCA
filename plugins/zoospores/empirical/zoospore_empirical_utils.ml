@@ -1,13 +1,14 @@
 (*
- * Empirical zoospore plugin for ABCA.
+ * ABCA (Agent-Based Cellular Automata)
+ * A modular simulation framework for discrete spatial systems,
+ * ranging from classical cellular automata to biologically inspired
+ * agent-based models.
  *
- * Biological movement parameters, including the complete latent VAR(1)
- * matrices A, Q and R, are loaded from abca_local_parameters.csv.
- * No global trajectory statistic (MSD,
- * straightness, tortuosity or net displacement) is imposed.
+ * Copyright (c) 2026 Edouard Evangelisti
  *
- * Distributional assumptions are documented in
- * zoospores_empirical_assumptions.md.
+ * Distributed under the MIT License.
+ * This software is provided "as is", without warranty of any kind.
+ * See the LICENSE file for details.
  *)
 
 let clamp lo hi x = max lo (min hi x)
