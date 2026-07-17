@@ -13,3 +13,9 @@
 
 let clamp lo hi x = max lo (min hi x)
 let clamp01 x = clamp 0.0 1.0 x
+
+let normalize_degrees angle =
+  let a = mod_float angle 360.0 in
+  if a < 0.0 then a +. 360.0 else a
+
+

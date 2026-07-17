@@ -63,8 +63,16 @@ let default_parameter_file =
 
 let default_quantile_basename = "abca_empirical_quantiles.csv"
 
-(* Minimal RFC-4180-style CSV line parser. It supports quoted fields and
-   doubled quotes; only parameter and value columns are consumed. *)
+
+
+(** Parse a single CSV record according to a minimal subset of the
+    RFC 4180 specification.
+
+    The parser supports quoted fields, embedded commas inside quoted
+    fields, and escaped double quotes represented as [""]. It is
+    intentionally lightweight, as the calibration files only require
+    reading simple two-column parameter/value tables rather than
+    providing a fully compliant CSV implementation. *)
 let parse_csv_line line =
   let fields = ref [] in
   let buffer = Buffer.create 32 in
@@ -284,7 +292,20 @@ let quantile dist u =
   in
   find 0
 
-(* Standard normal CDF approximation. *)
+
+
+(** Approximate the cumulative distribution function (CDF) of the
+    standard normal distribution.
+
+    This implementation computes the CDF via the error function:
+
+      Φ(x) = 0.5 * (1 + erf(x / sqrt(2)))
+
+    where [erf] is evaluated using the classical five-term rational
+    approximation of Abramowitz and Stegun (1964, Handbook of
+    Mathematical Functions, formula 7.1.26). The coefficients below
+    are the published constants of this approximation and provide
+    good accuracy while avoiding any external numerical dependency. *)
 let normal_cdf x =
   let sign = if x < 0.0 then -1.0 else 1.0 in
   let z = abs_float x /. sqrt 2.0 in
@@ -301,7 +322,27 @@ let normal_cdf x =
   in
   0.5 *. (1.0 +. erf)
 
-(* Acklam's inverse-normal approximation. *)
+
+
+(** Approximate the inverse cumulative distribution function (quantile
+    function) of the standard normal distribution.
+
+    Given a probability [p] in [0,1], this function returns the value
+    [x] such that [Φ(x) = p], where [Φ] denotes the standard normal CDF.
+
+    The implementation follows Peter J. Acklam's widely used rational
+    approximation, using separate polynomial approximations for the
+    lower tail, upper tail, and central region. The coefficients below
+    are those published by Acklam and provide high numerical accuracy
+    over the entire probability range.
+
+    Input probabilities are clamped to [[1e-12, 1 - 1e-12]] to avoid
+    singularities at the boundaries.
+
+    Reference:
+    Peter J. Acklam, "An algorithm for computing the inverse normal
+    cumulative distribution function", 2003.
+    https://stackedboxes.org/2017/05/01/acklams-normal-quantile-function/ *)
 let inverse_normal_cdf p =
   let p = Utils.clamp 1e-12 (1.0 -. 1e-12) p in
   let a = [|
@@ -339,7 +380,9 @@ let inverse_normal_cdf p =
     (((((a.(0) *. r +. a.(1)) *. r +. a.(2)) *. r +. a.(3)) *. r +. a.(4)) *. r +. a.(5)) *. q /.
     (((((b.(0) *. r +. b.(1)) *. r +. b.(2)) *. r +. b.(3)) *. r +. b.(4)) *. r +. 1.0)
   end
-  
+
+
+
 let validate_latent_var1 empirical =
   let tolerance = 1e-7 in
 

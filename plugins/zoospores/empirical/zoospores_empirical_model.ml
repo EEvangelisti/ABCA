@@ -58,10 +58,6 @@ type agent = {
 
 (* GEOMETRIC FUNCTIONS AND UTILITIES **************************************** *)
 
-let normalize_degrees angle =
-  let a = mod_float angle 360.0 in
-  if a < 0.0 then a +. 360.0 else a
-
 let state_of_motion = function Stop -> 1 | Run -> 2
 let state_of_agent ag = state_of_motion ag.motion
 
@@ -101,7 +97,7 @@ let reflected_heading rows cols x y heading =
   let h = ref heading in
   if x < 0.0 || x >= float_of_int cols then h := 180.0 -. !h;
   if y < 0.0 || y >= float_of_int rows then h := -. !h;
-  normalize_degrees !h
+  Utils.normalize_degrees !h
   
 
 
@@ -398,7 +394,7 @@ let step_agent rng params grid ag =
     update_turn rng params.empirical turn_z
   in
   let proposed_heading =
-    normalize_degrees (ag.heading_deg +. delta_heading)
+    Utils.normalize_degrees (ag.heading_deg +. delta_heading)
   in
   let x, y, heading_deg = move_agent params grid ag proposed_heading speed_um_s in
   {
@@ -443,7 +439,7 @@ let trace_record frame ag : Abca_io.Agent_trace.record =
     y = ag.y;
     row = row_of_agent ag;
     col = col_of_agent ag;
-    angle = int_of_float (Float.round (normalize_degrees ag.heading_deg)) mod 360;
+    angle = int_of_float (Float.round (Utils.normalize_degrees ag.heading_deg)) mod 360;
     age = ag.age;
     state = state_of_agent ag;
   }

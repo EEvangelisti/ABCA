@@ -22,3 +22,8 @@ val clamp : float -> float -> float -> float
 (** [clamp01 x] restricts [x] to the unit interval [[0.0, 1.0]].
     This helper is primarily used for probabilities and quantiles. *)
 val clamp01 : float -> float
+
+(** [normalize_degrees angle] normalizes an angle expressed in degrees
+    to the half-open interval [[0.0, 360.0)). Negative angles and
+    angles greater than or equal to [360.0] are wrapped accordingly. *)
+val normalize_degrees : float -> float
