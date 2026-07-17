@@ -152,6 +152,17 @@ let dirname filename =
 let quantile_file_from_parameter_file parameter_file =
   Filename.concat (dirname parameter_file) default_quantile_basename
 
+
+(** Read the empirical quantile table exported by the calibration
+    pipeline.
+
+    The CSV file is expected to contain one probability-value pair per
+    row, grouped by distribution name and experimental condition. The
+    returned hash table maps each (distribution, condition) pair to the
+    corresponding empirical quantile samples, which are subsequently
+    validated and converted into interpolation tables by
+    [required_quantile]. *)
+let read_quantile_table filename =
 let read_quantile_table filename =
   let ic = open_in filename in
   Fun.protect
@@ -200,6 +211,18 @@ let read_quantile_table filename =
         with End_of_file -> ());
        table)
 
+
+(** Retrieve and validate an empirical quantile distribution from the
+    quantile table.
+
+    The selected distribution is identified by its distribution name
+    and experimental condition. The returned probability–value pairs
+    are sorted by increasing probability and converted into the array
+    representation used for interpolation during simulation.
+
+    An exception is raised if the requested distribution is missing or
+    does not define a valid empirical quantile function. *)
+let required_quantile table ~distribution ~condition =
 let required_quantile table ~distribution ~condition =
   let key =
     String.uppercase_ascii distribution ^ "|" ^
@@ -226,6 +249,16 @@ let required_quantile table ~distribution ~condition =
       done;
       { probs; values }
 
+
+
+(** Load an empirical zoospore model from the parameter and quantile
+    tables exported by the calibration pipeline.
+
+    The parameter table provides scalar parameters together with the
+    latent VAR(1) model ([A], [Q] and [R]), whereas the quantile table
+    contains the empirical distributions used to sample swimming
+    speeds and turning angles. The resulting model is intended to be
+    validated with [validate_latent_var1] before use. *)
 let load_empirical parameter_file quantile_file =
   let t = read_parameter_table parameter_file in
   let q = read_quantile_table quantile_file in
@@ -383,6 +416,21 @@ let inverse_normal_cdf p =
 
 
 
+(** Validate the consistency of the latent VAR(1) model parameters.
+
+    This function verifies that the exported transition matrix [A],
+    innovation covariance [Q], and stationary covariance [R] define a
+    valid stationary Gaussian VAR(1) process. In particular, it checks
+    that:
+
+    - [R] is positive definite;
+    - [Q] is positive semidefinite;
+    - the stationarity identity [R = A R Aᵀ + Q] holds within numerical
+      tolerance;
+    - the spectral radius of [A] is strictly smaller than one.
+
+    An [Invalid_argument] exception is raised if any of these
+    conditions is violated. *)
 let validate_latent_var1 empirical =
   let tolerance = 1e-7 in
 
