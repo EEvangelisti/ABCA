@@ -145,12 +145,13 @@ let optional table key default =
   | None -> default
   | Some s -> (match finite_float s with Some x -> x | None -> default)
 
-let dirname filename =
-  let d = Filename.dirname filename in
-  if d = "" then "." else d
 
 let quantile_file_from_parameter_file parameter_file =
-  Filename.concat (dirname parameter_file) default_quantile_basename
+  let dir = 
+    match Filename.dirname parameter_file with
+    | "" -> "."
+    | dir -> dir 
+  in Filename.concat dir default_quantile_basename
 
 
 (** Read the empirical quantile table exported by the calibration
@@ -162,7 +163,6 @@ let quantile_file_from_parameter_file parameter_file =
     corresponding empirical quantile samples, which are subsequently
     validated and converted into interpolation tables by
     [required_quantile]. *)
-let read_quantile_table filename =
 let read_quantile_table filename =
   let ic = open_in filename in
   Fun.protect
@@ -222,7 +222,6 @@ let read_quantile_table filename =
 
     An exception is raised if the requested distribution is missing or
     does not define a valid empirical quantile function. *)
-let required_quantile table ~distribution ~condition =
 let required_quantile table ~distribution ~condition =
   let key =
     String.uppercase_ascii distribution ^ "|" ^
