@@ -103,12 +103,30 @@ let reflected_heading rows cols x y heading =
 
 (* INITIALIZATION FUNCTIONS ************************************************* *)
 
+(** Draw a sample from the standard normal distribution.
+
+    This implementation uses the classical Box-Muller transform to
+    convert two independent uniform random numbers into a Gaussian
+    variate with mean 0 and variance 1. The first uniform sample is
+    clamped away from zero to avoid evaluating [log 0]. *)
 let standard_normal rng =
-  (* Box-Muller; the lower bound prevents log 0. *)
   let u1 = max 1e-12 (Rng.float rng 1.0) in
   let u2 = Rng.float rng 1.0 in
   sqrt (-2.0 *. log u1) *. cos (2.0 *. Float.pi *. u2)
 
+
+(** Generate a stratified sample of approximately uniform random
+    numbers over the unit interval.
+
+    The interval [0,1] is divided into [n] equal strata, and one
+    midpoint sample is placed in each stratum:
+
+      u_i = (i + 1/2) / n.
+
+    The samples are then randomly permuted to remove any ordering
+    while preserving the exact stratification. This approach provides
+    more even coverage of the unit interval than independent uniform
+    sampling and reduces Monte Carlo variability. *)
 let stratified_uniforms rng n =
   if n <= 0 then [||]
   else begin
@@ -123,6 +141,14 @@ let stratified_uniforms rng n =
     values
   end
 
+
+(** Generate the initial RUN/STOP states of the simulated population.
+
+    The requested initial RUN fraction is converted to an integer
+    number of agents, rounded to the nearest value and clamped to the
+    valid range. The resulting RUN and STOP labels are then randomly
+    permuted so that the prescribed population proportion is preserved
+    without introducing any spatial ordering. *)
 let initial_motion_states rng n initial_run_fraction =
   let n_run =
     int_of_float
@@ -137,14 +163,44 @@ let initial_motion_states rng n initial_run_fraction =
   Rng.shuffle_array rng states;
   states
 
+
+(** Generate a standard normal random variable with a prescribed
+    Pearson correlation to another standard normal variable.
+
+    Given a standard normal variate [z1] and an independent standard
+    normal variate [independent_z2], this function returns a new
+    standard normal variate whose correlation with [z1] is [rho]. The
+    requested correlation is clamped slightly inside [-1,1] to avoid
+    numerical degeneracies. *)
+let correlated_standard_normals rho z1 independent_z2 =
 let correlated_standard_normals rho z1 independent_z2 =
   let rho = Utils.clamp (-0.999999) 0.999999 rho in
   rho *. z1 +. sqrt (1.0 -. rho *. rho) *. independent_z2
+
 
 let distribution_for_state empirical = function
   | Run -> empirical.Data.run_speed
   | Stop -> empirical.Data.stop_speed
 
+
+(** Construct the initial population of zoospore agents.
+
+    Agent positions are sampled from the requested initial geometry,
+    using the simulation seed for reproducibility. The population is
+    then initialized so as to reproduce the calibrated stationary
+    distributions while limiting finite-sample variability:
+
+    - RUN and STOP states match the observed initial occupancy;
+    - state-conditional speed quantiles are stratified separately;
+    - headings are stratified uniformly over the full circle;
+    - latent speed and turning variables are initialized with covariance [R],
+      thereby imposing the calibrated Gaussian-copula dependence from the
+      first simulation step.
+
+    Each selected grid coordinate yields one agent positioned at the centre
+    of the corresponding cell. The returned agents therefore constitute an
+    approximately isotropic population whose empirical marginals and latent
+    dependence structure are already consistent with the calibrated model. *)
 let initial_agents params grid =
   let rng = Rng.create params.seed in
   let coords =
@@ -256,6 +312,20 @@ let transition_state rng empirical = function
 let max_acceleration empirical multiplier =
   multiplier *. empirical.Data.absolute_acceleration_q90
 
+
+(** Draw a two-dimensional Gaussian innovation vector with covariance
+    matrix [Q] from the latent VAR(1) model.
+
+    Two independent standard normal variates are transformed using a
+    Cholesky factorization of the exported innovation covariance:
+
+      Q = [[q11, q12],
+           [q12, q22]].
+
+    The returned pair represents the innovations applied to the latent
+    speed and turning components, respectively. A dedicated branch
+    handles the positive-semidefinite degenerate case where [q11] is
+    effectively zero. *)
 let gaussian_innovation_2d rng empirical =
   (* Draw epsilon_t ~ N(0,Q) using the Cholesky factor of the exact innovation
      covariance exported by Python:
