@@ -109,8 +109,9 @@ module Xml_codec = struct
     string_of_int
 end
 
-let to_color_index state =
-  state
+let to_color_index = function
+  | 0 -> None
+  | s -> Some s
 
 let has n xs =
   List.exists (( = ) n) xs

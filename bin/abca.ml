@@ -308,16 +308,12 @@ module Action =
         else
           Some (Abca_palette.Color.parse !background)
       in
-      let skip_index =
-        if !skip_background then Some 0 else None
-      in
       Abca_render.Png.save_frames
         ~dirname:png_dir
         ~prefix:!model
         ~every:!every
         ~cell_size:!cell_size
         ?background:background_color
-        ?skip_index
         ~palette:render_palette
         ~to_color_index:selected_model.Abca_models.Model.to_color_index
         frames;

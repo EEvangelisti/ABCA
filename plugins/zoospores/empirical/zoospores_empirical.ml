@@ -41,7 +41,9 @@ module Xml_codec = struct
   let to_string = string_of_int
 end
 
-let to_color_index x = x
+let to_color_index = function
+  | 0 -> None
+  | s -> Some (min (s - 1) 255)
 
 let metadata params ~rows ~cols ~generations ~density =
   let e = params.Model.empirical in
@@ -129,16 +131,16 @@ let run ~rows ~cols ~generations ~seed ~density ~agents ~topology ~plugin_args ~
   List.iter
     (fun (name, p) -> check_probability name p)
     [
-      "P_RUN_to_RUN", empirical.p_run_run;
-      "P_RUN_to_STOP", empirical.p_run_stop;
-      "P_STOP_to_STOP", empirical.p_stop_stop;
-      "P_STOP_to_RUN", empirical.p_stop_run;
+      "P_FAST_to_FAST", empirical.p_fast_fast;
+      "P_FAST_to_SLOW", empirical.p_fast_slow;
+      "P_SLOW_to_SLOW", empirical.p_slow_slow;
+      "P_SLOW_to_FAST", empirical.p_slow_fast;
     ];
-  if abs_float (empirical.p_run_run +. empirical.p_run_stop -. 1.0) > 1e-6
-     || abs_float (empirical.p_stop_stop +. empirical.p_stop_run -. 1.0) > 1e-6
+  if abs_float (empirical.p_fast_fast +. empirical.p_fast_slow -. 1.0) > 1e-6
+     || abs_float (empirical.p_slow_slow +. empirical.p_slow_fast -. 1.0) > 1e-6
   then
     invalid_arg
-      "Zoospore empirical: each RUN/STOP transition-matrix row must sum to 1";
+      "Zoospore empirical: each FAST/SLOW transition-matrix row must sum to 1";
   let grid = Grid.create ~topology ~rows ~cols () in
   let frames, agent_trace = Model.simulate params grid generations in
   let archive =
@@ -167,7 +169,7 @@ let model = {
   family = Abca_models.Model.Biological;
   kind = Abca_models.Model.Agent_based_model;
   description =
-    "Data-driven zoospore model using local RUN/STOP, speed and steering statistics";
+    "Data-driven zoospore model using local FAST/SLOW, speed and steering statistics";
   state_count = 3;
   to_color_index;
   run;

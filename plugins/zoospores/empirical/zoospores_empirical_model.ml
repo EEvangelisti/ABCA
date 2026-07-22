@@ -15,9 +15,9 @@ module Data = Zoospores_empirical_data
 module Utils = Zoospores_empirical_utils
 
 type state = int
-(* 0 = empty; 1 = STOP; 2 = RUN *)
+(* 0 = empty; 1 = SLOW; 2 = FAST *)
 
-type motion_state = Stop | Run
+type motion_state = SLOW | FAST
 
 type init_shape =
   | Init_full
@@ -58,7 +58,7 @@ type agent = {
 
 (* GEOMETRIC FUNCTIONS AND UTILITIES **************************************** *)
 
-let state_of_motion = function Stop -> 1 | Run -> 2
+let state_of_motion = function SLOW -> 1 | FAST -> 2
 let state_of_agent ag = state_of_motion ag.motion
 
 let row_of_agent ag = int_of_float (Float.floor ag.y)
@@ -142,23 +142,23 @@ let stratified_uniforms rng n =
   end
 
 
-(** Generate the initial RUN/STOP states of the simulated population.
+(** Generate the initial FAST/SLOW states of the simulated population.
 
-    The requested initial RUN fraction is converted to an integer
+    The requested initial FAST fraction is converted to an integer
     number of agents, rounded to the nearest value and clamped to the
-    valid range. The resulting RUN and STOP labels are then randomly
+    valid range. The resulting FAST and SLOW labels are then randomly
     permuted so that the prescribed population proportion is preserved
     without introducing any spatial ordering. *)
-let initial_motion_states rng n initial_run_fraction =
-  let n_run =
+let initial_motion_states rng n initial_fast_fraction =
+  let n_fast =
     int_of_float
       (Float.round
-         (Utils.clamp01 initial_run_fraction *. float_of_int n))
+         (Utils.clamp01 initial_fast_fraction *. float_of_int n))
     |> min n
     |> max 0
   in
   let states =
-    Array.init n (fun i -> if i < n_run then Run else Stop)
+    Array.init n (fun i -> if i < n_fast then FAST else SLOW)
   in
   Rng.shuffle_array rng states;
   states
@@ -178,8 +178,8 @@ let correlated_standard_normals rho z1 independent_z2 =
 
 
 let distribution_for_state empirical = function
-  | Run -> empirical.Data.run_speed
-  | Stop -> empirical.Data.stop_speed
+  | FAST -> empirical.Data.fast_speed
+  | SLOW -> empirical.Data.slow_speed
 
 
 (** Construct the initial population of zoospore agents.
@@ -189,7 +189,7 @@ let distribution_for_state empirical = function
     then initialized so as to reproduce the calibrated stationary
     distributions while limiting finite-sample variability:
 
-    - RUN and STOP states match the observed initial occupancy;
+    - FAST and SLOW states match the observed initial occupancy;
     - state-conditional speed quantiles are stratified separately;
     - headings are stratified uniformly over the full circle;
     - latent speed and turning variables are initialized with covariance [R],
@@ -208,25 +208,25 @@ let initial_agents params grid =
   in
   let n = Array.length coords in
 
-  (* Initial motion states reproduce the observed RUN/STOP occupancy while
+  (* Initial motion states reproduce the observed FAST/SLOW occupancy while
      avoiding unnecessary binomial sampling noise. *)
   let motions =
-    initial_motion_states rng n params.empirical.initial_run_fraction
+    initial_motion_states rng n params.empirical.initial_fast_fraction
   in
 
   (* Each state-specific speed distribution is stratified separately.  This
      ensures that both empirical conditional marginals are evenly represented
      at t = 0, rather than letting a small initial sample omit their tails. *)
-  let run_count =
+  let fast_count =
     Array.fold_left
-      (fun acc state -> if state = Run then acc + 1 else acc)
+      (fun acc state -> if state = FAST then acc + 1 else acc)
       0 motions
   in
-  let stop_count = n - run_count in
-  let run_u = stratified_uniforms rng run_count in
-  let stop_u = stratified_uniforms rng stop_count in
-  let run_index = ref 0 in
-  let stop_index = ref 0 in
+  let slow_count = n - fast_count in
+  let fast_u = stratified_uniforms rng fast_count in
+  let slow_u = stratified_uniforms rng slow_count in
+  let fast_index = ref 0 in
+  let slow_index = ref 0 in
 
   (* Initial headings are uniformly stratified over the circle, then shuffled.
      This implements theta_i = 2 pi u_i and is consistent with isotropy. *)
@@ -249,13 +249,13 @@ let initial_agents params grid =
        let motion = motions.(id) in
        let u_speed =
          match motion with
-         | Run ->
-             let u = run_u.(!run_index) in
-             incr run_index;
+         | FAST ->
+             let u = fast_u.(!fast_index) in
+             incr fast_index;
              u
-         | Stop ->
-             let u = stop_u.(!stop_index) in
-             incr stop_index;
+         | SLOW ->
+             let u = slow_u.(!slow_index) in
+             incr slow_index;
              u
        in
        let speed_z = Data.inverse_normal_cdf u_speed in
@@ -300,12 +300,12 @@ let initial_agents params grid =
 
 
 let transition_state rng empirical = function
-  | Run ->
-      (* The RUN row of the empirical transition matrix is used directly. *)
-      if Rng.chance rng empirical.Data.p_run_run then Run else Stop
-  | Stop ->
-      (* The STOP row of the empirical transition matrix is used directly. *)
-      if Rng.chance rng empirical.Data.p_stop_stop then Stop else Run
+  | FAST ->
+      (* The FAST row of the empirical transition matrix is used directly. *)
+      if Rng.chance rng empirical.Data.p_fast_fast then FAST else SLOW
+  | SLOW ->
+      (* The SLOW row of the empirical transition matrix is used directly. *)
+      if Rng.chance rng empirical.Data.p_slow_slow then SLOW else FAST
 
 
 let max_acceleration empirical multiplier =

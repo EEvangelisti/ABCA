@@ -1,5 +1,4 @@
-(*
- * Hidden-Markov zoospore plugin for ABCA.
+(* Hidden-Markov zoospore plugin for ABCA.
  *
  * The plugin reads three TSV files exported by
  * fit_and_interpret_zoospore_hmm.py:
@@ -749,7 +748,9 @@ module Xml_codec = struct
   let to_string = string_of_int
 end
 
-let to_color_index x = x
+let to_color_index = function
+  | 0 -> None
+  | s -> Some (min s 255)
 
 let metadata params ~rows ~cols ~generations ~density =
   Abca_io.Metadata.of_list [

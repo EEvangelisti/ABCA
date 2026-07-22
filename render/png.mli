@@ -29,9 +29,8 @@ val save_frame :
   filename:string ->
   cell_size:int ->
   ?background:color ->
-  ?skip_index:int ->
   palette:palette ->
-  to_color_index:('state -> int) ->
+  to_color_index:('state -> int option) ->
   'state array array ->
   unit
 (** Renders a simulation frame as a PNG image.
@@ -47,9 +46,8 @@ val save_frames :
   every:int ->
   cell_size:int ->
   ?background:color ->
-  ?skip_index:int ->
   palette:palette ->
-  to_color_index:('state -> int) ->
+  to_color_index:('state -> int option) ->
   'state array array array ->
   unit
 (** Renders a sequence of frames as numbered PNG images.

@@ -104,7 +104,9 @@ module Xml_codec = struct
     string_of_int
 end
 
-let to_color_index = min 255
+let to_color_index = function
+  | 0 -> None
+  | s -> Some (min s 255)
 
 let member n xs =
   List.exists (( = ) n) xs

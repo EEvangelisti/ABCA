@@ -79,7 +79,10 @@ module Xml_codec = struct
   let to_string = string_of_int
 end
 
-let to_color_index x = x
+let to_color_index = function
+  | 0 -> None
+  | s -> Some s
+
 let clamp lo hi x = max lo (min hi x)
 let trim = String.trim
 

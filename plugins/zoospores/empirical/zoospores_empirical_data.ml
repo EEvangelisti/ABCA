@@ -20,11 +20,11 @@ type quantile_dist = {
 
 type empirical = {
   dt : float;
-  initial_run_fraction : float;
-  p_run_run : float;
-  p_run_stop : float;
-  p_stop_stop : float;
-  p_stop_run : float;
+  initial_fast_fraction : float;
+  p_fast_fast : float;
+  p_fast_slow : float;
+  p_slow_slow : float;
+  p_slow_fast : float;
 
   (* Parameters of the stationary latent bivariate Gaussian VAR(1)
        Z_(t+1) = A Z_t + epsilon_t, epsilon_t ~ N(0,Q).
@@ -53,8 +53,8 @@ type empirical = {
   default_accel_cap_multiplier : float;
   default_microns_per_cell : float;
 
-  run_speed : quantile_dist;
-  stop_speed : quantile_dist;
+  fast_speed : quantile_dist;
+  slow_speed : quantile_dist;
   abs_turn : quantile_dist;
 }
 
@@ -263,11 +263,11 @@ let load_empirical parameter_file quantile_file =
   let q = read_quantile_table quantile_file in
   {
     dt = required t "time_step";
-    initial_run_fraction = required t "initial_run_fraction";
-    p_run_run = required t "P_RUN_to_RUN";
-    p_run_stop = required t "P_RUN_to_STOP";
-    p_stop_stop = required t "P_STOP_to_STOP";
-    p_stop_run = required t "P_STOP_to_RUN";
+    initial_fast_fraction = required t "initial_fast_fraction";
+    p_fast_fast = required t "P_FAST_to_FAST";
+    p_fast_slow = required t "P_FAST_to_SLOW";
+    p_slow_slow = required t "P_SLOW_to_SLOW";
+    p_slow_fast = required t "P_SLOW_to_FAST";
 
     (* Exact matrices exported by extract_abca_local_parameters_var1.py.
        A governs temporal memory and cross-lag effects; Q is the covariance of
@@ -298,10 +298,10 @@ let load_empirical parameter_file quantile_file =
     default_microns_per_cell =
       optional t "microns_per_cell" 10.0;
 
-    run_speed =
-      required_quantile q ~distribution:"speed" ~condition:"RUN";
-    stop_speed =
-      required_quantile q ~distribution:"speed" ~condition:"STOP";
+    fast_speed =
+      required_quantile q ~distribution:"speed" ~condition:"FAST";
+    slow_speed =
+      required_quantile q ~distribution:"speed" ~condition:"SLOW";
     abs_turn =
       required_quantile q ~distribution:"turn_angle_absolute" ~condition:"ALL";
   }

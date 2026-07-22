@@ -65,7 +65,6 @@ let save_frame
     ~filename
     ~cell_size
     ?background
-    ?skip_index
     ~palette
     ~to_color_index
     frame =
@@ -88,8 +87,6 @@ let save_frame
     | None -> palette.background
   in
 
-  clear cr ~w:width ~h:height background;
-
   Cairo.set_antialias cr Cairo.ANTIALIAS_NONE;
   clear cr ~w:width ~h:height background;
 
@@ -97,16 +94,11 @@ let save_frame
     (fun row cells ->
        Array.iteri
          (fun col state ->
-            let index = to_color_index state in
-
-            match skip_index with
-            | Some skip when index = skip ->
-                ()
-
-            | _ ->
+            match to_color_index state with
+            | None -> () (* Background - nothing to draw. *)
+            | Some index ->
                 if index < 0 || index >= Array.length palette.colors then
                   invalid_arg "Png.save_frame: invalid color index";
-
                 let color = palette.colors.(index) in
                 draw_cell cr ~cell_size ~row ~col color)
          cells)
@@ -131,7 +123,6 @@ let save_frames
     ~every
     ~cell_size
     ?background
-    ?skip_index
     ~palette
     ~to_color_index
     frames =
@@ -150,7 +141,6 @@ let save_frames
            ~filename:(frame_filename ~dirname ~prefix !output_index)
            ~cell_size
            ?background
-           ?skip_index
            ~palette
            ~to_color_index
            frame;

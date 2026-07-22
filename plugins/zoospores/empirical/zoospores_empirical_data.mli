@@ -39,11 +39,11 @@ type quantile_dist
     subsequently treated as read-only. *)
 type empirical = {
   dt : float;
-  initial_run_fraction : float;
-  p_run_run : float;
-  p_run_stop : float;
-  p_stop_stop : float;
-  p_stop_run : float;
+  initial_fast_fraction : float;
+  p_fast_fast : float;
+  p_fast_slow : float;
+  p_slow_slow : float;
+  p_slow_fast : float;
 
   a11 : float;
   a12 : float;
@@ -65,8 +65,8 @@ type empirical = {
   default_accel_cap_multiplier : float;
   default_microns_per_cell : float;
 
-  run_speed : quantile_dist;
-  stop_speed : quantile_dist;
+  fast_speed : quantile_dist;
+  slow_speed : quantile_dist;
   abs_turn : quantile_dist;
 }
 

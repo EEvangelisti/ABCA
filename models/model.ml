@@ -33,7 +33,7 @@ type t = {
   description : string;
 
   state_count : int;
-  to_color_index : int -> int;
+  to_color_index : int -> int option;
 
   run :
     rows:int ->

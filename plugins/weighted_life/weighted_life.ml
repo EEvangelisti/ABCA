@@ -140,8 +140,9 @@ module Xml_codec = struct
     string_of_int
 end
 
-let to_color_index state =
-  if state = 0 then 0 else 1
+let to_color_index = function
+  | 0 -> None
+  | s -> Some (min s 255)
 
 let weighted_offsets =
   [|
