@@ -11,7 +11,7 @@ dune clean
 dune exec abca -- \
   --mode run \
   --model "$MODEL" \
-  --density 0.1 \
+  --density 0.15 \
   --generations $GEN \
   --seed 42 \
   --toroidal \
@@ -22,7 +22,7 @@ dune exec abca -- \
   --model "$MODEL" \
   --input "$BIN" \
   --gif "$GIF" \
-  --palette tol-prgn \
+  --palette tol-high-contrast \
   --background white \
   --draw-background \
   --every 1 \
