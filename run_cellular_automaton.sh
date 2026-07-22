@@ -11,9 +11,7 @@ dune clean
 dune exec abca -- \
   --mode run \
   --model "$MODEL" \
-  --density 0.3 \
-  --rows 500 \
-  --cols 500 \
+  --density 0.1 \
   --generations $GEN \
   --seed 42 \
   --toroidal \
