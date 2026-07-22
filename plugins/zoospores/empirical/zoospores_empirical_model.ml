@@ -173,7 +173,6 @@ let initial_motion_states rng n initial_run_fraction =
     requested correlation is clamped slightly inside [-1,1] to avoid
     numerical degeneracies. *)
 let correlated_standard_normals rho z1 independent_z2 =
-let correlated_standard_normals rho z1 independent_z2 =
   let rho = Utils.clamp (-0.999999) 0.999999 rho in
   rho *. z1 +. sqrt (1.0 -. rho *. rho) *. independent_z2
 
