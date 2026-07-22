@@ -27,4 +27,5 @@ let initialize () =
   Register.register Tol_high_contrast.generator;
   Register.register Tol_vibrant.generator;
   Register.register Tol_muted.generator;
-  Register.register Tol_prgn.generator
+  Register.register Tol_prgn.generator;
+  Register.register Tol_prgn_binary.generator
