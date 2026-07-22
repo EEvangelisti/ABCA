@@ -170,7 +170,7 @@ let model = {
   kind = Abca_models.Model.Agent_based_model;
   description =
     "Data-driven zoospore model using local FAST/SLOW, speed and steering statistics";
-  state_count = 3;
+  state_count = 2;
   to_color_index;
   run;
   export_xml;
