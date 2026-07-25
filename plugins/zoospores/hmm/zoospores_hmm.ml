@@ -7,15 +7,17 @@
  *   - hmm_start_probabilities.tsv
  *   - hmm_state_quantiles.tsv
  *
- * Each agent carries one hidden locomotor state. At every generation:
+ * Each agent carries the hidden state that will emit the next movement.
+ * At every generation, the simulation follows the standard HMM order:
  *
- *   1. the next hidden state is sampled from the corresponding row of the
- *      fitted HMM transition matrix;
- *   2. a speed and an absolute turn angle are sampled from the empirical
- *      state-conditional quantile tables;
- *   3. the sign of the turn is sampled from the state-specific empirical
- *      probability of a positive turn;
- *   4. heading and continuous position are updated.
+ *   1. an observation (speed and turning angle) is emitted conditionally on
+ *      the current hidden state;
+ *   2. heading and continuous position are updated from that observation;
+ *   3. the next hidden state is sampled from the corresponding row of the
+ *      fitted HMM transition matrix.
+ *
+ * Thus the initial-state distribution is used for the first emitted movement,
+ * and every movement is associated with the state that generated it.
  *
  * The HMM states are statistical locomotor regimes. They are deliberately not
  * renamed or interpreted inside the simulation code.
@@ -73,7 +75,10 @@ type agent = {
   age : int;
   heading_deg : float;
   speed_um_s : float;
+  (* State that will emit the next movement. *)
   hmm_state : int;
+  (* State that emitted the movement ending at the current frame. *)
+  emitted_state : int;
 }
 
 let model_name = "zoospores-hmm"
@@ -103,7 +108,7 @@ let col_of_agent ag = int_of_float (Float.floor ag.x)
 let coord_of_agent ag =
   { Grid.row = row_of_agent ag; col = col_of_agent ag }
 
-let state_of_agent ag = ag.hmm_state + 1
+let state_of_agent ag = ag.emitted_state + 1
 
 let find_arg key plugin_args =
   List.assoc_opt (String.uppercase_ascii key) plugin_args
@@ -551,50 +556,27 @@ let geometry_of_params params =
         thickness = params.thickness;
       }
 
-let initial_agents params grid =
-  let rng = Rng.create params.seed in
+let initial_agents rng params grid =
   let coords =
     Initial_geometry.select grid (geometry_of_params params)
     |> Initial_geometry.random_subset rng ~n:params.agents
   in
-  let n = Array.length coords in
-  let states =
-    stratified_categorical
-      rng n params.hmm.start_probabilities
-  in
-  let headings =
-    stratified_uniforms rng n
-    |> Array.map (fun u -> 360.0 *. u)
-  in
-
-  (* Stratify the initial speed ranks independently within every HMM state. *)
-  let counts = Array.make params.hmm.n_states 0 in
-  Array.iter (fun state -> counts.(state) <- counts.(state) + 1) states;
-  let speed_uniforms =
-    Array.init params.hmm.n_states
-      (fun state -> stratified_uniforms rng counts.(state))
-  in
-  let speed_indices = Array.make params.hmm.n_states 0 in
-
   Array.mapi
     (fun id coord ->
-       let hmm_state = states.(id) in
-       let index = speed_indices.(hmm_state) in
-       speed_indices.(hmm_state) <- index + 1;
-       let distribution =
-         params.hmm.state_distributions.(hmm_state)
-       in
-       let speed_um_s =
-         quantile distribution.speed speed_uniforms.(hmm_state).(index)
+       (* Independent draw S0 ~ pi for every simulated agent. *)
+       let hmm_state =
+         sample_categorical rng params.hmm.start_probabilities
        in
        {
          id;
          x = float_of_int coord.Grid.col +. 0.5;
          y = float_of_int coord.Grid.row +. 0.5;
          age = 1;
-         heading_deg = headings.(id);
-         speed_um_s;
+         heading_deg = Rng.float rng 360.0;
+         (* No observation has yet been emitted at frame 0. *)
+         speed_um_s = 0.0;
          hmm_state;
+         emitted_state = hmm_state;
        })
     coords
 
@@ -647,16 +629,15 @@ let move_agent params grid ag heading speed =
       end
 
 let step_agent rng params grid ag =
-  let next_state =
-    sample_categorical
-      rng params.hmm.transition_matrix.(ag.hmm_state)
-  in
+  (* Standard HMM semantics: the current state emits the observation. *)
+  let emitted_state = ag.hmm_state in
   let distribution =
-    params.hmm.state_distributions.(next_state)
+    params.hmm.state_distributions.(emitted_state)
   in
 
-  (* Speed and turn magnitude are conditionally sampled from the decoded
-     empirical observations assigned to the newly entered HMM state. *)
+  (* The emission distribution is factorised into empirical state-conditional
+     marginals for speed and turn magnitude. This remains a valid HMM emission
+     model: observations depend only on the current hidden state. *)
   let speed_um_s =
     quantile distribution.speed (Rng.float rng 1.0)
   in
@@ -673,6 +654,13 @@ let step_agent rng params grid ag =
   let x, y, heading_deg =
     move_agent params grid ag proposed_heading speed_um_s
   in
+
+  (* Only after emission and movement do we sample the state for the next
+     generation. The first movement is therefore emitted from S0 ~ pi. *)
+  let next_state =
+    sample_categorical
+      rng params.hmm.transition_matrix.(emitted_state)
+  in
   {
     ag with
     x;
@@ -681,6 +669,7 @@ let step_agent rng params grid ag =
     heading_deg;
     speed_um_s;
     hmm_state = next_state;
+    emitted_state;
   }
 
 let step_agents rng params grid agents =
@@ -721,7 +710,7 @@ let simulate params grid generations =
   let rng = Rng.create params.seed in
   let frames = Array.make (generations + 1) [||] in
   let trace = ref [] in
-  let agents = ref (initial_agents params grid) in
+  let agents = ref (initial_agents rng params grid) in
   let record generation =
     Array.iter
       (fun ag ->
@@ -776,9 +765,11 @@ let metadata params ~rows ~cols ~generations ~density =
     "init", string_of_init_shape params.init_shape;
     "radius", string_of_float params.radius;
     "thickness", string_of_float params.thickness;
-    "state_dynamics", "fitted HMM transition matrix";
+    "state_dynamics", "standard HMM: current-state emission then transition";
+    "initial_state_usage", "first movement emitted from fitted start distribution";
     "speed_distribution", "state-conditional empirical inverse CDF";
     "turn_distribution", "state-conditional empirical inverse CDF";
+    "emission_factorisation", "speed and turn sampled independently conditional on state";
     "signed_turn", "state-specific empirical positive-turn probability";
     "acceleration", "derived from consecutive sampled speeds";
     "agent_cell_exclusion", "false";
@@ -818,6 +809,11 @@ let run
       ~start_file
       ~quantile_file
   in
+  if hmm.n_states <> 2 then
+    invalid_arg
+      (Printf.sprintf
+         "Zoospore HMM: this plugin expects exactly two hidden states, got %d"
+         hmm.n_states);
   let params = {
     hmm;
     transition_file;
@@ -834,7 +830,7 @@ let run
     thickness = arg_float "THICKNESS" 4.0 plugin_args;
     microns_per_cell =
       arg_float "MICRONS_PER_CELL" 10.0 plugin_args;
-    dt = arg_float "DT" 0.22 plugin_args;
+    dt = arg_float "DT" 0.075 plugin_args;
     max_age = arg_int "MAX_AGE" 255 plugin_args;
     seed;
     topology;
@@ -887,8 +883,8 @@ let model = {
   family = Abca_models.Model.Biological;
   kind = Abca_models.Model.Agent_based_model;
   description =
-    "Data-driven zoospore model using hidden Markov locomotor states";
-  state_count = 8;
+    "Two-state zoospore HMM with current-state empirical emissions";
+  state_count = 3;
   to_color_index;
   run;
   export_xml;
