@@ -20,12 +20,14 @@ module Mode = struct
     | Xml
     | Render
     | Analyze
+    | Info
 
   let all = [
     "run", Run;
     "xml", Xml;
     "render", Render;
     "analyze", Analyze;
+    "info", Info;
   ]
 
   let of_string s =
@@ -35,7 +37,7 @@ module Mode = struct
 
   let requires_model = function
     | Run | Xml | Render -> true
-    | Analyze -> false
+    | Analyze | Info -> false
 
   let help =
     all
@@ -201,6 +203,31 @@ module Action =
       Printf.printf "Exported XML -> %s\n%!" !xml
 
 
+    let info () =
+      ensure_input ();
+      let module Binary_codec = struct
+        type t = int
+        let to_int32 = Int32.of_int
+        let of_int32 = Int32.to_int
+      end in
+      let open Abca_io.Binary in
+      let archive =
+        load
+          ~filename:!input
+          ~codec:(module Binary_codec)
+      in
+      Printf.printf "File: %s\n" !input;
+      Printf.printf "Grid: %d x %d\n" archive.header.rows archive.header.cols;
+      Printf.printf "Generations: %d\n" archive.header.generation;
+      Printf.printf "Frames: %d\n" (Array.length archive.frames);
+      Printf.printf "Agent records: %d\n" (Array.length archive.agents);
+      Printf.printf "Metadata:\n";
+      Abca_io.Metadata.to_list archive.header.metadata
+      |> List.iter (fun (key, value) ->
+           Printf.printf "  %-28s %s\n" (key ^ ":") value);
+      flush stdout
+
+
     let analyze () =
       ensure_input ();
       let module Binary_codec = struct
@@ -343,6 +370,7 @@ module Action =
       | Mode.Xml, Some model -> xml model
       | Mode.Render, Some model -> render model
       | Mode.Analyze, _ -> analyze ()
+      | Mode.Info, _ -> info ()
       | _, None -> invalid_arg "This mode requires a model"
   end
 
