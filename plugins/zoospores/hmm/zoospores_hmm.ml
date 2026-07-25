@@ -739,7 +739,7 @@ end
 
 let to_color_index = function
   | 0 -> None
-  | s -> Some (min s 255)
+  | s -> Some (min (s - 1) 255)
 
 let metadata params ~rows ~cols ~generations ~density =
   Abca_io.Metadata.of_list [
@@ -884,7 +884,7 @@ let model = {
   kind = Abca_models.Model.Agent_based_model;
   description =
     "Two-state zoospore HMM with current-state empirical emissions";
-  state_count = 3;
+  state_count = 2;
   to_color_index;
   run;
   export_xml;
