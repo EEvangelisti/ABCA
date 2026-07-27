@@ -1,7 +1,8 @@
 <p align="center">
-  <img src="examples/life.gif" alt="Conway's Game of Life" />
+  <img src="examples/life.gif"
+       alt="Conway's Game of Life"
+       width="400">
 </p>
-
 
 # Life-like Cellular Automata
 
