@@ -14,8 +14,8 @@ dune clean
 dune exec abca -- \
   --mode run \
   --model "$MODEL" \
-  --rows 1000 \
-  --cols 1000 \
+  --rows 800 \
+  --cols 800 \
   --generations $GEN \
   --agents 2500 \
   --seed 42 \
@@ -38,7 +38,7 @@ dune exec abca -- \
   --model "$MODEL" \
   --input "$BIN" \
   --gif "$GIF" \
-  --palette tol-prgn-binary \
+  --palette python-binary \
   --background white \
   --draw-background \
   --every 1 \

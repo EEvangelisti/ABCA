@@ -297,7 +297,7 @@ extract_trajectory_metrics() {
 
     section "Extracting trajectory metrics"
 
-    run_python characterize_zoospore_trajectories.py \
+    run_python extract_trajectory_metrics.py \
         "$XML_SOURCE" \
         --outdir "$METRICS_DIR" \
         --dt "$FRAME_INTERVAL_S" \

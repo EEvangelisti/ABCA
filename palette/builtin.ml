@@ -21,6 +21,7 @@ let initialize () =
   Register.register Plasma.generator;
   Register.register Inferno.generator;
   Register.register Cividis.generator;
+  Register.register Python_binary.generator;
   (* Paul Tol's discrete palettes.
      Check: https://sronpersonalpages.nl/~pault/ *)
   Register.register Tol_bright.generator;
