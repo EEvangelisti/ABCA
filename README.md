@@ -19,23 +19,16 @@ ABCA currently includes the following plugins:
 
 ### Cellular automata
 
-* `cyclic`
-* `generations`
-* `larger_than_life`
-* `life`
-* `weighted_life`
+* [`cyclic`](plugins/cyclic/README.md)
+* [`generations`](plugins/generations/README.md)
+* [`larger_than_life`](plugins/larger_than_life/README.md)
+* [`life`](plugins/life/README.md)
+* [`weighted_life`](plugins/weighted_life/README.md)
 
 ### Agent-based cellular automata
 
-* `zoospores`
+* [`zoospores`](plugins/zoospores/README.md)
 
 Each plugin defines its own states, parameters, and transition rules while relying on the common ABCA simulation and rendering engine.
 
-## Zoospore model
-
-The `zoospores` plugin provides data-driven models of oomycete zoospore swimming.
-
-See the plugin documentation:
-
-* [`plugins/zoospores/README.md`](plugins/zoospores/README.md)
 
