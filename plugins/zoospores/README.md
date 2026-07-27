@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="examples/P_nicotianae_empirical.gif" alt="Phytophthora nicotianae zoospore simulation" />
+</p>
+
 # Zoospore Analysis Plugin
 
 This plugin provides a complete workflow for analysing zoospore swimming trajectories from time-lapse microscopy data. It combines image preprocessing, automated trajectory reconstruction, quantitative trajectory analysis, empirical parameter extraction for ABCA modelling, and hidden Markov model (HMM) inference.
