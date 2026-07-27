@@ -1,5 +1,7 @@
 <p align="center">
-  <img src="examples/P_nicotianae_empirical.gif" alt="Phytophthora nicotianae zoospore simulation" />
+  <img src="examples/P_nicotianae_empirical.gif"
+       alt="Phytophthora nicotianae zoospore simulation"
+       width="400">
 </p>
 
 # Zoospore Analysis Plugin
