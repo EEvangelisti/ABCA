@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/mazectric.png" alt="Mazectric" />
+  <img src="docs/logo.png" alt="ABCA" />
 </p>
 
 # ABCA
