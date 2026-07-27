@@ -1,3 +1,8 @@
+<p align="center">
+  <img src="examples/life.gif" alt="Conway's Game of Life" />
+</p>
+
+
 # Life-like Cellular Automata
 
 The `life` plugin implements **Life-like cellular automata**, a family of binary cellular automata derived from Conway’s Game of Life.
