@@ -41,4 +41,4 @@ The current distribution includes the following plugins:
 | [`larger_than_life`](plugins/larger_than_life/README.md) | CA   | Larger-than-Life cellular automata                                              |
 | [`life`](plugins/life/README.md)                         | CA   | Life-like cellular automata                                                     |
 | [`weighted_life`](plugins/weighted_life/README.md)       | CA   | Weighted Life cellular automata                                                 |
-| [`zoospores`](plugins/zoospores/README.md)               | ABCA | Empirical and HMM-driven agent-based models of *Phytophthora* zoospore swimming |
+| [`zoospores`](plugins/zoospores/README.md)               | ABCA | Agent-based models of *Phytophthora* zoospore swimming                          |
