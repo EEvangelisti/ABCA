@@ -1,3 +1,9 @@
+<p align="center">
+  <img src="examples/star_wars.gif"
+       alt="Star Wars"
+       width="400">
+</p>
+
 # Generations Cellular Automata
 
 The `generations` plugin implements **Generations cellular automata**, a family of multi-state extensions of Conway's Game of Life.
