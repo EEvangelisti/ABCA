@@ -1,3 +1,9 @@
+<p align="center">
+  <img src="examples/fire_flies.gif"
+       alt="Fire Flies"
+       width="400">
+</p>
+
 # Weighted Life Cellular Automata
 
 The `weighted_life` plugin implements **Weighted Life cellular automata**, a family of Life-like rules in which each position of the local neighbourhood can contribute a different weight to the transition score.
