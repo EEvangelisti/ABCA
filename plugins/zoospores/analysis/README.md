@@ -3,7 +3,7 @@
 
 
 
-## Trajectory resampling (`resample.sh`)
+## Resampling simulated trajectories (`resample.sh`)
 
 ### Purpose
 
