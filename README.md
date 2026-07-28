@@ -2,32 +2,42 @@
   <img src="docs/logo.png" alt="ABCA" width="600" />
 </p>
 
+**ABCA** is a framework for two-dimensional **cellular automata (CA)** and **agent-based cellular automata (ABCA)**.
 
-**ABCA** is a simulation engine for two-dimensional cellular automata and agent-based cellular automata.
+It provides a common simulation engine together with a modular plugin system, allowing a wide range of models to share the same execution, rendering, and export pipeline. Simulations can be saved as compact binary files and rendered as images, animations, or videos.
 
-It provides two main functions:
+## Installation
 
-* running and storing simulations;
-* rendering simulation outputs as images, animations, or videos.
+Clone the repository, for example with:
 
-## Plugin-based models
+```bash
+git clone git@github.com:EEvangelisti/ABCA.git
+```
 
-Simulation models are implemented as plugins located in the `plugins/` directory.
+Compile the project with [dune](https://github.com/ocaml/dune):
 
-ABCA currently includes the following plugins:
+```bash
+dune build
+```
 
-### Cellular automata
+During development, the program can be run directly without manually locating the executable:
 
-* [`cyclic`](plugins/cyclic/README.md)
-* [`generations`](plugins/generations/README.md)
-* [`larger_than_life`](plugins/larger_than_life/README.md)
-* [`life`](plugins/life/README.md)
-* [`weighted_life`](plugins/weighted_life/README.md)
+```bash
+dune exec abca -- <options>
+```
 
-### Agent-based cellular automata
+## Plugins
 
-* [`zoospores`](plugins/zoospores/README.md)
+ABCA uses a plugin architecture in which every model is implemented as an independent plugin located in the `plugins/` directory. Each plugin provides its own rules, parameters, documentation, and example simulations while relying on the common ABCA simulation and rendering engine.
 
-Each plugin defines its own states, parameters, and transition rules while relying on the common ABCA simulation and rendering engine.
+The current distribution includes the following plugins:
 
+| Plugin                                                   | Description                                                                     |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| [`cyclic`](plugins/cyclic/README.md)                     | Cyclic cellular automata                                                        |
+| [`generations`](plugins/generations/README.md)           | Multi-state Generations automata                                                |
+| [`larger_than_life`](plugins/larger_than_life/README.md) | Larger-than-Life cellular automata                                              |
+| [`life`](plugins/life/README.md)                         | Life-like cellular automata                                                     |
+| [`weighted_life`](plugins/weighted_life/README.md)       | Weighted Life cellular automata                                                 |
+| [`zoospores`](plugins/zoospores/README.md)               | Empirical and HMM-driven agent-based models of *Phytophthora* zoospore swimming |
 
