@@ -1,8 +1,7 @@
 <p align="center">
-  <img src="docs/logo.png" alt="ABCA" />
+  <img src="docs/logo.png" alt="ABCA" width="400" />
 </p>
 
-# ABCA
 
 **ABCA** is a simulation engine for two-dimensional cellular automata and agent-based cellular automata.
 
