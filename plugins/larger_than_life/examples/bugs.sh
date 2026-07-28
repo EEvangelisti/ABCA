@@ -15,6 +15,7 @@ dune exec abca -- \
 
 dune exec abca -- \
   --mode render \
+  --render-root plugins/larger_than_life/examples \
   --input plugins/larger_than_life/examples/bugs.bin \
   --gif bugs.gif \
   --palette python-binary
