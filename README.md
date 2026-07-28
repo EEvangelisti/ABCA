@@ -26,7 +26,7 @@ During development, the program can be run directly without manually locating th
 dune exec abca -- <options>
 ```
 
-The available `<options>` are defined [in this document](doc/cli.md)
+The available `<options>` are defined [in this document](doc/cli.md).
 
 ## Plugins
 
