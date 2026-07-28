@@ -15,6 +15,7 @@ dune exec abca -- \
 
 dune exec abca -- \
   --mode render \
+  --render-root plugins/weighted_life/examples \
   --input plugins/weighted_life/examples/fire_flies.bin \
   --gif fire_flies.gif \
   --palette tol-muted
