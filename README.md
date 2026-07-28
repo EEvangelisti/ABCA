@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/logo.png" alt="ABCA" width="600" />
+  <img src="doc/logo.png" alt="ABCA" width="600" />
 </p>
 
 **ABCA** is a framework for two-dimensional **cellular automata (CA)** and **agent-based cellular automata (ABCA)**.
