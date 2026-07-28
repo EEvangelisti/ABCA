@@ -1,3 +1,9 @@
+<p align="center">
+  <img src="examples/bugs.gif"
+       alt="Larger than Life: Bugs"
+       width="400">
+</p>
+
 # Larger-than-Life Cellular Automata
 
 The `larger_than_life` plugin implements **Larger-than-Life (LtL)** cellular automata, a generalisation of Conway's Game of Life introduced by Kellie Evans.
