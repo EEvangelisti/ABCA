@@ -47,14 +47,12 @@ mpl.rcParams.update(
 FIGURE_HEIGHT = 6.0
 FIGSIZE_STANDARD = (8.0, FIGURE_HEIGHT)
 FIGSIZE_WIDE = (10.0, FIGURE_HEIGHT)
-FIGSIZE_COMPACT = (7.0, FIGURE_HEIGHT)
 
 HISTOGRAM_FACE = "0.82"
 HISTOGRAM_EDGE = "0.30"
 LINE_COLOR = "0.10"
 REFERENCE_COLOR = "0.50"
 SCATTER_COLOR = "0.72"
-BAND_COLOR = "0.82"
 
 
 # -----------------------------------------------------------------------------
@@ -145,9 +143,9 @@ def plot_histogram(
     bins: int,
     dpi: int,
     vertical_reference: float | None = None,
-    legend_pos_x : float = 0.98,
-    legend_pos_y : float = 0.95,
-    horizontal_alignment : string = "right",
+    legend_pos_x: float = 0.98,
+    legend_pos_y: float = 0.95,
+    horizontal_alignment: str = "right",
 ) -> None:
     """Plot a percentage histogram with a median line and compact summary."""
     data = finite(values)
@@ -190,27 +188,6 @@ def plot_histogram(
         ha=horizontal_alignment,
         va="top",
     )
-    save_figure(fig, output_path, dpi)
-
-
-def plot_lag_curve(
-    x: Sequence[float],
-    y: Sequence[float],
-    output_path: Path,
-    title: str,
-    xlabel: str,
-    ylabel: str,
-    dpi: int,
-    horizontal_zero: bool = True,
-) -> None:
-    """Plot a lag-dependent metric using a consistent line style."""
-    fig, ax = make_figure()
-    ax.plot(x, y, color=LINE_COLOR, marker="o", markersize=4, linewidth=1.5)
-    if horizontal_zero:
-        ax.axhline(0.0, color=REFERENCE_COLOR, linewidth=0.8)
-    ax.set_title(title)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
     save_figure(fig, output_path, dpi)
 
 
@@ -383,17 +360,6 @@ def benjamini_hochberg(p_values: Sequence[float]) -> np.ndarray:
     corrected = np.minimum.accumulate(corrected[::-1])[::-1]
     adjusted[order] = np.clip(corrected, 0.0, 1.0)
     return adjusted
-
-
-def format_p_value(value: float) -> str:
-    """Format a P value for compact CSV and figure reporting."""
-    if not np.isfinite(value):
-        return "NA"
-    if value < 1e-300:
-        return "<1e-300"
-    if value < 0.001:
-        return f"{value:.2e}"
-    return f"{value:.3f}"
 
 
 def relationship_statistics(
@@ -1500,8 +1466,8 @@ def analyse_spatial_exploration(
         "Net displacement / path length",
         40,
         dpi,
-        legend_pos_x = 0.05,
-        horizontal_alignment = "left",
+        legend_pos_x=0.05,
+        horizontal_alignment="left",
     )
 
 
