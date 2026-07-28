@@ -32,6 +32,8 @@ The available `<options>` are defined [in this document](doc/cli.md).
 
 ABCA uses a plugin architecture in which every model is implemented as an independent plugin located in the `plugins/` directory. Each plugin provides its own rules, parameters, documentation, and example simulations while relying on the common ABCA simulation and rendering engine.
 
+The framework currently includes both classical cellular automata and agent-based cellular automata. While the former illustrate the flexibility of the engine, the latter are actively used in computational phytopathology research (e.g., to model the behaviour of *Phytophthora* zoospores from experimentally calibrated data).
+
 The current distribution includes the following plugins:
 
 | Plugin                                                   | Type | Description                                                                     |
