@@ -34,18 +34,11 @@ ABCA uses a plugin architecture in which every model is implemented as an indepe
 
 The current distribution includes the following plugins:
 
-### Cellular automata
-
-| Plugin                                                   | Description                                                                     |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| [`cyclic`](plugins/cyclic/README.md)                     | Cyclic cellular automata                                                        |
-| [`generations`](plugins/generations/README.md)           | Multi-state Generations automata                                                |
-| [`larger_than_life`](plugins/larger_than_life/README.md) | Larger-than-Life cellular automata                                              |
-| [`life`](plugins/life/README.md)                         | Life-like cellular automata                                                     |
-| [`weighted_life`](plugins/weighted_life/README.md)       | Weighted Life cellular automata                                                 |
-
-### Agent-based cellular automata
-
-| Plugin                                                   | Description                                                                     |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| [`zoospores`](plugins/zoospores/README.md)               | Empirical and HMM-driven agent-based models of *Phytophthora* zoospore swimming |
+| Plugin                                                   | Type | Description                                                                     |
+| -------------------------------------------------------- | ---- | ------------------------------------------------------------------------------- |
+| [`cyclic`](plugins/cyclic/README.md)                     | CA   | Cyclic cellular automata                                                        |
+| [`generations`](plugins/generations/README.md)           | CA   | Multi-state Generations automata                                                |
+| [`larger_than_life`](plugins/larger_than_life/README.md) | CA   | Larger-than-Life cellular automata                                              |
+| [`life`](plugins/life/README.md)                         | CA   | Life-like cellular automata                                                     |
+| [`weighted_life`](plugins/weighted_life/README.md)       | CA   | Weighted Life cellular automata                                                 |
+| [`zoospores`](plugins/zoospores/README.md)               | ABCA | Empirical and HMM-driven agent-based models of *Phytophthora* zoospore swimming |
