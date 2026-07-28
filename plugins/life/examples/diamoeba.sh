@@ -15,6 +15,7 @@ dune exec abca -- \
 
 dune exec abca -- \
   --mode render \
+  --render-root plugins/life/examples \
   --input plugins/life/examples/diamoeba.bin \
   --gif diamoeba.gif \
   --palette inferno \
