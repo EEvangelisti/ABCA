@@ -26,6 +26,8 @@ During development, the program can be run directly without manually locating th
 dune exec abca -- <options>
 ```
 
+The available `<options>` are defined [in this document](doc/cli.md)
+
 ## Plugins
 
 ABCA uses a plugin architecture in which every model is implemented as an independent plugin located in the `plugins/` directory. Each plugin provides its own rules, parameters, documentation, and example simulations while relying on the common ABCA simulation and rendering engine.
