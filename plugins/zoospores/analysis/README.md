@@ -36,13 +36,13 @@ analyse_trajectory_metrics
 
 | Module | Description |
 |---------|-------------|
-| [`setup_python.md`](setup_python.md) | Configure the Python interpreter used by the analysis pipeline. |
-| [`extract_trajectory_metrics.md`](extract_trajectory_metrics.md) | Extract local and global trajectory metrics from TrackMate outputs. |
-| [`analyse_trajectory_metrics.md`](analyse_trajectory_metrics.md) | Generate descriptive statistics and publication-quality figures. |
-| [`plot_trajectory_overview.md`](plot_trajectory_overview.md) | Produce trajectory visualisations and exploratory summaries. |
-| [`analyse_hysteresis.md`](analyse_hysteresis.md) | Evaluate the influence of FAST/SLOW hysteresis thresholds. |
-| [`extract_local_parameters.md`](extract_local_parameters.md) | Estimate the empirical ABCA model parameters from experimental data. |
-| [`fit_hidden_markov_models.md`](fit_hidden_markov_models.md) | Fit, compare and interpret Gaussian Hidden Markov Models. |
+| [`setup_python.md`](0_virtual_env/README.md) | Configure the Python interpreter used by the analysis pipeline. |
+| [`extract_trajectory_metrics.md`](1_extract_metrics/README.md) | Extract local and global trajectory metrics from TrackMate outputs. |
+| [`analyse_trajectory_metrics.md`](2_analyse_metrics/README.md) | Generate descriptive statistics and publication-quality figures. |
+| [`plot_trajectory_overview.md`](3_plot_overview/README.md) | Produce trajectory visualisations and exploratory summaries. |
+| [`analyse_hysteresis.md`](4_hysteresis/README.md) | Evaluate the influence of FAST/SLOW hysteresis thresholds. |
+| [`extract_local_parameters.md`](5_abca_parameters/README.md) | Estimate the empirical ABCA model parameters from experimental data. |
+| [`fit_hidden_markov_models.md`](6_hmm_analysis/README.md) | Fit, compare and interpret Gaussian Hidden Markov Models. |
 
 ---
 
