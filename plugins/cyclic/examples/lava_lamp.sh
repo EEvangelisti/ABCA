@@ -15,6 +15,7 @@ dune exec abca -- \
 
 dune exec abca -- \
   --mode render \
+  --render-root plugins/cyclic/examples \
   --input plugins/cyclic/examples/lava-lamp.bin \
   --gif lava-lamp.gif \
   --palette viridis

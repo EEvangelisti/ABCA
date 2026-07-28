@@ -15,6 +15,7 @@ dune exec abca -- \
 
 dune exec abca -- \
   --mode render \
+  --render-root plugins/cyclic/examples \
   --input plugins/cyclic/examples/spirals.bin \
   --gif spirals.gif \
   --palette viridis
