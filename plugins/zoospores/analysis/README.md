@@ -1,9 +1,20 @@
 # Trajectory analysis
 
+## Setting up virtual environment
 
+## 1. Metrics extraction
 
+## 2. Metrics analysis
 
-## Resampling simulated trajectories (`resample.sh`)
+## 3. Trajectory overview plots
+
+## 4. Hysteresis analysis
+
+## 5. ABCA parameters
+
+## 6. HMM analysis
+
+## 7. Resampling simulated trajectories
 
 ### Purpose
 
