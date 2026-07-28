@@ -15,6 +15,7 @@ dune exec abca -- \
 
 dune exec abca -- \
   --mode render \
+  --render-root plugins/generations/examples \
   --input plugins/generations/examples/star_wars.bin \
   --gif star_wars.gif \
   --palette tol-muted
