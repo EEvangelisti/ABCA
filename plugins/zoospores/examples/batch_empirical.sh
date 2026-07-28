@@ -3,6 +3,17 @@ set -euo pipefail
 
 cd ../../..
 
+dune clean
+dune build
+ABCA="$(dune exec which abca 2>/dev/null)"
+
+if [[ ! -x "$ABCA" ]]; then
+    echo "Error: failed to locate the ABCA executable." >&2
+    exit 1
+fi
+
+echo "Using ABCA executable: $ABCA"
+
 ROOT="plugins/zoospores"
 DATA="$ROOT/empirical/data"
 
@@ -17,7 +28,7 @@ for SEED in $(seq 1 "$N_RUNS"); do
     (
         # Run the simulation.
         echo "[$SEED/$N_RUNS] Running simulation..."
-        dune exec abca -- \
+        $ABCA \
             --mode run \
             --model zoospores-empirical \
             --rows 800 \
@@ -35,7 +46,7 @@ for SEED in $(seq 1 "$N_RUNS"); do
 
         # Export trajectories to an XML file.
         echo "[$SEED/$N_RUNS] Exporting trajectories to XML..."
-        dune exec abca -- \
+        $ABCA \
             --mode xml \
             --model zoospores-empirical \
             --input "$BIN" \
