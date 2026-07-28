@@ -1,3 +1,9 @@
+<p align="center">
+  <img src="examples/spirals.gif"
+       alt="Circular automaton: Spirals"
+       width="400">
+</p>
+
 # Cyclic Cellular Automata
 
 The `cyclic` plugin implements a family of cyclic cellular automata (CCA), a class of multi-state cellular automata in which cells evolve through a cyclic sequence of states depending on the states of their neighbours.
