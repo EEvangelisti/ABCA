@@ -317,7 +317,7 @@ analyse_trajectory_metrics() {
 
     section "Analysing trajectory metrics"
 
-    run_python analyze_zoospore_trajectory_metrics.py \
+    run_python summarise_zoospore_trajectory_metrics.py \
         "$ANALYSIS_METRICS_DIR" \
         --outdir "$GROUPED_ANALYSIS_DIR" \
         --dpi "$DPI"
