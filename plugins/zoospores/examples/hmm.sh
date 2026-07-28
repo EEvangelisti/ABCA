@@ -30,6 +30,7 @@ dune exec abca -- \
 
 dune exec abca -- \
   --mode render \
+  --render-root $ROOT/examples \
   --model zoospores-hmm \
   --input $ROOT/examples/P_nicotianae_hmm.bin \
   --gif P_nicotianae_hmm.gif \
