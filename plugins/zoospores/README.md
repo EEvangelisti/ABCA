@@ -146,6 +146,30 @@ Predictive validation can then be performed by applying the same workflow to
 independent experimental datasets and comparing the resulting simulations with 
 the corresponding observations.
 
+<h4 align="center">Representative outputs</h4>
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="examples/05_absolute_acceleration_experimental_vs_simulations.png">
+        <img src="examples/05_absolute_acceleration_experimental_vs_simulations.png" alt="Speed distribution" width="100%">
+      </a>
+    </td>
+    <td align="center">
+      <a href="examples/06_net_displacement_experimental_vs_simulations.png">
+        <img src="examples/06_net_displacement_experimental_vs_simulations.png" width="100%">
+      </a>
+    </td>
+    <td align="center">
+      <a href="examples/08_msd_experimental_vs_simulations.png">
+        <img src="examples/08_msd_experimental_vs_simulations.png" width="100%">
+      </a>
+    </td>
+  </tr>
+</table>
+
+<p align="center"><em>Click any image to view it at full resolution.</em></p>
+
 ---
 
 ← **[Back to ABCA documentation](../../README.md)**
