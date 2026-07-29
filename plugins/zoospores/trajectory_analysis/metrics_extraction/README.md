@@ -38,6 +38,18 @@ created containing the filtered metrics together with filter diagnostics.
 ./extract_trajectory_metrics.sh CONFIG_FILE
 ```
 
+### A typical output
+
+```bash
+Extracting trajectory metrics...
+  XML source: ../../tracks
+  Output:     ../../output/metrics
+  Python:     /home/user/setup/python_venv/bin/python
+P_nicotianae_hmm_000042.xml: 2500 tracks
+Complete metrics written to: ../../output/metrics
+Trajectory metric extraction completed.
+```
+
 ### Notes
 
 - Both TrackMate and ABCA XML formats are supported.
