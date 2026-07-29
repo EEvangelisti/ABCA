@@ -1,4 +1,4 @@
-← **[Back to the analysis pipeline](../../README.md)**
+← **[Back to plugin documentation](../../README.md)**
 
 ---
 
@@ -60,4 +60,4 @@ Trajectory metric extraction completed.
 
 ---
 
-← **[Back to the analysis pipeline](../../README.md)**
+← **[Back to plugin documentation](../../README.md)**
