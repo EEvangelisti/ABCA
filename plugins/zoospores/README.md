@@ -69,7 +69,7 @@ script assume this layout. Modifying the directory structure is not recommended.
 If you do so, the relative paths defined throughout the configuration files, 
 shell wrappers, and `run_all.sh` must be updated accordingly.
 
-### Trajectory reconstruction
+### Before you begin: Trajectory reconstruction
 
 Trajectories are typically reconstructed from time-lapse microscopy image series 
 using ImageJ/Fiji together with a dedicated particle-tracking plugin such as 
@@ -83,8 +83,7 @@ frame.
 3. **Trajectory reconstruction**, where detections are linked across successive 
 frames to generate complete trajectories.
 
-The analysis workflow provided in this repository starts from the reconstructed 
-trajectories produced by this process.
+**The analysis workflow provided in this repository starts from the reconstructed trajectories produced by this process.**
 
 ### Trajectory analysis
 
