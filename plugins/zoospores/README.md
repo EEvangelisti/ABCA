@@ -19,7 +19,10 @@ Two complementary behavioural models are currently supported.
 
 ## Analysis workflow
 
-A typical analysis workflow consists of three stages: trajectory analysis, model fitting, and model validation.
+A typical analysis workflow consists of three stages: trajectory analysis, 
+model fitting, and model validation. Before running the analysis pipeline, 
+[set up the Python environment](setup/README.md). This environment is shared 
+by all scripts and ensures isolated, reproducible execution.
 
 ### Trajectory analysis
 
@@ -27,7 +30,6 @@ These modules extract quantitative descriptors from reconstructed trajectories
 and generate the figures and summary statistics used to characterise zoospore 
 swimming behaviour.
 
-- [Setting up the Python environment](setup/README.md)
 - [Extracting trajectory metrics](trajectory_analysis/metrics_extraction/README.md)
 - [Analysing trajectory metrics](trajectory_analysis/metrics_analysis/README.md)
 - [Plotting trajectory overviews](trajectory_analysis/plotting_overviews/README.md)
