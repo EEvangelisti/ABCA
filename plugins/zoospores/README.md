@@ -61,18 +61,14 @@ Nevertheless, users are encouraged to review and adjust the configuration files
 associated with each analysis step before launching the pipeline.
 
 > [!NOTE]
-> **Before you begin.** Trajectories are typically reconstructed from time-lapse 
-microscopy image series using ImageJ/Fiji together with a dedicated 
-particle-tracking plugin such as [TrackMate](https://imagej.net/plugins/trackmate/).
-A typical reconstruction workflow consists of:
->1. **Image preprocessing**, including operations such as background subtraction, 
-size filtering, noise reduction, and image enhancement.
->2. **Particle detection**, in which individual zoospores are identified in each 
-frame.
->3. **Trajectory reconstruction**, where detections are linked across successive 
-frames to generate complete trajectories.
-> 
->**The analysis workflow provided in this repository starts from the reconstructed trajectories produced by this process.**
+> **Trajectory reconstruction.** Before the analysis workflow can be applied, 
+zoospore trajectories must first be reconstructed from time-lapse microscopy 
+image series. This is typically achieved using ImageJ/Fiji together with a 
+dedicated particle-tracking plugin such as
+[TrackMate](https://imagej.net/plugins/trackmate/). A typical workflow consists 
+of (1) image preprocessing (e.g. background subtraction, size filtering, and 
+noise reduction), (2) particle detection, and (3) trajectory reconstruction by 
+linking detections across successive frames.
 
 > [!IMPORTANT]
 > **Directory layout.** The analysis pipeline is designed around a fixed 
