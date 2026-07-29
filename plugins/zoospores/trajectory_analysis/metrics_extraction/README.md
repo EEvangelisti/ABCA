@@ -1,3 +1,7 @@
+← **[Back to the analysis pipeline](../../README.md)**
+
+---
+
 ## Extracting trajectory metrics
 
 ### Purpose
@@ -41,3 +45,7 @@ created containing the filtered metrics together with filter diagnostics.
 - The Python interpreter is automatically read from `python.conf`.
 - Analysis parameters (frame interval, coordinate scale, filtering strategy,
   etc.) are defined in the configuration file.
+
+---
+
+← **[Back to the analysis pipeline](../../README.md)**
