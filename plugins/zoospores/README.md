@@ -22,11 +22,10 @@ Two complementary behavioural models are currently supported.
 A typical analysis workflow is organised as follows:
 
 - Acquiring time-lapse microscopy movies.
-- Image preprocessing.
-- Trajectory reconstruction (TrackMate/Fiji).
+- [Image analysis (Fiji/TrackMate)](image_analysis_README.md).
 - [Trajectory analysis](trajectory_analysis/README.md).
-- HMM fit and parameter extraction for modelling.
-
+- [HMM fit and parameter extraction for modelling](model_fitting/README.md).
+- [Model validation](model_validation/README.md)
 
 ## Examples
 
