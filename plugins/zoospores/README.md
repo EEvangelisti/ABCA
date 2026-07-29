@@ -28,7 +28,7 @@ A typical analysis workflow is organised as follows:
 
 ## Examples
 
-Examples can be found in [`examples`](examples/).
+The following files illustrate how to run simulations.
 
 | File                                                                | Description                                     |
 | ------------------------------------------------------------------- | ----------------------------------------------- |
