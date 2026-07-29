@@ -89,7 +89,7 @@ swimming behaviour.
 - [Analysing trajectory metrics](trajectory_analysis/metrics_analysis/README.md)
 - [Plotting trajectory overviews](trajectory_analysis/plotting_overviews/README.md)
 
-> [!INFO]
+> [!NOTE]
 > **Batch processing.** The script 
 [`batch_analyse_trajectories.sh`](batch_analyse_trajectories.sh) is provided 
 to analyse multiple trajectory datasets in parallel. It is particularly useful 
