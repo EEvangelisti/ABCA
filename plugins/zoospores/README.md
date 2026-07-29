@@ -4,6 +4,10 @@
        width="400">
 </p>
 
+← **[Back to AbCA documentation](../../../README.md)**
+
+---
+
 # Zoospore Analysis Plugin
 
 This plugin provides a complete workflow for analysing zoospore swimming trajectories from time-lapse microscopy data. It combines image preprocessing, automated trajectory reconstruction, quantitative trajectory analysis, empirical parameter extraction for ABCA modelling, and hidden Markov model (HMM) inference.
@@ -66,3 +70,6 @@ The following files illustrate how to run simulations.
 | [`P_nicotianae_empirical.gif`](examples/P_nicotianae_empirical.gif) | Zoospore simulation using the empirical model   |
 | [`P_nicotianae_hmm.gif`](examples/P_nicotianae_hmm.gif)             | Zoospore simulation using the two-state HMM     |
 
+---
+
+← **[Back to AbCA documentation](../../../README.md)**
