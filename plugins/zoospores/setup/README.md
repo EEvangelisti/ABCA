@@ -57,4 +57,4 @@ The analysis pipeline depends on the following Python packages:
 - **[Matplotlib](https://matplotlib.org/)** – generation of publication-quality figures.
 - **[scikit-learn](https://scikit-learn.org/)** – data preprocessing and machine learning utilities.
 - **[hmmlearn](https://hmmlearn.readthedocs.io/)** – Gaussian Hidden Markov Model fitting.
-- **[tol-colors](https://github.com/jiffyclub/palettable)** – Paul Tol's colour palettes for scientific visualisation.
+- **[tol-colors](https://pypi.org/project/tol-colors/)** – Paul Tol's colour palettes for scientific visualisation.
