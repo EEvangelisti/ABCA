@@ -1,3 +1,7 @@
+← **[Back to plugin documentation](../../README.md)**
+
+---
+
 ## Fitting and interpreting hidden Markov models
 
 ### Purpose
@@ -63,3 +67,7 @@ containing all model-specific outputs.
   model and the structurally recommended model, avoiding several very large
   redundant files. This behaviour can be changed by setting
   `WRITE_DECODED_ALL=1` in the configuration file.
+
+---
+
+← **[Back to plugin documentation](../../README.md)**
