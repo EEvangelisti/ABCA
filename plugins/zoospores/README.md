@@ -88,7 +88,7 @@ simulation framework.
 
 - [Analysing SLOW/FAST hysteresis](model_fitting/hysteresis/README.md)
 - [Extracting empirical model parameters](model_fitting/local_parameter_extraction/README.md)
-- [Fitting hidden Markov models](trajectory_analysis/hmm_model_fit/README.md)
+- [Fitting hidden Markov models](model_fitting/hmm_model_fit/README.md)
 
 At this stage, you can run simulations using your own input files. For examples of Bash scripts, see above.
 
