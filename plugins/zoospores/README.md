@@ -22,17 +22,32 @@ Two complementary behavioural models are currently supported.
 A typical analysis workflow is organised as follows:
 
 ### Trajectory analysis
+
+These modules extract quantitative descriptors from reconstructed trajectories 
+and generate the figures and summary statistics used to characterise zoospore 
+swimming behaviour.
+
 - [Setting up the Python environment](setup/README.md)
 - [Extracting trajectory metrics](trajectory_analysis/metrics_extraction/README.md)
 - [Analysing trajectory metrics](trajectory_analysis/metrics_analysis/README.md)
 - [Plotting trajectory overviews](trajectory_analysis/plotting_overviews/README.md)
 
 ### Model fitting
+
+These modules infer empirical and Hidden Markov behavioural models directly 
+from the experimental data, producing parameter sets compatible with the ABCA 
+simulation framework.
+
 - [Analysing SLOW/FAST hysteresis](trajectory_analysis/hysteresis/README.md)
 - [Extracting empirical model parameters](model_fitting/local_parameter_extraction/README.md)
 - [Fitting Hidden Markov models](trajectory_analysis/hmm_model_fit/README.md)
 
 ### Model validation
+
+These modules compare simulated and experimental trajectories after controlling 
+for differences in trajectory length, allowing quantitative validation of 
+simulation outputs.
+
 - [Resampling trajectories](model_validation/trajectory_resampling/README.md)
 - [Validating simulations](model_validation/simulation_validation/README.md)
 
