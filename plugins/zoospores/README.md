@@ -8,37 +8,31 @@
 
 This plugin provides a complete workflow for analysing zoospore swimming trajectories from time-lapse microscopy data. It combines image preprocessing, automated trajectory reconstruction, quantitative trajectory analysis, empirical parameter extraction for ABCA modelling, and hidden Markov model (HMM) inference.
 
+
+## Available models
+
 Two complementary behavioural models are currently supported.
 
 - **Empirical SLOW/FAST model**: a two-state empirical model describing alternating FAST and SLOW swimming phases. Model parameters are estimated directly from experimental trajectories and exported for use by the ABCA simulator.
+
 - **Two-state hidden Markov model**: a probabilistic hidden Markov model inferred directly from trajectory data. The HMM provides an independent statistical description of behavioural states and serves both for biological interpretation and for validating the empirical SLOW/FAST model.
 
-The workflow is organised into four successive stages:
+## Analysis workflow
 
-```
-Microscopy movies
-        │
-        ▼
- Image preprocessing
-        │
-        ▼
-Trajectory reconstruction
-    (TrackMate/Fiji)
-        │
-        ▼
-Trajectory analysis
-        │
-        ├── Empirical SLOW/FAST model
-        └── Two-state HMM
-```
+A typical analysis workflow is organised as follows:
 
-## Image preprocessing
+- Acquiring time-lapse microscopy movies.
+- Image preprocessing.
+- Trajectory reconstruction (TrackMate/Fiji).
+- Trajectory analysis.
+- HMM fit and parameter extraction for modelling.
 
-**PLACEHOLDER**
+Below are the scripts used for image processing, trajectory analysis, HMM fit, and parameter extraction.
 
-## Trajectory analysis
-
-See the [documentation](analysis/README.md).
+| Step                | Documentation                       |
+| ------------------- | ----------------------------------- |
+| Image preprocessing |                                     |
+| Trajectory analysis | [documentation](analysis/README.md) |
 
 
 ## Examples
