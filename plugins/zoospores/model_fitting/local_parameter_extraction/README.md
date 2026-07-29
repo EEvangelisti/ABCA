@@ -42,6 +42,23 @@ The output directory contains:
 ./extract_local_parameters.sh CONFIG_FILE
 ```
 
+### A typical output
+
+```bash
+Extracting empirical local parameters...
+  Metrics:                  ../../output/metrics
+  Output:                   ../../output/abca_parameters
+  FAST/SLOW threshold:      automatically inferred
+  Hysteresis half-width:    25
+  Maximum lag:              25 steps
+  Quantile grid size:       1001
+  Acceleration multiplier:  3
+  Microns per cell:         10
+  Python:                   /home/user/setup/python_venv/bin/python
+Wrote outputs to ../../output/abca_parameters
+Local-parameter extraction completed.
+```
+
 ### Notes
 
 - The Python interpreter is automatically read from `python.conf`.
