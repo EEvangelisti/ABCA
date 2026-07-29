@@ -48,3 +48,13 @@ Python interpreter:       python_venv/bin/python
 - Other Bash scripts in the workflow read `python.conf` to locate the Python
   interpreter, ensuring that the same environment is used throughout the
   analysis pipeline.
+
+The analysis pipeline depends on the following Python packages:
+
+- **[NumPy](https://numpy.org/)** – numerical arrays and vectorised computations.
+- **[pandas](https://pandas.pydata.org/)** – tabular data manipulation and CSV input/output.
+- **[SciPy](https://scipy.org/)** – scientific computing and statistical functions.
+- **[Matplotlib](https://matplotlib.org/)** – generation of publication-quality figures.
+- **[scikit-learn](https://scikit-learn.org/)** – data preprocessing and machine learning utilities.
+- **[hmmlearn](https://hmmlearn.readthedocs.io/)** – Gaussian Hidden Markov Model fitting.
+- **[tol-colors](https://github.com/jiffyclub/palettable)** – Paul Tol's colour palettes for scientific visualisation.
