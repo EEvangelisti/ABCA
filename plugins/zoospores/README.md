@@ -97,25 +97,29 @@ when processing large numbers of independent simulations. Because each analysis
 generates its own complete set of intermediate and output files, large batch 
 analyses may require substantial disk space.
 
+<h4 align="center">Representative outputs</h4>
+
 <table>
   <tr>
     <td align="center">
       <a href="examples/01_speed_distribution.png">
-        <img src="examples/01_speed_distribution.png" alt="Speed distribution" width="95%">
+        <img src="examples/01_speed_distribution.png" alt="Speed distribution" width="100%">
       </a>
     </td>
     <td align="center">
       <a href="examples/04_net_displacement.png">
-        <img src="examples/04_net_displacement.png" alt="Net displacement" width="95%">
+        <img src="examples/04_net_displacement.png" alt="Net displacement" width="100%">
       </a>
     </td>
     <td align="center">
       <a href="examples/01_msd.png">
-        <img src="examples/01_msd.png" alt="Mean squared displacement" width="95%">
+        <img src="examples/01_msd.png" alt="Mean squared displacement" width="100%">
       </a>
     </td>
   </tr>
 </table>
+
+<p align="center"><em>Click any image to view it at full resolution.</em></p>
 
 ### Model fitting
 
