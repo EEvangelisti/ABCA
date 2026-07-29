@@ -26,7 +26,8 @@ A typical analysis workflow consists of three stages: trajectory analysis,
 model fitting, and model validation. Before running the analysis pipeline, 
 [set up the Python environment](setup/README.md). This environment is shared by 
 all scripts and ensures isolated, reproducible execution. For convenience, a 
-`run_all.sh` script is provided to automate the complete workflow. Nevertheless, 
+<a href="run_all.sh" target="_blank"><code>run_all.sh</code></a> 
+script is provided to automate the complete workflow. Nevertheless, 
 users are encouraged to review and adjust the configuration files associated 
 with each analysis step before launching the pipeline.
 
