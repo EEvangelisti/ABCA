@@ -40,7 +40,7 @@ case "$1" in
         ;;
 esac
 
-PYTHON_CONFIG="python.conf"
+PYTHON_CONFIG="../../setup/python.conf"
 ANALYSIS_CONFIG="$1"
 PYTHON_SCRIPT="analyse_trajectory_metrics.py"
 
@@ -68,7 +68,7 @@ source "$ANALYSIS_CONFIG"
 [[ -d "$METRICS_DIR" ]] \
     || die "Metrics directory not found: $METRICS_DIR"
 
-OUTPUT_DIR="${OUTPUT_DIR:-$METRICS_DIR/grouped_analysis}"
+OUTPUT_DIR="${GROUPED_ANALYSIS_DIR:-$METRICS_DIR/grouped_analysis}"
 DPI="${DPI:-300}"
 STATE_SPEED_THRESHOLD="${STATE_SPEED_THRESHOLD:-}"
 BINS="${BINS:-50}"
