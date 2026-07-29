@@ -90,7 +90,7 @@ simulation framework.
 - [Extracting empirical model parameters](model_fitting/local_parameter_extraction/README.md)
 - [Fitting Hidden Markov models](trajectory_analysis/hmm_model_fit/README.md)
 
-At this stage, you can do your own simulations. See example files above.
+At this stage, you can run simulations using your own input files. For examples of Bash scripts, see above.
 
 ### Model validation
 
