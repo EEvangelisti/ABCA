@@ -86,7 +86,7 @@ These modules infer empirical and Hidden Markov behavioural models directly
 from the experimental data, producing parameter sets compatible with the ABCA 
 simulation framework.
 
-- [Analysing SLOW/FAST hysteresis](trajectory_analysis/hysteresis/README.md)
+- [Analysing SLOW/FAST hysteresis](model_fitting/hysteresis/README.md)
 - [Extracting empirical model parameters](model_fitting/local_parameter_extraction/README.md)
 - [Fitting Hidden Markov models](trajectory_analysis/hmm_model_fit/README.md)
 
