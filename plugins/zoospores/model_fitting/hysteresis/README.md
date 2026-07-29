@@ -36,6 +36,22 @@ The output directory contains:
 ./analyse_hysteresis.sh CONFIG_FILE
 ```
 
+## A typical output
+
+```bash
+Analysing FAST/SLOW hysteresis sensitivity...
+  Metrics:            ../../output/metrics
+  Output:             ../../output/hysteresis_sensitivity
+  Hysteresis widths:  0,5,10,15,20,30,40
+  Otsu bins:          256
+  Histogram bins:     50
+  Python:             /home/user/setup/python_venv/bin/python
+Otsu threshold: 183.787 µm/s
+Hysteresis half-widths: 0, 5, 10, 15, 20, 30, 40 µm/s
+Results written to: ../../output/hysteresis_sensitivity
+Hysteresis analysis completed.
+```
+
 ### Notes
 
 - The Python interpreter is automatically read from `python.conf`.
