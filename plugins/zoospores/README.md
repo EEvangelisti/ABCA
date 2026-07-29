@@ -97,6 +97,26 @@ when processing large numbers of independent simulations. Because each analysis
 generates its own complete set of intermediate and output files, large batch 
 analyses may require substantial disk space.
 
+<table>
+  <tr>
+    <td align="center">
+      <a href="examples/01_speed_distribution.png">
+        <img src="examples/01_speed_distribution.png" alt="Speed distribution" width="30%">
+      </a>
+    </td>
+    <td align="center">
+      <a href="examples/04_net_displacement.png">
+        <img src="examples/04_net_displacement.png" alt="Net displacement" width="30%">
+      </a>
+    </td>
+    <td align="center">
+      <a href="examples/01_msd.png">
+        <img src="examples/01_msd.png" alt="Mean squared displacement" width="30%">
+      </a>
+    </td>
+  </tr>
+</table>
+
 ### Model fitting
 
 These modules infer empirical and Hidden Markov behavioural models directly 
