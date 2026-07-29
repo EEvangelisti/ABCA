@@ -1,3 +1,7 @@
+← **[Back to plugin documentation](../../README.md)**
+
+---
+
 ## Analysing FAST/SLOW hysteresis sensitivity
 
 ### Purpose
@@ -63,3 +67,7 @@ Hysteresis analysis completed.
   *threshold − 25* to *threshold + 25*.
 - A hysteresis half-width of `0` reproduces the standard single-threshold
   FAST/SLOW segmentation.
+
+---
+
+← **[Back to plugin documentation](../../README.md)**
