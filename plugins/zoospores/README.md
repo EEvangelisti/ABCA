@@ -27,12 +27,14 @@ model fitting, and model validation. Before running the analysis pipeline,
 [set up the Python environment](setup/README.md). This environment is shared 
 by all scripts and ensures isolated, reproducible execution.
 
-> [!WARNING]
-> **Directory layout.** The default configuration assumes that all analysis 
-modules are organised as sibling directories within a common parent directory. 
-If this layout is changed, you will need to update (i) the relative paths 
-defined in the configuration files and (ii) the location of `python.conf` 
-referenced by each shell wrapper.
+> [!IMPORTANT]
+> **Directory layout.** The analysis pipeline is designed around a fixed 
+directory layout in which all analysis modules are organised as sibling 
+directories within a common parent directory. The relative paths used 
+throughout the configuration files, shell wrappers, and the `run_all.sh` 
+script assume this layout. Modifying the directory structure is not recommended. 
+If you do so, the relative paths defined throughout the configuration files, 
+shell wrappers, and `run_all.sh` must be updated accordingly.
 
 
 ### Trajectory analysis
