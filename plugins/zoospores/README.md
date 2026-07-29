@@ -89,6 +89,14 @@ swimming behaviour.
 - [Analysing trajectory metrics](trajectory_analysis/metrics_analysis/README.md)
 - [Plotting trajectory overviews](trajectory_analysis/plotting_overviews/README.md)
 
+> [!INFO]
+> **Batch processing.** The script 
+[`batch_analyse_trajectories.sh`](batch_analyse_trajectories.sh) is provided 
+to analyse multiple trajectory datasets in parallel. It is particularly useful 
+when processing large numbers of independent simulations. Because each analysis 
+generates its own complete set of intermediate and output files, large batch 
+analyses may require substantial disk space.
+
 ### Model fitting
 
 These modules infer empirical and Hidden Markov behavioural models directly 
