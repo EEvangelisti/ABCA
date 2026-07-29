@@ -19,13 +19,16 @@ die() {
 }
 
 usage() {
-    cat <<EOF
+    cat <<EOF_USAGE
 Usage:
   $(basename "$0") CONFIG_FILE
 
 CONFIG_FILE is a trusted Bash configuration file containing the input/output
 paths and trajectory-overview parameters.
-EOF
+
+At least one of FILTERED_METRICS_DIR or COMPLETE_METRICS_DIR must be set.
+Both may be provided.
+EOF_USAGE
 }
 
 if (( $# != 1 )); then
@@ -40,7 +43,7 @@ case "$1" in
         ;;
 esac
 
-PYTHON_CONFIG="python.conf"
+PYTHON_CONFIG="../../setup/python.conf"
 ANALYSIS_CONFIG="$1"
 PYTHON_SCRIPT="plot_trajectory_overview.py"
 
@@ -60,21 +63,48 @@ source "$PYTHON_CONFIG"
 source "$ANALYSIS_CONFIG"
 
 : "${PYTHON:?PYTHON is not defined in $PYTHON_CONFIG}"
-: "${METRICS_DIR:?METRICS_DIR is not defined in $ANALYSIS_CONFIG}"
+
+FILTERED_METRICS_DIR="${FILTERED_METRICS_DIR:-}"
+COMPLETE_METRICS_DIR="${COMPLETE_METRICS_DIR:-}"
+
+if [[ -z "$FILTERED_METRICS_DIR" && -z "$COMPLETE_METRICS_DIR" ]]; then
+    die "At least one of FILTERED_METRICS_DIR or COMPLETE_METRICS_DIR must be defined in $ANALYSIS_CONFIG"
+fi
 
 [[ -x "$PYTHON" ]] \
     || die "Python interpreter is not executable: $PYTHON"
 
-[[ -d "$METRICS_DIR" ]] \
-    || die "Metrics directory not found: $METRICS_DIR"
+validate_metrics_dir() {
+    local label="$1"
+    local directory="$2"
 
-[[ -f "$METRICS_DIR/step_metrics.csv" ]] \
-    || die "Required file not found: $METRICS_DIR/step_metrics.csv"
+    [[ -d "$directory" ]] \
+        || die "$label metrics directory not found: $directory"
 
-[[ -f "$METRICS_DIR/track_metrics.csv" ]] \
-    || die "Required file not found: $METRICS_DIR/track_metrics.csv"
+    [[ -f "$directory/step_metrics.csv" ]] \
+        || die "Required file not found: $directory/step_metrics.csv"
 
-OVERVIEW_DIR="${OVERVIEW_DIR:-$METRICS_DIR/trajectory_overview}"
+    [[ -f "$directory/track_metrics.csv" ]] \
+        || die "Required file not found: $directory/track_metrics.csv"
+}
+
+if [[ -n "$FILTERED_METRICS_DIR" ]]; then
+    validate_metrics_dir "Filtered" "$FILTERED_METRICS_DIR"
+fi
+
+if [[ -n "$COMPLETE_METRICS_DIR" ]]; then
+    validate_metrics_dir "Complete" "$COMPLETE_METRICS_DIR"
+fi
+
+# The Python script requires one primary metrics directory. Prefer the filtered
+# dataset when available; otherwise use the complete dataset.
+if [[ -n "$FILTERED_METRICS_DIR" ]]; then
+    PRIMARY_METRICS_DIR="$FILTERED_METRICS_DIR"
+else
+    PRIMARY_METRICS_DIR="$COMPLETE_METRICS_DIR"
+fi
+
+OVERVIEW_DIR="${OVERVIEW_DIR:-$PRIMARY_METRICS_DIR/trajectory_overview}"
 
 ANGULAR_BINS="${ANGULAR_BINS:-36}"
 MAX_TRACKS="${MAX_TRACKS:-2000}"
@@ -85,7 +115,7 @@ DPI="${DPI:-300}"
 mkdir -p "$OVERVIEW_DIR"
 
 args=(
-    "$METRICS_DIR"
+    "$PRIMARY_METRICS_DIR"
     --outdir "$OVERVIEW_DIR"
     --angular-bins "$ANGULAR_BINS"
     --max-tracks "$MAX_TRACKS"
@@ -94,24 +124,19 @@ args=(
     --dpi "$DPI"
 )
 
-# Supplying the complete metric dataset produces an additional, unfiltered
-# trajectory-length distribution.
-if [[ -n "${COMPLETE_METRICS_DIR:-}" ]]; then
-    [[ -d "$COMPLETE_METRICS_DIR" ]] \
-        || die "Complete metrics directory not found: $COMPLETE_METRICS_DIR"
-
-    [[ -f "$COMPLETE_METRICS_DIR/track_metrics.csv" ]] \
-        || die \
-            "Required file not found: $COMPLETE_METRICS_DIR/track_metrics.csv"
-
+# When both datasets are supplied, the filtered dataset is used for the main
+# overview plots and the complete dataset adds the unfiltered trajectory-length
+# distribution.
+if [[ -n "$FILTERED_METRICS_DIR" && -n "$COMPLETE_METRICS_DIR" ]]; then
     args+=(
         --complete-metrics-dir "$COMPLETE_METRICS_DIR"
     )
 fi
 
 echo "Generating trajectory overview..."
-echo "  Metrics:          $METRICS_DIR"
+echo "  Filtered metrics: ${FILTERED_METRICS_DIR:-not specified}"
 echo "  Complete metrics: ${COMPLETE_METRICS_DIR:-not specified}"
+echo "  Primary metrics:  $PRIMARY_METRICS_DIR"
 echo "  Output:           $OVERVIEW_DIR"
 echo "  Python:           $PYTHON"
 
