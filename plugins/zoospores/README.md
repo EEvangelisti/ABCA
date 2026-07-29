@@ -24,8 +24,11 @@ Two complementary behavioural models are currently supported.
 
 A typical analysis workflow consists of three stages: trajectory analysis, 
 model fitting, and model validation. Before running the analysis pipeline, 
-[set up the Python environment](setup/README.md). This environment is shared 
-by all scripts and ensures isolated, reproducible execution.
+[set up the Python environment](setup/README.md). This environment is shared by 
+all scripts and ensures isolated, reproducible execution. For convenience, a 
+`run_all.sh` script is provided to automate the complete workflow. Nevertheless, 
+users are encouraged to review and adjust the configuration files associated 
+with each analysis step before launching the pipeline.
 
 > [!IMPORTANT]
 > **Directory layout.** The analysis pipeline is designed around a fixed 
