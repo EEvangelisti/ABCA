@@ -2,7 +2,7 @@
 
 ---
 
-## 7. Resampling simulated trajectories
+## Resampling simulated trajectories
 
 ### Purpose
 
