@@ -38,7 +38,7 @@ The output directory contains:
 ./validate_simulations.sh CONFIG_FILE
 ```
 
-## A typical output
+### A typical output
 
 ```
 Simulation validation
