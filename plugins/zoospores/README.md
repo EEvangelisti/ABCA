@@ -2,7 +2,7 @@
 
 ---
 
-# Zoospore Analysis Plugin
+# Modelling Zoospore Swimming Behaviour
 
 This plugin provides a complete workflow for analysing zoospore swimming trajectories from time-lapse microscopy data. It combines image preprocessing, automated trajectory reconstruction, quantitative trajectory analysis, empirical parameter extraction for ABCA modelling, and hidden Markov model (HMM) inference.
 
