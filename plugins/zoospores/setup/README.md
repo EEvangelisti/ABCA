@@ -1,5 +1,7 @@
 ## Setting up the Python environment
 
+← **[Back to the analysis pipeline](../README.md)**
+
 ### Purpose
 
 Create a dedicated Python virtual environment, install all required Python
@@ -58,3 +60,5 @@ The analysis pipeline depends on the following Python packages:
 - **[scikit-learn](https://scikit-learn.org/)** – data preprocessing and machine learning utilities.
 - **[hmmlearn](https://hmmlearn.readthedocs.io/)** – Gaussian Hidden Markov Model fitting.
 - **[tol-colors](https://pypi.org/project/tol-colors/)** – Paul Tol's colour palettes for scientific visualisation.
+
+← **[Back to the analysis pipeline](../README.md)**
