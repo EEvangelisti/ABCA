@@ -80,6 +80,7 @@ size filtering, noise reduction, and image enhancement.
 frame.
 >3. **Trajectory reconstruction**, where detections are linked across successive 
 frames to generate complete trajectories.
+
 >**The analysis workflow provided in this repository starts from the reconstructed trajectories produced by this process.**
 
 ### Trajectory analysis
