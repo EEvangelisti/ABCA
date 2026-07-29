@@ -1,3 +1,7 @@
+← **[Back to plugin documentation](../../README.md)**
+
+---
+
 ## Extracting empirical local parameters
 
 ### Purpose
@@ -58,3 +62,7 @@ The output directory contains:
   numerical safeguard.
 - Global trajectory statistics are exported solely as validation targets and
   are never imposed as local behavioural rules.
+
+---
+
+← **[Back to plugin documentation](../../README.md)**
