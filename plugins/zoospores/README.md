@@ -4,7 +4,17 @@
 
 # Modelling Zoospore Swimming Behaviour
 
-This plugin provides a complete workflow for analysing zoospore swimming trajectories from time-lapse microscopy data. It combines image preprocessing, automated trajectory reconstruction, quantitative trajectory analysis, empirical parameter extraction for ABCA modelling, and hidden Markov model (HMM) inference.
+This repository provides two behavioural models of zoospore swimming calibrated 
+from nearly 60,000 experimentally reconstructed trajectories of 
+*Phytophthora nicotianae* zoospores freely exploring a liquid environment. 
+The models comprise an empirical SLOW/FAST model and a hidden Markov model 
+(HMM), which can be directly used with the ABCA simulation framework.
+
+To facilitate the development of new behavioural models, the complete analysis 
+workflow used for model calibration is also provided. It includes image 
+preprocessing, automated trajectory reconstruction, quantitative trajectory 
+analysis, empirical parameter extraction, and HMM inference, allowing users 
+to infer equivalent models from their own time-lapse microscopy datasets.
 
 <p align="center">
   <img src="examples/P_nicotianae_empirical.gif"
@@ -14,11 +24,18 @@ This plugin provides a complete workflow for analysing zoospore swimming traject
 
 ## Available models
 
-Two complementary behavioural models are currently supported.
+Two complementary behavioural models are currently provided.
 
-- **Empirical SLOW/FAST model**: a two-state empirical model describing alternating FAST and SLOW swimming phases. Model parameters are estimated directly from experimental trajectories and exported for use by the ABCA simulator.
+- **Empirical SLOW/FAST model**: a two-state empirical model describing 
+alternating SLOW and FAST swimming phases. Its parameters were estimated 
+directly from experimentally reconstructed trajectories and exported for use 
+with the ABCA simulation framework.
 
-- **Two-state hidden Markov model**: a probabilistic hidden Markov model inferred directly from trajectory data. The HMM provides an independent statistical description of behavioural states and serves both for biological interpretation and for validating the empirical SLOW/FAST model.
+- **Two-state hidden Markov model (HMM)**: a probabilistic model inferred 
+independently from the same trajectory dataset. It provides an alternative 
+statistical description of zoospore behaviour and serves both to refine the 
+biological interpretation of swimming states and to independently validate 
+the empirical SLOW/FAST model.
 
 ## Examples
 
