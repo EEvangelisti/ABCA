@@ -99,7 +99,11 @@ for differences in trajectory length, allowing quantitative validation of
 simulation outputs.
 
 - [Resampling trajectories](model_validation/trajectory_resampling/README.md)
-- [Validating simulations](model_validation/simulation_validation/README.md)
+- [Validating simulations using global metrics](model_validation/simulation_validation/README.md)
+
+Predictive validation can then be performed by applying the same workflow to 
+independent experimental datasets and comparing the resulting simulations with 
+the corresponding observations.
 
 ---
 
