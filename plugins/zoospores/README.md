@@ -26,9 +26,9 @@ A typical analysis workflow is organised as follows:
 - [Extracting trajectory metrics](trajectory_analysis/metrics_extraction/README.md)
 - [Analysing trajectory metrics](trajectory_analysis/metrics_analysis/README.md)
 - [Plotting trajectory overviews](trajectory_analysis/plotting_overviews/README.md)
-- [Analysing SLOW/FAST hysteresis](trajectory_analysis/hysteresis/README.md)
 
 ### Model fitting
+- [Analysing SLOW/FAST hysteresis](trajectory_analysis/hysteresis/README.md)
 - [Extracting empirical model parameters](model_fitting/local_parameter_extraction/README.md)
 - [Fitting Hidden Markov models](trajectory_analysis/hmm_model_fit/README.md)
 
