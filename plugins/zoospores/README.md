@@ -60,15 +60,6 @@ all scripts and ensures isolated, reproducible execution. For convenience, a
 Nevertheless, users are encouraged to review and adjust the configuration files 
 associated with each analysis step before launching the pipeline.
 
-> [!IMPORTANT]
-> **Directory layout.** The analysis pipeline is designed around a fixed 
-directory layout in which all analysis modules are organised as sibling 
-directories within a common parent directory. The relative paths used 
-throughout the configuration files, shell wrappers, and the `run_all.sh` 
-script assume this layout. Modifying the directory structure is not recommended. 
-If you do so, the relative paths defined throughout the configuration files, 
-shell wrappers, and `run_all.sh` must be updated accordingly.
-
 > [!NOTE]
 > **Before you begin.** Trajectories are typically reconstructed from time-lapse 
 microscopy image series using ImageJ/Fiji together with a dedicated 
@@ -82,6 +73,15 @@ frame.
 frames to generate complete trajectories.
 > 
 >**The analysis workflow provided in this repository starts from the reconstructed trajectories produced by this process.**
+
+> [!IMPORTANT]
+> **Directory layout.** The analysis pipeline is designed around a fixed 
+directory layout in which all analysis modules are organised as sibling 
+directories within a common parent directory. The relative paths used 
+throughout the configuration files, shell wrappers, and the `run_all.sh` 
+script assume this layout. Modifying the directory structure is not recommended. 
+If you do so, the relative paths defined throughout the configuration files, 
+shell wrappers, and `run_all.sh` must be updated accordingly.
 
 ### Trajectory analysis
 
