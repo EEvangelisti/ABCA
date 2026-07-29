@@ -24,15 +24,8 @@ A typical analysis workflow is organised as follows:
 - Acquiring time-lapse microscopy movies.
 - Image preprocessing.
 - Trajectory reconstruction (TrackMate/Fiji).
-- Trajectory analysis.
+- [Trajectory analysis](analysis/README.md).
 - HMM fit and parameter extraction for modelling.
-
-Below are the scripts used for image processing, trajectory analysis, HMM fit, and parameter extraction.
-
-| Step                | Documentation                       |
-| ------------------- | ----------------------------------- |
-| Image preprocessing |                                     |
-| Trajectory analysis | [documentation](analysis/README.md) |
 
 
 ## Examples
