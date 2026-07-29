@@ -21,10 +21,20 @@ Two complementary behavioural models are currently supported.
 
 A typical analysis workflow is organised as follows:
 
-- [Image analysis (Fiji/TrackMate)](image_analysis/README.md).
-- [Trajectory analysis](trajectory_analysis/README.md).
-- [HMM fit and parameter extraction for modelling](model_fitting/README.md).
-- [Model validation](model_validation/README.md).
+**Trajectory analysis**
+- [Setting up the Python environment](setup/README.md)
+- [Extracting trajectory metrics](trajectory_analysis/metrics_extraction/README.md)
+- [Analysing trajectory metrics](trajectory_analysis/metrics_analysis/README.md)
+- [Plotting trajectory overviews](trajectory_analysis/plotting_overviews/README.md)
+- [Analysing SLOW/FAST hysteresis](trajectory_analysis/hysteresis/README.md)
+
+**Model fitting**
+- [Extracting empirical model parameters](model_fitting/local_parameter_extraction/README.md)
+- [Fitting Hidden Markov models](trajectory_analysis/hmm_model_fit/README.md)
+
+**Model validation**
+- [Resampling trajectories](model_validation/trajectory_resampling/README.md)
+- [Validating simulations](model_validation/simulation_validation/README.md)
 
 ## Examples
 
