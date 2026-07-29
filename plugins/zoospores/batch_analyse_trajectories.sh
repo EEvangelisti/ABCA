@@ -173,7 +173,22 @@ for tracks_dir in "${valid_track_dirs[@]}"; do
         replace_config_value "$analysis_conf" "METRICS_DIR" "$metrics_dir"
         replace_config_value "$analysis_conf" "GROUPED_ANALYSIS_DIR" "$grouped_analysis_dir"
 
-        replace_config_value "$overview_conf" "FILTERED_METRICS_DIR" ""
+        # Read the filtering settings from the specialised extraction
+        # configuration so that the overview step consumes the correct output.
+        # shellcheck disable=SC1090
+        source "$extraction_conf"
+
+        if [[ "${LENGTH_FILTER_MODE:-none}" == "none" ]]; then
+            filtered_metrics_dir=""
+        else
+            if [[ -z "${FILTERED_SUBDIR:-}" ]]; then
+                echo "Error: FILTERED_SUBDIR must be defined when LENGTH_FILTER_MODE is not 'none'." >&2
+                exit 1
+            fi
+            filtered_metrics_dir="$metrics_dir/$FILTERED_SUBDIR"
+        fi
+
+        replace_config_value "$overview_conf" "FILTERED_METRICS_DIR" "$filtered_metrics_dir"
         replace_config_value "$overview_conf" "COMPLETE_METRICS_DIR" "$metrics_dir"
         replace_config_value "$overview_conf" "OVERVIEW_DIR" "$overview_dir"
 
