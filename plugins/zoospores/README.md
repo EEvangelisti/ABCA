@@ -101,17 +101,17 @@ analyses may require substantial disk space.
   <tr>
     <td align="center">
       <a href="examples/01_speed_distribution.png">
-        <img src="examples/01_speed_distribution.png" alt="Speed distribution" width="30%">
+        <img src="examples/01_speed_distribution.png" alt="Speed distribution" width="80%">
       </a>
     </td>
     <td align="center">
       <a href="examples/04_net_displacement.png">
-        <img src="examples/04_net_displacement.png" alt="Net displacement" width="30%">
+        <img src="examples/04_net_displacement.png" alt="Net displacement" width="80%">
       </a>
     </td>
     <td align="center">
       <a href="examples/01_msd.png">
-        <img src="examples/01_msd.png" alt="Mean squared displacement" width="30%">
+        <img src="examples/01_msd.png" alt="Mean squared displacement" width="80%">
       </a>
     </td>
   </tr>
