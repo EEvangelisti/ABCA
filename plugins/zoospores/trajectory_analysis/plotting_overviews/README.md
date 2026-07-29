@@ -1,3 +1,7 @@
+← **[Back to the analysis pipeline](../../README.md)**
+
+---
+
 ## Generating the trajectory overview
 
 ### Purpose
@@ -36,6 +40,19 @@ The output directory contains:
 ./plot_trajectory_overview.sh CONFIG_FILE
 ```
 
+### A typical output
+
+```bash
+Generating trajectory overview...
+  Filtered metrics: not specified
+  Complete metrics: ../../output/metrics
+  Primary metrics:  ../../output/metrics
+  Output:           ../../output/trajectory_overview
+  Python:           /home/user/setup/python_venv/bin/python
+Figures and CSV files written to: ../../output/trajectory_overview
+Trajectory overview completed.
+```
+
 ### Notes
 
 - The Python interpreter is automatically read from `python.conf`.
@@ -48,3 +65,7 @@ The output directory contains:
   distribution is generated for the complete, unfiltered dataset.
 - Trajectories in the global panel are sampled across all ten
   trajectory-length deciles.
+  
+---
+
+← **[Back to the analysis pipeline](../../README.md)**
