@@ -19,7 +19,7 @@ Two complementary behavioural models are currently supported.
 
 ## Analysis workflow
 
-A typical analysis workflow is organised as follows:
+A typical analysis workflow consists of three stages: trajectory analysis, model fitting, and model validation.
 
 ### Trajectory analysis
 
