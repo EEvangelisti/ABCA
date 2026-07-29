@@ -24,7 +24,7 @@ A typical analysis workflow is organised as follows:
 - [Image analysis (Fiji/TrackMate)](image_analysis_README.md).
 - [Trajectory analysis](trajectory_analysis/README.md).
 - [HMM fit and parameter extraction for modelling](model_fitting/README.md).
-- [Model validation](model_validation/README.md)
+- [Model validation](model_validation/README.md).
 
 ## Examples
 
