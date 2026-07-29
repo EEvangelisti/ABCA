@@ -74,13 +74,13 @@ shell wrappers, and `run_all.sh` must be updated accordingly.
 microscopy image series using ImageJ/Fiji together with a dedicated 
 particle-tracking plugin such as [TrackMate](https://imagej.net/plugins/trackmate/).
 A typical reconstruction workflow consists of:
-1. **Image preprocessing**, including operations such as background subtraction, 
+>1. **Image preprocessing**, including operations such as background subtraction, 
 size filtering, noise reduction, and image enhancement.
-2. **Particle detection**, in which individual zoospores are identified in each 
+>2. **Particle detection**, in which individual zoospores are identified in each 
 frame.
-3. **Trajectory reconstruction**, where detections are linked across successive 
+>3. **Trajectory reconstruction**, where detections are linked across successive 
 frames to generate complete trajectories.
-**The analysis workflow provided in this repository starts from the reconstructed trajectories produced by this process.**
+>**The analysis workflow provided in this repository starts from the reconstructed trajectories produced by this process.**
 
 ### Trajectory analysis
 
