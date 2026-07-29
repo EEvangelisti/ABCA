@@ -28,6 +28,19 @@ or
 ./setup_python.sh /path/to/python3
 ```
 
+### A typical output
+
+```bash
+Creating Python virtual environment...
+Upgrading pip...
+Installing required packages...
+
+Python successfully configured.
+Configuration written to: python.conf
+Python interpreter:       python_venv/bin/python
+```
+
+
 ### Notes
 
 - The virtual environment is created only if it does not already exist.
