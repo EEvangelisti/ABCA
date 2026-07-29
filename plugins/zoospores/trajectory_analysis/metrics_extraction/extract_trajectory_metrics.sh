@@ -40,7 +40,7 @@ case "$1" in
         ;;
 esac
 
-PYTHON_CONFIG="python.conf"
+PYTHON_CONFIG="../../setup/python.conf"
 ANALYSIS_CONFIG="$1"
 PYTHON_SCRIPT="extract_trajectory_metrics.py"
 
