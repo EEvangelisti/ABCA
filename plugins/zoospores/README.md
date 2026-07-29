@@ -20,7 +20,20 @@ Two complementary behavioural models are currently supported.
 
 - **Two-state hidden Markov model**: a probabilistic hidden Markov model inferred directly from trajectory data. The HMM provides an independent statistical description of behavioural states and serves both for biological interpretation and for validating the empirical SLOW/FAST model.
 
-## Analysis workflow
+## Examples
+
+The following files illustrate how to run simulations.
+
+| File                                                                | Description                                     |
+| ------------------------------------------------------------------- | ----------------------------------------------- |
+| [`empirical.sh`](examples/empirical.sh)                             | Example of simulation using the empirical model |
+| [`batch_empirical.sh`](examples/batch_empirical.sh)                 | Same as above, but for batch processing         |
+| [`hmm.sh`](examples/hmm.sh)                                         | Example of simulation using the two-state HMM   |
+| [`batch_hmm.sh`](examples/batch_hmm.sh)                             | Same as above, but for batch processing         |
+| [`P_nicotianae_empirical.gif`](examples/P_nicotianae_empirical.gif) | Zoospore simulation using the empirical model   |
+| [`P_nicotianae_hmm.gif`](examples/P_nicotianae_hmm.gif)             | Zoospore simulation using the two-state HMM     |
+
+## Workflow for building new behavioural models
 
 A typical analysis workflow consists of three stages: trajectory analysis, 
 model fitting, and model validation. Before running the analysis pipeline, 
@@ -68,19 +81,6 @@ simulation outputs.
 
 - [Resampling trajectories](model_validation/trajectory_resampling/README.md)
 - [Validating simulations](model_validation/simulation_validation/README.md)
-
-## Examples
-
-The following files illustrate how to run simulations.
-
-| File                                                                | Description                                     |
-| ------------------------------------------------------------------- | ----------------------------------------------- |
-| [`empirical.sh`](examples/empirical.sh)                             | Example of simulation using the empirical model |
-| [`batch_empirical.sh`](examples/batch_empirical.sh)                 | Same as above, but for batch processing         |
-| [`hmm.sh`](examples/hmm.sh)                                         | Example of simulation using the two-state HMM   |
-| [`batch_hmm.sh`](examples/batch_hmm.sh)                             | Same as above, but for batch processing         |
-| [`P_nicotianae_empirical.gif`](examples/P_nicotianae_empirical.gif) | Zoospore simulation using the empirical model   |
-| [`P_nicotianae_hmm.gif`](examples/P_nicotianae_hmm.gif)             | Zoospore simulation using the two-state HMM     |
 
 ---
 
