@@ -1,4 +1,4 @@
-← **[Back to the analysis pipeline](../../README.md)**
+← **[Back to plugin documentation](../../README.md)**
 
 ---
 
@@ -53,4 +53,4 @@ Trajectory analysis completed.
   
 ---
 
-← **[Back to the analysis pipeline](../../README.md)**
+← **[Back to plugin documentation](../../README.md)**
