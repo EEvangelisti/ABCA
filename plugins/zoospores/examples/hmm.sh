@@ -3,9 +3,20 @@ set -euo pipefail
 
 cd ../../..
 
+dune clean
+dune build
+ABCA="$(dune exec which abca 2>/dev/null)"
+
+if [[ ! -x "$ABCA" ]]; then
+    echo "Error: failed to locate the ABCA executable." >&2
+    exit 1
+fi
+
+echo "Using ABCA executable: $ABCA"
+
 ROOT="plugins/zoospores"
 
-dune exec abca -- \
+"$ABCA" \
   --mode run \
   --model zoospores-hmm \
   --rows 400 \
@@ -22,13 +33,13 @@ dune exec abca -- \
   --plugin-arg MICRONS_PER_CELL=10 \
   --out $ROOT/examples/P_nicotianae_hmm.bin
 
-dune exec abca -- \
+"$ABCA" \
   --mode xml \
   --model zoospores-hmm \
   --input $ROOT/examples/P_nicotianae_hmm.bin \
   --xml $ROOT/examples/P_nicotianae_hmm.xml
 
-dune exec abca -- \
+"$ABCA" \
   --mode render \
   --render-root $ROOT/examples \
   --model zoospores-hmm \
@@ -39,4 +50,4 @@ dune exec abca -- \
   --every 1 \
   --fps 15
 
-cd $ROOT/examples
+
