@@ -45,6 +45,43 @@ containing all model-specific outputs.
 ./fit_hidden_markov_models.sh CONFIG_FILE
 ```
 
+### A typical output
+
+```
+Fitting and interpreting zoospore HMMs...
+  Metrics:                    ../../output/metrics
+  Output:                     ../../output/hmm_analysis
+  Time step:                  0.07 s
+  State range:                2-2
+  Initializations per model:  1
+  Maximum EM iterations:      500
+  Convergence tolerance:      1e-4
+  Covariance type:            diag
+  Minimum track observations: 10
+  Acceleration scale:         100
+  Connectivity threshold:     0.02
+  Minimum state occupancy:    0.01
+  Minimum state posterior:    0.50
+  Quantiles per state:        1001
+  Write all decoded tables:   0
+  Python:                     /home/adunaton/user/setup/python_venv/bin/python
+Prepared 2500 independent trajectories and 247500 local observations.
+[  1/1] Fitting 2 states, seed 0...
+    BIC=1821894.546; converged=True; iterations=46
+...
+    
+Generating complete outputs for 2 states...
+
+BIC-selected model: 2 states
+BIC: 1.82189e+06
+Structurally recommended model: 2 states (lowest BIC among structurally admissible models)
+Complete model-specific outputs:
+  ../../output/hmm_analysis/models_by_state_count
+Combined selection table:
+  ../../output/hmm_analysis/hmm_model_selection_with_connectivity.tsv
+Results written to: ../../output/hmm_analysis
+```
+
 ### Notes
 
 - The Python interpreter is automatically read from `python.conf`.
