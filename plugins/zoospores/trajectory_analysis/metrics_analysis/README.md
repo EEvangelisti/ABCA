@@ -32,6 +32,17 @@ The output directory contains:
 ./analyse_trajectory_metrics.sh CONFIG_FILE
 ```
 
+### A typical output
+
+```bash
+Analysing trajectory metrics...
+  Metrics: ../../output/metrics/
+  Output:  ../../output/grouped_analysis
+  Python:  /home/user/setup/python_venv/bin/python
+Grouped analysis written to: ../../output/grouped_analysis
+Trajectory analysis completed.
+```
+
 ### Notes
 
 - The Python interpreter is automatically read from `python.conf`.
