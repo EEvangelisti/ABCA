@@ -16,7 +16,7 @@ preprocessing, automated trajectory reconstruction, quantitative trajectory
 analysis, empirical parameter extraction, and HMM inference, allowing users 
 to infer equivalent models from their own time-lapse microscopy datasets.
 
-<table  style="margin: 0px auto;" cellspacing="0" cellpadding="0">
+<table align="center" style="margin: 0px auto;">
   <tr>
     <td align="center">
       <a href="examples/P_nicotianae_empirical.gif">
