@@ -1,4 +1,4 @@
-← **[Back to plugin documentation](../../README.md)**
+← **[Back to plugin documentation](../../../README.md)**
 
 ---
 
@@ -107,4 +107,4 @@ Results written to: ../../output/hmm_analysis
 
 ---
 
-← **[Back to plugin documentation](../../README.md)**
+← **[Back to plugin documentation](../../../README.md)**
