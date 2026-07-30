@@ -104,13 +104,13 @@ analyses may require substantial disk space.
 
 <p align="center">
   <a href="examples/01_speed_distribution.png">
-    <img src="examples/01_speed_distribution.png" alt="Speed distribution" width="100%">
+    <img src="examples/01_speed_distribution.png" alt="Speed distribution" width="30%">
   </a>
   <a href="examples/04_net_displacement.png">
-    <img src="examples/04_net_displacement.png" alt="Net displacement" width="100%">
+    <img src="examples/04_net_displacement.png" alt="Net displacement" width="30%">
   </a>
   <a href="examples/01_msd.png">
-    <img src="examples/01_msd.png" alt="Mean squared displacement" width="100%">
+    <img src="examples/01_msd.png" alt="Mean squared displacement" width="30%">
   </a>
 </p>
 
@@ -146,13 +146,13 @@ the corresponding observations.
 
 <p align="center">
   <a href="examples/05_absolute_acceleration_experimental_vs_simulations.png">
-    <img src="examples/05_absolute_acceleration_experimental_vs_simulations.png" alt="Speed distribution" width="100%">
+    <img src="examples/05_absolute_acceleration_experimental_vs_simulations.png" alt="Speed distribution" width="30%">
   </a>
   <a href="examples/06_net_displacement_experimental_vs_simulations.png">
-    <img src="examples/06_net_displacement_experimental_vs_simulations.png" width="100%">
+    <img src="examples/06_net_displacement_experimental_vs_simulations.png" width="30%">
   </a>
   <a href="examples/08_msd_experimental_vs_simulations.png">
-    <img src="examples/08_msd_experimental_vs_simulations.png" width="100%">
+    <img src="examples/08_msd_experimental_vs_simulations.png" width="30%">
   </a>
 </p>
 
