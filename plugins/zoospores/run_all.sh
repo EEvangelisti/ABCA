@@ -1,47 +1,49 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Directory containing all configuration files.
+CONFDIR="$(realpath "${1:-.}")"
+[[ -d "$CONFDIR" ]] || {
+    echo "Configuration directory not found: $CONFDIR" >&2
+    exit 1
+}
+
 # Setting up Python environment
-cd setup
-./setup_python.sh "${1:-}"
-cd ..
+cd "$ROOT/setup"
+./setup_python.sh "${2:-}"
 
 # ------------------------------------------------------------------------------
 # Analysing trajectories
 # ------------------------------------------------------------------------------
-cd trajectory_analysis
+cd "$ROOT/trajectory_analysis/metrics_extraction"
+./extract_trajectory_metrics.sh \
+    "$CONFDIR/extract_trajectory_metrics.conf"
 
-cd metrics_extraction
-./extract_trajectory_metrics.sh extract_trajectory_metrics.conf
-cd ..
+cd "$ROOT/trajectory_analysis/metrics_analysis"
+./analyse_trajectory_metrics.sh \
+    "$CONFDIR/analyse_trajectory_metrics.conf"
 
-cd metrics_analysis
-./analyse_trajectory_metrics.sh analyse_trajectory_metrics.conf
-cd ..
-
-cd plotting_overviews
-./plot_trajectory_overview.sh plot_trajectory_overview.conf
-cd ..
-
-cd ..
+cd "$ROOT/trajectory_analysis/plotting_overviews"
+./plot_trajectory_overview.sh \
+    "$CONFDIR/plot_trajectory_overview.conf"
 
 # ------------------------------------------------------------------------------
 # Model fitting
 # ------------------------------------------------------------------------------
-cd model_fitting
+cd "$ROOT/model_fitting/hysteresis"
+./analyse_hysteresis.sh \
+    "$CONFDIR/analyse_hysteresis.conf"
 
-cd hysteresis
-./analyse_hysteresis.sh analyse_hysteresis.conf
-cd ..
+cd "$ROOT/model_fitting/local_parameter_extraction"
+./extract_local_parameters.sh \
+    "$CONFDIR/extract_local_parameters.conf"
 
-cd local_parameter_extraction
-./extract_local_parameters.sh extract_local_parameters.conf
-cd ..
+cd "$ROOT/model_fitting/hmm_model_fit"
+./fit_and_interpret_zoospore_hmm.sh \
+    "$CONFDIR/fit_and_interpret_zoospore_hmm.conf"
 
-cd hmm_model_fit
-./fit_and_interpret_zoospore_hmm.sh fit_and_interpret_zoospore_hmm.conf
-cd ..
-
-cd ..
-
-echo "The analysis completed successfully"
+echo
+echo "The analysis completed successfully."
+echo "Configuration profile: $CONFDIR"
