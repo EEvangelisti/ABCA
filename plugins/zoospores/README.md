@@ -20,12 +20,12 @@ to infer equivalent models from their own time-lapse microscopy datasets.
   <tr>
     <td align="center">
       <a href="examples/P_nicotianae_empirical.gif">
-        <img src="examples/P_nicotianae_empirical.gif" alt="Speed distribution" width="100%">
+        <img src="examples/P_nicotianae_empirical.gif" alt="Speed distribution" width="300">
       </a>
     </td>
     <td align="center">
       <a href="examples/02_centered_trajectories.png">
-        <img src="examples/02_centered_trajectories.png" width="100%">
+        <img src="examples/02_centered_trajectories.png" width="300">
       </a>
   </tr>
 </table>
