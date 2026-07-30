@@ -58,9 +58,9 @@ The following files illustrate how to run simulations.
 
 A typical analysis workflow consists of three stages: trajectory analysis, 
 model fitting, and model validation. Before running the analysis pipeline, 
-[set up the Python environment](setup/README.md). This environment is shared by 
+[set up the Python environment](analysis/setup/README.md). This environment is shared by 
 all scripts and ensures isolated, reproducible execution. For convenience, a 
-[`run_all.sh`](run_all.sh) script is provided to automate the complete workflow. 
+[`run_all.sh`](analysis/run_all.sh) script is provided to automate the complete workflow. 
 Nevertheless, users are encouraged to review and adjust the configuration files 
 associated with each analysis step before launching the pipeline.
 
@@ -89,13 +89,13 @@ These modules extract quantitative descriptors from reconstructed trajectories
 and generate the figures and summary statistics used to characterise zoospore 
 swimming behaviour.
 
-- [Extracting trajectory metrics](trajectory_analysis/metrics_extraction/README.md)
-- [Analysing trajectory metrics](trajectory_analysis/metrics_analysis/README.md)
-- [Plotting trajectory overviews](trajectory_analysis/plotting_overviews/README.md)
+- [Extracting trajectory metrics](analysis/trajectory_analysis/metrics_extraction/README.md)
+- [Analysing trajectory metrics](analysis/trajectory_analysis/metrics_analysis/README.md)
+- [Plotting trajectory overviews](analysis/trajectory_analysis/plotting_overviews/README.md)
 
 > [!NOTE]
 > **Batch processing.** The script 
-[`batch_analyse_trajectories.sh`](batch_analyse_trajectories.sh) is provided 
+[`batch_analyse_trajectories.sh`](analysis/batch_analyse_trajectories.sh) is provided 
 to analyse multiple trajectory datasets in parallel. It is particularly useful 
 when processing large numbers of independent simulations. Because each analysis 
 generates its own complete set of intermediate and output files, large batch 
@@ -115,9 +115,9 @@ These modules infer empirical and Hidden Markov behavioural models directly
 from the experimental data, producing parameter sets compatible with the ABCA 
 simulation framework.
 
-- [Analysing SLOW/FAST hysteresis](model_fitting/hysteresis/README.md)
-- [Extracting empirical model parameters](model_fitting/local_parameter_extraction/README.md)
-- [Fitting hidden Markov models](model_fitting/hmm_model_fit/README.md)
+- [Analysing SLOW/FAST hysteresis](analysis/model_fitting/hysteresis/README.md)
+- [Extracting empirical model parameters](analysis/model_fitting/local_parameter_extraction/README.md)
+- [Fitting hidden Markov models](analysis/model_fitting/hmm_model_fit/README.md)
 
 At this stage, you can run simulations using your own input files. For examples of Bash scripts, see above.
 
@@ -127,9 +127,9 @@ These modules compare simulated and experimental trajectories after controlling
 for differences in trajectory length, allowing quantitative validation of 
 simulation outputs.
 
-- [Resampling trajectories](model_validation/trajectory_resampling/README.md)
-- [Validating simulations using global metrics](model_validation/simulation_validation/README.md)
-- [Comparing model performance against experimental data](model_validation/model_comparison/README.md)
+- [Resampling trajectories](analysis/model_validation/trajectory_resampling/README.md)
+- [Validating simulations using global metrics](analysis/model_validation/simulation_validation/README.md)
+- [Comparing model performance against experimental data](analysis/model_validation/model_comparison/README.md)
 
 Predictive validation can then be performed by applying the same workflow to 
 independent experimental datasets and comparing the resulting simulations with 
