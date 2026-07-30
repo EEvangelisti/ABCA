@@ -24,6 +24,7 @@ to infer equivalent models from their own time-lapse microscopy datasets.
     <img src="examples/02_centered_trajectories.png" width="400">
   </a>
 </p>
+<p align="center"><em>Click any image to view it at full resolution.</em></p>
 
 ## Available models
 
