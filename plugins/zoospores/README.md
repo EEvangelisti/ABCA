@@ -141,6 +141,7 @@ simulation outputs.
 
 - [Resampling trajectories](model_validation/trajectory_resampling/README.md)
 - [Validating simulations using global metrics](model_validation/simulation_validation/README.md)
+- [Comparing model performance against experimental data](model_validation/model_comparison/README.md)
 
 Predictive validation can then be performed by applying the same workflow to 
 independent experimental datasets and comparing the resulting simulations with 
