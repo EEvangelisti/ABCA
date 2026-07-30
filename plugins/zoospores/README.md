@@ -102,25 +102,17 @@ analyses may require substantial disk space.
 
 <h4 align="center">Representative outputs</h4>
 
-<table>
-  <tr>
-    <td align="center">
-      <a href="examples/01_speed_distribution.png">
-        <img src="examples/01_speed_distribution.png" alt="Speed distribution" width="100%">
-      </a>
-    </td>
-    <td align="center">
-      <a href="examples/04_net_displacement.png">
-        <img src="examples/04_net_displacement.png" alt="Net displacement" width="100%">
-      </a>
-    </td>
-    <td align="center">
-      <a href="examples/01_msd.png">
-        <img src="examples/01_msd.png" alt="Mean squared displacement" width="100%">
-      </a>
-    </td>
-  </tr>
-</table>
+<p align="center">
+  <a href="examples/01_speed_distribution.png">
+    <img src="examples/01_speed_distribution.png" alt="Speed distribution" width="100%">
+  </a>
+  <a href="examples/04_net_displacement.png">
+    <img src="examples/04_net_displacement.png" alt="Net displacement" width="100%">
+  </a>
+  <a href="examples/01_msd.png">
+    <img src="examples/01_msd.png" alt="Mean squared displacement" width="100%">
+  </a>
+</p>
 
 <p align="center"><em>Click any image to view it at full resolution.</em></p>
 
@@ -152,25 +144,17 @@ the corresponding observations.
 
 <h4 align="center">Representative outputs</h4>
 
-<table>
-  <tr>
-    <td align="center">
-      <a href="examples/05_absolute_acceleration_experimental_vs_simulations.png">
-        <img src="examples/05_absolute_acceleration_experimental_vs_simulations.png" alt="Speed distribution" width="100%">
-      </a>
-    </td>
-    <td align="center">
-      <a href="examples/06_net_displacement_experimental_vs_simulations.png">
-        <img src="examples/06_net_displacement_experimental_vs_simulations.png" width="100%">
-      </a>
-    </td>
-    <td align="center">
-      <a href="examples/08_msd_experimental_vs_simulations.png">
-        <img src="examples/08_msd_experimental_vs_simulations.png" width="100%">
-      </a>
-    </td>
-  </tr>
-</table>
+<p align="center">
+  <a href="examples/05_absolute_acceleration_experimental_vs_simulations.png">
+    <img src="examples/05_absolute_acceleration_experimental_vs_simulations.png" alt="Speed distribution" width="100%">
+  </a>
+  <a href="examples/06_net_displacement_experimental_vs_simulations.png">
+    <img src="examples/06_net_displacement_experimental_vs_simulations.png" width="100%">
+  </a>
+  <a href="examples/08_msd_experimental_vs_simulations.png">
+    <img src="examples/08_msd_experimental_vs_simulations.png" width="100%">
+  </a>
+</p>
 
 <p align="center"><em>Click any image to view it at full resolution.</em></p>
 
