@@ -1,4 +1,4 @@
-← **[Back to the analysis pipeline](../README.md)**
+← **[Back to the analysis pipeline](../../README.md)**
 
 ---
 
@@ -66,4 +66,4 @@ The analysis pipeline depends on the following Python packages:
 
 ---
 
-← **[Back to the analysis pipeline](../README.md)**
+← **[Back to the analysis pipeline](../../README.md)**
