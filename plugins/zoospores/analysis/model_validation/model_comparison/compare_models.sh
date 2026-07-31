@@ -3,10 +3,10 @@
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+cd "$ABCA_CONFIG_DIR"
 
-SETUP_CONFIG="${1:-$SCRIPT_DIR/../../setup/python.conf}"
-MODULE_CONFIG="${2:-$SCRIPT_DIR/compare_models.conf}"
-PYTHON_SCRIPT="$SCRIPT_DIR/compare_zoospore_models_indexed.py"
+MODULE_CONFIG="$1"
+PYTHON_SCRIPT="$SCRIPT_DIR/compare_models.py"
 
 die() {
     printf 'Error: %s\n' "$*" >&2
@@ -43,22 +43,15 @@ resolve_path() {
     if [[ "$value" = /* ]]; then
         printf '%s\n' "$value"
     else
-        printf '%s\n' "$SCRIPT_DIR/$value"
+        printf '%s\n' "$ABCA_CONFIG_DIR/$value"
     fi
 }
 
-require_file "$SETUP_CONFIG"
 require_file "$MODULE_CONFIG"
 require_file "$PYTHON_SCRIPT"
 
 # shellcheck disable=SC1090
-source "$SETUP_CONFIG"
-
-# shellcheck disable=SC1090
 source "$MODULE_CONFIG"
-
-require_variable PYTHON
-require_file "$PYTHON"
 
 required_variables=(
     EXPERIMENTAL_ANALYSIS_DIR
@@ -117,7 +110,7 @@ OUTPUT_PATH_PREFIX="$OUTPUT_DIR/$OUTPUT_PREFIX"
 LOG_PATH="$OUTPUT_DIR/$LOG_FILENAME"
 
 command=(
-    "$PYTHON" "$PYTHON_SCRIPT"
+    python "$PYTHON_SCRIPT"
     --experimental-displacement "$EXPERIMENTAL_DISPLACEMENT"
     --empirical-displacement "$EMPIRICAL_DISPLACEMENT"
     --hmm-displacement "$HMM_DISPLACEMENT"
@@ -144,7 +137,7 @@ fi
 cat <<EOF
 Model comparison
 ================
-Python interpreter:        $PYTHON
+Python interpreter:        $(command -v python)
 Experimental analysis:     $EXPERIMENTAL_ANALYSIS_DIR
 Empirical simulations:     $EMPIRICAL_ANALYSIS_TEMPLATE
 HMM simulations:           $HMM_ANALYSIS_TEMPLATE
