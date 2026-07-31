@@ -1,48 +1,34 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+CONFDIR="$(realpath -e -- "${1:-.}")"
+SETUP_CONFIG="${2:-}"
 
-# Directory containing all configuration files.
-CONFDIR="$(realpath "${1:-.}")"
-[[ -d "$CONFDIR" ]] || {
-    echo "Configuration directory not found: $CONFDIR" >&2
-    exit 1
-}
+"$ROOT/setup/setup_python.sh" "$SETUP_CONFIG"
+source "$ROOT/setup/python_venv/bin/activate"
 
-# Setting up Python environment
-cd "$ROOT/setup"
-./setup_python.sh "${2:-}"
+scripts=(
+    "$ROOT/trajectory_analysis/metrics_extraction/extract_trajectory_metrics.sh"
+    "$ROOT/trajectory_analysis/metrics_analysis/analyse_trajectory_metrics.sh"
+    "$ROOT/trajectory_analysis/plotting_overviews/plot_trajectory_overview.sh"
+    "$ROOT/model_fitting/hysteresis/analyse_hysteresis.sh"
+    "$ROOT/model_fitting/local_parameter_extraction/extract_local_parameters.sh"
+    "$ROOT/model_fitting/hmm_model_fit/fit_and_interpret_zoospore_hmm.sh"
+)
 
-# ------------------------------------------------------------------------------
-# Analysing trajectories
-# ------------------------------------------------------------------------------
-cd "$ROOT/trajectory_analysis/metrics_extraction"
-./extract_trajectory_metrics.sh \
+configs=(
     "$CONFDIR/extract_trajectory_metrics.conf"
-
-cd "$ROOT/trajectory_analysis/metrics_analysis"
-./analyse_trajectory_metrics.sh \
     "$CONFDIR/analyse_trajectory_metrics.conf"
-
-cd "$ROOT/trajectory_analysis/plotting_overviews"
-./plot_trajectory_overview.sh \
     "$CONFDIR/plot_trajectory_overview.conf"
-
-# ------------------------------------------------------------------------------
-# Model fitting
-# ------------------------------------------------------------------------------
-cd "$ROOT/model_fitting/hysteresis"
-./analyse_hysteresis.sh \
     "$CONFDIR/analyse_hysteresis.conf"
-
-cd "$ROOT/model_fitting/local_parameter_extraction"
-./extract_local_parameters.sh \
     "$CONFDIR/extract_local_parameters.conf"
-
-cd "$ROOT/model_fitting/hmm_model_fit"
-./fit_and_interpret_zoospore_hmm.sh \
     "$CONFDIR/fit_and_interpret_zoospore_hmm.conf"
+)
+
+for i in "${!scripts[@]}"; do
+    ABCA_CONFIG_DIR="$CONFDIR" "${scripts[$i]}" "${configs[$i]}"
+done
 
 echo
 echo "The analysis completed successfully."

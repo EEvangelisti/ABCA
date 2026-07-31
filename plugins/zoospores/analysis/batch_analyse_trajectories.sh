@@ -95,11 +95,9 @@ if (( ${#valid_track_dirs[@]} == 0 )); then
     exit 1
 fi
 
-# Set up the shared Python environment once before launching parallel analyses.
-(
-    cd "$ROOT/setup"
-    ./setup_python.sh "$SETUP_CONFIG"
-)
+# Set up and activate the shared Python environment once.
+"$ROOT/setup/setup_python.sh" "$SETUP_CONFIG"
+source "$ROOT/setup/python_venv/bin/activate"
 
 # Replace one shell-style KEY=... assignment in a copied configuration file.
 replace_config_value() {
@@ -240,20 +238,9 @@ for tracks_dir in "${valid_track_dirs[@]}"; do
             "OVERVIEW_DIR" \
             "$overview_dir"
 
-        (
-            cd "$extraction_module"
-            ./extract_trajectory_metrics.sh "$extraction_conf"
-        )
-
-        (
-            cd "$analysis_module"
-            ./analyse_trajectory_metrics.sh "$analysis_conf"
-        )
-
-        (
-            cd "$overview_module"
-            ./plot_trajectory_overview.sh "$overview_conf"
-        )
+        ABCA_CONFIG_DIR="$config_dir" "$extraction_module/extract_trajectory_metrics.sh" "$extraction_conf"
+        ABCA_CONFIG_DIR="$config_dir" "$analysis_module/analyse_trajectory_metrics.sh" "$analysis_conf"
+        ABCA_CONFIG_DIR="$config_dir" "$overview_module/plot_trajectory_overview.sh" "$overview_conf"
 
         echo \
             "[$index/$total] Completed $tracks_name" \
