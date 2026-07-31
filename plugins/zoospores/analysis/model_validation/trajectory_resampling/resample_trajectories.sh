@@ -2,30 +2,19 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
-
-PYTHON_CONF="../../setup/python.conf"
-CONFIG_FILE="${1:-resample_trajectories.conf}"
-SCRIPT="resample_trajectories.py"
-
-if [[ ! -f "$PYTHON_CONF" ]]; then
-    echo "Error: Python configuration file not found: $PYTHON_CONF" >&2
-    exit 1
-fi
+cd "$ABCA_CONFIG_DIR"
+CONFIG_FILE="$1"
+SCRIPT="$SCRIPT_DIR/resample_trajectories.py"
 
 if [[ ! -f "$CONFIG_FILE" ]]; then
     echo "Error: configuration file not found: $CONFIG_FILE" >&2
     exit 1
 fi
 
-# Shared Python interpreter, then module-specific settings.
-# shellcheck disable=SC1090
-source "$PYTHON_CONF"
-# shellcheck disable=SC1090
+# shellcheck source=/dev/null
 source "$CONFIG_FILE"
 
 required_variables=(
-    PYTHON
     INPUT_DIR
     OUTPUT_DIR
     EMPIRICAL_LENGTHS
@@ -39,16 +28,6 @@ for variable in "${required_variables[@]}"; do
         exit 1
     fi
 done
-
-if [[ ! -f "$PYTHON" ]]; then
-    echo "Error: Python interpreter not found: $PYTHON" >&2
-    exit 1
-fi
-
-if [[ ! -x "$PYTHON" ]]; then
-    echo "Error: Python interpreter is not executable: $PYTHON" >&2
-    exit 1
-fi
 
 for required_file in "$SCRIPT" "$EMPIRICAL_LENGTHS"; do
     if [[ ! -f "$required_file" ]]; then
@@ -85,7 +64,7 @@ fi
 
 echo "Trajectory resampling"
 echo "====================="
-echo "Python interpreter:    $PYTHON"
+echo "Python interpreter:    $(command -v python)"
 echo "Configuration file:    $CONFIG_FILE"
 echo "Input directory:       $INPUT_DIR"
 echo "Output directory:      $OUTPUT_DIR"
@@ -109,7 +88,7 @@ for xml in "${xml_files[@]}"; do
     (
         echo "[$job_index/$total] Resampling $base (seed=$job_seed)..."
 
-        "$PYTHON" "$SCRIPT" \
+        python "$SCRIPT" \
             "$xml" \
             "$EMPIRICAL_LENGTHS" \
             "$output_xml" \
