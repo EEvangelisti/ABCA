@@ -2,30 +2,19 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
-
-PYTHON_CONF="../../setup/python.conf"
-CONFIG_FILE="${1:-validate_simulations.conf}"
-SCRIPT="validate_simulations.py"
-
-if [[ ! -f "$PYTHON_CONF" ]]; then
-    echo "Error: Python configuration file not found: $PYTHON_CONF" >&2
-    exit 1
-fi
+cd "$ABCA_CONFIG_DIR"
+CONFIG_FILE="$1"
+SCRIPT="$SCRIPT_DIR/validate_simulations.py"
 
 if [[ ! -f "$CONFIG_FILE" ]]; then
     echo "Error: configuration file not found: $CONFIG_FILE" >&2
     exit 1
 fi
 
-# Shared Python interpreter, then module-specific settings.
-# shellcheck disable=SC1090
-source "$PYTHON_CONF"
-# shellcheck disable=SC1090
+# shellcheck source=/dev/null
 source "$CONFIG_FILE"
 
 required_variables=(
-    PYTHON
     EXPERIMENTAL_DIR
     SIMULATIONS_ROOT
     OUTPUT_DIR
@@ -40,16 +29,6 @@ for variable in "${required_variables[@]}"; do
         exit 1
     fi
 done
-
-if [[ ! -f "$PYTHON" ]]; then
-    echo "Error: Python interpreter not found: $PYTHON" >&2
-    exit 1
-fi
-
-if [[ ! -x "$PYTHON" ]]; then
-    echo "Error: Python interpreter is not executable: $PYTHON" >&2
-    exit 1
-fi
 
 if [[ ! -f "$SCRIPT" ]]; then
     echo "Error: validation script not found: $SCRIPT" >&2
@@ -77,7 +56,7 @@ if ! [[ "$DPI" =~ ^[1-9][0-9]*$ ]]; then
 fi
 
 if [[ -n "${UPPER_PERCENTILE:-}" ]]; then
-    if ! "$PYTHON" - "$UPPER_PERCENTILE" <<'PY'
+    if ! python - "$UPPER_PERCENTILE" <<'PY'
 import sys
 
 try:
@@ -110,7 +89,7 @@ fi
 
 echo "Simulation validation"
 echo "====================="
-echo "Python interpreter:  $PYTHON"
+echo "Python interpreter:  $(command -v python)"
 echo "Configuration file:  $CONFIG_FILE"
 echo "Experimental data:   $EXPERIMENTAL_DIR"
 echo "Simulations root:    $SIMULATIONS_ROOT"
@@ -121,7 +100,7 @@ echo "Upper percentile:    ${UPPER_PERCENTILE:-none}"
 echo "Figure resolution:   $DPI dpi"
 echo
 
-"$PYTHON" "$SCRIPT" "${args[@]}"
+python "$SCRIPT" "${args[@]}"
 
 echo
 echo "Simulation validation completed."
