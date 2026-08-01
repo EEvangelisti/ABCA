@@ -45,6 +45,15 @@ require_file() {
         || die "$description not found: $file"
 }
 
+# Ensure that an executable file exists.
+require_executable() {
+    local file="$1"
+    local description="${2:-Executable}"
+
+    [[ -x "$file" ]] \
+        || die "$description is not executable: $file"
+}
+
 # Initialize the execution environment and load the configuration.
 initialize_environment() {
     local root="$1"
@@ -69,9 +78,7 @@ initialize_environment() {
 
     require_file "$ANALYSIS_CONFIG" "Analysis configuration"
     require_file "$PYTHON_SCRIPT" "Python script"
-
-    [[ -x "$PYTHON" ]] \
-        || die "Python interpreter is not executable: $PYTHON"
+    require_executable "$PYTHON" "Python interpreter"
 
     cd -- "$(dirname -- "$ANALYSIS_CONFIG")"
 
