@@ -24,6 +24,9 @@ fi
 PYTHON="$VENV_DIR/bin/python"
 require_executable "$PYTHON" "Python interpreter"
 
+# Skip package installation when setup has already been performed by a parent runner.
+(( ${SKIP_PYTHON_SETUP:-0} == 0 )) || exit 0
+
 printf 'Upgrading pip...\n'
 "$PYTHON" -m pip install --quiet --upgrade pip
 
