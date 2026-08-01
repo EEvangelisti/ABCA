@@ -1,3 +1,4 @@
+```bash
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
@@ -19,65 +20,71 @@ set -Eeuo pipefail
 #
 # Usage:
 #   ./batch_analyse_trajectories.sh \
-#       TRACKS_ROOT OUTPUT_ROOT CONFDIR [MAX_JOBS] [SETUP_CONFIG]
+#       TRACKS_ROOT OUTPUT_ROOT TEMPLATE_CONFDIR [MAX_JOBS] [PYTHON_COMMAND]
 
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+BASH_SCRIPTS="$ROOT/bash-scripts"
+
+# shellcheck disable=SC1091
+source "$BASH_SCRIPTS/utils.sh"
 
 usage() {
     cat >&2 <<'EOF'
 Usage:
   ./batch_analyse_trajectories.sh \
-      TRACKS_ROOT OUTPUT_ROOT CONFDIR [MAX_JOBS] [SETUP_CONFIG]
+      TRACKS_ROOT OUTPUT_ROOT TEMPLATE_CONFDIR [MAX_JOBS] [PYTHON_COMMAND]
 
 Arguments:
-  TRACKS_ROOT   Directory containing tracks_001, tracks_002, etc.
-  OUTPUT_ROOT   Parent directory in which trajectory_analysis_001, etc. are created.
-  CONFDIR       Directory containing the configuration profile.
-  MAX_JOBS      Maximum number of analyses run in parallel (default: 5).
-  SETUP_CONFIG  Optional argument forwarded to setup/setup_python.sh.
+  TRACKS_ROOT      Directory containing tracks_001, tracks_002, etc.
+  OUTPUT_ROOT      Parent directory for trajectory_analysis_001, etc.
+  TEMPLATE_CONFDIR Directory containing the standard analysis configuration files.
+  MAX_JOBS         Maximum number of parallel analyses.
+                   Defaults to one quarter of the available CPUs.
+  PYTHON_COMMAND   Optional Python command forwarded to setup_python.sh.
 EOF
+    exit 2
 }
 
-if (( $# < 3 || $# > 5 )); then
-    usage
-    exit 2
-fi
+(( $# >= 3 && $# <= 5 )) || usage
 
-TRACKS_ROOT="$(realpath -e -- "$1")"
-OUTPUT_ROOT="$(realpath -m -- "$2")"
-CONFDIR="$(realpath -e -- "$3")"
-MAX_JOBS="${4:-5}"
-SETUP_CONFIG="${5:-}"
+TRACKS_ROOT="$1"
+OUTPUT_ROOT="$2"
+TEMPLATE_CONFDIR="$3"
+PYTHON_COMMAND="${5:-}"
 
-if [[ ! -d "$TRACKS_ROOT" ]]; then
-    echo "Error: tracks root not found: $TRACKS_ROOT" >&2
-    exit 1
-fi
+require_directory "$TRACKS_ROOT" "Tracks root directory"
+require_directory "$TEMPLATE_CONFDIR" "Template configuration directory"
 
-if [[ ! -d "$CONFDIR" ]]; then
-    echo "Error: configuration directory not found: $CONFDIR" >&2
-    exit 1
-fi
+TRACKS_ROOT="$(realpath -e -- "$TRACKS_ROOT")"
+OUTPUT_ROOT="$(realpath -m -- "$OUTPUT_ROOT")"
+TEMPLATE_CONFDIR="$(realpath -e -- "$TEMPLATE_CONFDIR")"
 
-if ! [[ "$MAX_JOBS" =~ ^[1-9][0-9]*$ ]]; then
-    echo "Error: MAX_JOBS must be a positive integer." >&2
-    exit 2
-fi
+require_executable "$ROOT/analyse_trajectories.sh" \
+    "Trajectory-analysis runner"
 
-for required_file in \
-    "$ROOT/setup/setup_python.sh" \
-    "$ROOT/trajectory_analysis/metrics_extraction/extract_trajectory_metrics.sh" \
-    "$ROOT/trajectory_analysis/metrics_analysis/analyse_trajectory_metrics.sh" \
-    "$ROOT/trajectory_analysis/plotting_overviews/plot_trajectory_overview.sh" \
-    "$CONFDIR/extract_trajectory_metrics.conf" \
-    "$CONFDIR/analyse_trajectory_metrics.conf" \
-    "$CONFDIR/plot_trajectory_overview.conf"
-do
-    if [[ ! -f "$required_file" ]]; then
-        echo "Error: required file not found: $required_file" >&2
-        exit 1
-    fi
-done
+require_executable "$BASH_SCRIPTS/setup_python.sh" \
+    "Python setup script"
+
+require_file \
+    "$TEMPLATE_CONFDIR/extract_trajectory_metrics.conf" \
+    "Trajectory-extraction configuration"
+
+require_file \
+    "$TEMPLATE_CONFDIR/analyse_trajectory_metrics.conf" \
+    "Trajectory-analysis configuration"
+
+require_file \
+    "$TEMPLATE_CONFDIR/plot_trajectory_overview.conf" \
+    "Trajectory-overview configuration"
+
+# Maximum number of parallel jobs; defaults to one quarter of available CPUs.
+CPU_COUNT="$(nproc)"
+MAX_JOBS="${4:-$(( CPU_COUNT / 4 ))}"
+
+# Ensure at least one job on machines with fewer than four CPUs.
+(( MAX_JOBS >= 1 )) || MAX_JOBS=1
+
+require_integer MAX_JOBS "<=" "$CPU_COUNT"
 
 mkdir -p "$OUTPUT_ROOT"
 
@@ -86,18 +93,23 @@ track_dirs=("$TRACKS_ROOT"/tracks_*)
 shopt -u nullglob
 
 valid_track_dirs=()
+
 for directory in "${track_dirs[@]}"; do
     [[ -d "$directory" ]] && valid_track_dirs+=("$directory")
 done
 
-if (( ${#valid_track_dirs[@]} == 0 )); then
-    echo "Error: no tracks_* directories found in $TRACKS_ROOT" >&2
-    exit 1
+(( ${#valid_track_dirs[@]} > 0 )) \
+    || die "No tracks_* directories found in $TRACKS_ROOT"
+
+# Set up the shared Python environment once before launching parallel analyses.
+if [[ -n "$PYTHON_COMMAND" ]]; then
+    "$BASH_SCRIPTS/setup_python.sh" "$PYTHON_COMMAND"
+else
+    "$BASH_SCRIPTS/setup_python.sh"
 fi
 
-# Set up and activate the shared Python environment once.
-"$ROOT/setup/setup_python.sh" "$SETUP_CONFIG"
-source "$ROOT/setup/python_venv/bin/activate"
+# Prevent child runners from reinstalling Python packages.
+export SKIP_PYTHON_SETUP=1
 
 # Replace one shell-style KEY=... assignment in a copied configuration file.
 replace_config_value() {
@@ -105,9 +117,12 @@ replace_config_value() {
     local key="$2"
     local value="$3"
     local temporary="${file}.tmp"
+    local status=0
 
     awk -v key="$key" -v value="$value" '
-        BEGIN { replaced = 0 }
+        BEGIN {
+            replaced = 0
+        }
 
         $0 ~ "^[[:space:]]*" key "=" {
             print key "=\"" value "\""
@@ -115,24 +130,26 @@ replace_config_value() {
             next
         }
 
-        { print }
+        {
+            print
+        }
 
         END {
             if (!replaced) {
                 exit 42
             }
         }
-    ' "$file" > "$temporary" || {
-        local status=$?
+    ' "$file" > "$temporary" || status=$?
 
+    if (( status != 0 )); then
         rm -f -- "$temporary"
 
         if (( status == 42 )); then
-            echo "Error: variable $key not found in $file" >&2
+            die "Variable '$key' not found in $file"
         fi
 
-        return "$status"
-    }
+        die "Could not update variable '$key' in $file"
+    fi
 
     mv -- "$temporary" "$file"
 }
@@ -141,13 +158,16 @@ total="${#valid_track_dirs[@]}"
 index=0
 
 for tracks_dir in "${valid_track_dirs[@]}"; do
+    wait_for_job_slot "$MAX_JOBS"
+
     ((index += 1))
 
     tracks_name="$(basename -- "$tracks_dir")"
     suffix="${tracks_name#tracks_}"
 
     if [[ "$suffix" == "$tracks_name" || -z "$suffix" ]]; then
-        echo "Warning: skipping unexpected directory name: $tracks_name" >&2
+        printf 'Warning: skipping unexpected directory name: %s\n' \
+            "$tracks_name" >&2
         continue
     fi
 
@@ -156,104 +176,83 @@ for tracks_dir in "${valid_track_dirs[@]}"; do
     grouped_analysis_dir="$analysis_dir/grouped_analysis"
     overview_dir="$analysis_dir/trajectory_overview"
 
+    job_index="$index"
+
     (
-        extraction_module="$ROOT/trajectory_analysis/metrics_extraction"
-        analysis_module="$ROOT/trajectory_analysis/metrics_analysis"
-        overview_module="$ROOT/trajectory_analysis/plotting_overviews"
+        confdir="$(mktemp -d \
+            "$OUTPUT_ROOT/.trajectory_analysis_${suffix}_conf.XXXXXX")"
 
-        # Store the specialised configurations with their corresponding output.
-        config_dir="$analysis_dir/configuration"
+        cleanup() {
+            rm -rf -- "$confdir"
+        }
 
-        extraction_conf="$config_dir/extract_trajectory_metrics.conf"
-        analysis_conf="$config_dir/analyse_trajectory_metrics.conf"
-        overview_conf="$config_dir/plot_trajectory_overview.conf"
+        trap cleanup EXIT INT TERM
 
-        echo "[$index/$total] Analysing $tracks_name..."
+        extraction_conf="$confdir/extract_trajectory_metrics.conf"
+        analysis_conf="$confdir/analyse_trajectory_metrics.conf"
+        overview_conf="$confdir/plot_trajectory_overview.conf"
 
-        mkdir -p "$config_dir"
+        printf '[%d/%d] Analysing %s...\n' \
+            "$job_index" "$total" "$tracks_name"
 
-        # Create dataset-specific configuration files from the selected profile.
+        mkdir -p "$analysis_dir"
+
         cp -- \
-            "$CONFDIR/extract_trajectory_metrics.conf" \
+            "$TEMPLATE_CONFDIR/extract_trajectory_metrics.conf" \
             "$extraction_conf"
 
         cp -- \
-            "$CONFDIR/analyse_trajectory_metrics.conf" \
+            "$TEMPLATE_CONFDIR/analyse_trajectory_metrics.conf" \
             "$analysis_conf"
 
         cp -- \
-            "$CONFDIR/plot_trajectory_overview.conf" \
+            "$TEMPLATE_CONFDIR/plot_trajectory_overview.conf" \
             "$overview_conf"
 
         replace_config_value \
             "$extraction_conf" \
-            "XML_SOURCE" \
+            XML_SOURCE \
             "$tracks_dir"
 
         replace_config_value \
             "$extraction_conf" \
-            "OUTPUT_DIR" \
+            OUTPUT_DIR \
             "$metrics_dir"
 
         replace_config_value \
             "$analysis_conf" \
-            "METRICS_DIR" \
+            METRICS_DIR \
             "$metrics_dir"
 
         replace_config_value \
             "$analysis_conf" \
-            "GROUPED_ANALYSIS_DIR" \
+            GROUPED_ANALYSIS_DIR \
             "$grouped_analysis_dir"
 
-        # Read the filtering settings from the specialised extraction
-        # configuration so that the overview step consumes the correct output.
-        # shellcheck disable=SC1090
-        source "$extraction_conf"
-
-        if [[ "${LENGTH_FILTER_MODE:-none}" == "none" ]]; then
-            filtered_metrics_dir=""
-        else
-            if [[ -z "${FILTERED_SUBDIR:-}" ]]; then
-                echo \
-                    "Error: FILTERED_SUBDIR must be defined when" \
-                    "LENGTH_FILTER_MODE is not 'none'." >&2
-                exit 1
-            fi
-
-            filtered_metrics_dir="$metrics_dir/$FILTERED_SUBDIR"
-        fi
+        replace_config_value \
+            "$overview_conf" \
+            FILTERED_METRICS_DIR \
+            ""
 
         replace_config_value \
             "$overview_conf" \
-            "FILTERED_METRICS_DIR" \
-            "$filtered_metrics_dir"
-
-        replace_config_value \
-            "$overview_conf" \
-            "COMPLETE_METRICS_DIR" \
+            COMPLETE_METRICS_DIR \
             "$metrics_dir"
 
         replace_config_value \
             "$overview_conf" \
-            "OVERVIEW_DIR" \
+            OVERVIEW_DIR \
             "$overview_dir"
 
-        ABCA_CONFIG_DIR="$config_dir" "$extraction_module/extract_trajectory_metrics.sh" "$extraction_conf"
-        ABCA_CONFIG_DIR="$config_dir" "$analysis_module/analyse_trajectory_metrics.sh" "$analysis_conf"
-        ABCA_CONFIG_DIR="$config_dir" "$overview_module/plot_trajectory_overview.sh" "$overview_conf"
+        "$ROOT/analyse_trajectories.sh" "$confdir"
 
-        echo \
-            "[$index/$total] Completed $tracks_name" \
-            "-> trajectory_analysis_$suffix"
+        printf '[%d/%d] Completed %s -> trajectory_analysis_%s\n' \
+            "$job_index" "$total" "$tracks_name" "$suffix"
     ) &
-
-    while (( $(jobs -rp | wc -l) >= MAX_JOBS )); do
-        wait -n
-    done
 done
 
 wait
 
-echo
-echo "All trajectory analyses completed successfully."
-echo "Configuration profile: $CONFDIR"
+job_done "All trajectory analyses completed successfully"
+```
+
