@@ -11,7 +11,7 @@ initialize_environment "$ROOT" "extract_trajectory_metrics.py" "$@"
 # ------------------------------------------------------------------------------
 
 require_variables PYTHON PYTHON_SCRIPT XML_SOURCE OUTPUT_DIR
-require_file "$XML_SOURCE" "XML source file"
+require_directory "$XML_SOURCE" "XML source directory"
 
 # Time interval between two consecutive frames (s).
 FRAME_INTERVAL_S="${FRAME_INTERVAL_S:-0.22}"
