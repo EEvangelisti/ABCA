@@ -1,10 +1,12 @@
 # Shared functions
 
+# Print an error message and terminate the script.
 die() {
     printf 'Error: %s\n' "$*" >&2
     exit 1
 }
 
+# Display the command-line usage.
 usage() {
     cat <<EOF
 Usage:
@@ -15,12 +17,35 @@ input/output paths and analysis parameters.
 EOF
 }
 
-check_file() {
-    local file="$1"
-    local description="$2"
-    [[ -f "$file" ]] || die "$description not found: $file"
+# Ensure that the specified variables are defined and non-empty.
+require_variables() {
+    local variable
+
+    for variable in "$@"; do
+        [[ -n "${!variable:-}" ]] \
+            || die "Required variable '$variable' is not defined in $ANALYSIS_CONFIG."
+    done
 }
 
+# Ensure that a directory exists.
+require_directory() {
+    local directory="$1"
+    local description="$2"
+
+    [[ -d "$directory" ]] \
+        || die "$description not found: $directory"
+}
+
+# Ensure that a file exists.
+require_file() {
+    local file="$1"
+    local description="$2"
+
+    [[ -f "$file" ]] \
+        || die "$description not found: $file"
+}
+
+# Initialize the execution environment and load the configuration.
 initialize_environment() {
     local root="$1"
     local python_script="$2"
@@ -40,45 +65,21 @@ initialize_environment() {
 
     ANALYSIS_CONFIG="$(realpath -- "$1")"
     PYTHON_SCRIPT="$root/../python-scripts/$python_script"
-
-    check_file "$ANALYSIS_CONFIG" "Analysis configuration"
-    check_file "$PYTHON_SCRIPT" "Python script"
-
     PYTHON="$root/../python-scripts/zsp_venv/bin/python"
-    : "${PYTHON:?PYTHON is not defined in $PYTHON_CONFIG}"
+
+    require_file "$ANALYSIS_CONFIG" "Analysis configuration"
+    require_file "$PYTHON_SCRIPT" "Python script"
+
     [[ -x "$PYTHON" ]] \
         || die "Python interpreter is not executable: $PYTHON"
 
-    cd "$(dirname $ANALYSIS_CONFIG)"
+    cd -- "$(dirname -- "$ANALYSIS_CONFIG")"
+
     # shellcheck disable=SC1090
     source "$ANALYSIS_CONFIG"
 }
 
-require_variables() {
-    local variable
-
-    for variable in "$@"; do
-        [[ -n "${!variable:-}" ]] \
-            || die "Required variable '$variable' is not defined in $ANALYSIS_CONFIG."
-    done
-}
-
-require_directory() {
-    local directory="$1"
-    local description="$2"
-
-    [[ -d "$directory" ]] \
-        || die "$description not found: $directory"
-}
-
-require_file() {
-    local file="$1"
-    local description="$2"
-
-    [[ -f "$file" ]] \
-        || die "$description not found: $file"
-}
-
+# Ensure that a metrics directory contains the required files.
 check_metrics_directory() {
     local directory="$1"
     require_directory "$directory" "Metrics directory"
@@ -86,6 +87,7 @@ check_metrics_directory() {
     require_file "$directory/track_metrics.csv" "Track metrics file"
 }
 
+# Ensure that a variable contains a valid numeric value.
 require_number() {
     local name="$1"
     local value="${!name:-}"
@@ -166,6 +168,7 @@ require_number() {
     done
 }
 
+# Ensure that a variable contains a valid integer.
 require_integer() {
     local name="$1"
     local value="${!name:-}"
@@ -176,11 +179,11 @@ require_integer() {
         || die "$name must be an integer (received: $value)"
 }
 
+# Ensure that a variable matches one of the allowed values.
 require_choice() {
     local name="$1"
     local value="${!name:-}"
     local choice
-    local normalized_value="${value,,}"
 
     shift
 
@@ -188,7 +191,8 @@ require_choice() {
         || die "No allowed values specified for $name"
 
     for choice in "$@"; do
-        if [[ "$normalized_value" == "${choice,,}" ]]; then
+        if [[ "${value,,}" == "${choice,,}" ]]; then
+            printf -v "$name" '%s' "$choice"
             return 0
         fi
     done
@@ -196,7 +200,11 @@ require_choice() {
     die "$name must be one of: $* (received: $value)"
 }
 
+# Print a completion message.
 job_done() {
-  echo "$1."
-  echo "---------------------------------------------------------"
+cat <<EOF
+$1.
+---------------------------------------------------------
+
+EOF
 }
