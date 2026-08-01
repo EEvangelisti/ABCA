@@ -89,9 +89,9 @@ These modules extract quantitative descriptors from reconstructed trajectories
 and generate the figures and summary statistics used to characterise zoospore 
 swimming behaviour.
 
-- [Extracting trajectory metrics](analysis/trajectory_analysis/metrics_extraction/README.md)
-- [Analysing trajectory metrics](analysis/trajectory_analysis/metrics_analysis/README.md)
-- [Plotting trajectory overviews](analysis/trajectory_analysis/plotting_overviews/README.md)
+- [Extracting trajectory metrics](analysis/doc/metrics_extraction.md)
+- [Analysing trajectory metrics](analysis/doc/metrics_analysis.md)
+- [Plotting trajectory overviews](analysis/doc/plotting_overviews.md)
 
 > [!NOTE]
 > **Batch processing.** The script 
@@ -115,9 +115,9 @@ These modules infer empirical and Hidden Markov behavioural models directly
 from the experimental data, producing parameter sets compatible with the ABCA 
 simulation framework.
 
-- [Analysing SLOW/FAST hysteresis](analysis/model_fitting/hysteresis/README.md)
-- [Extracting empirical model parameters](analysis/model_fitting/local_parameter_extraction/README.md)
-- [Fitting hidden Markov models](analysis/model_fitting/hmm_model_fit/README.md)
+- [Analysing SLOW/FAST hysteresis](analysis/doc/hysteresis.md)
+- [Extracting empirical model parameters](analysis/doc/local_parameter_extraction.md)
+- [Fitting hidden Markov models](analysis/doc/hmm_model_fit.md)
 
 At this stage, you can run simulations using your own input files. For examples of Bash scripts, see above.
 
@@ -127,9 +127,9 @@ These modules compare simulated and experimental trajectories after controlling
 for differences in trajectory length, allowing quantitative validation of 
 simulation outputs.
 
-- [Resampling trajectories](analysis/model_validation/trajectory_resampling/README.md)
-- [Validating simulations using global metrics](analysis/model_validation/simulation_validation/README.md)
-- [Comparing model performance against experimental data](analysis/model_validation/model_comparison/README.md)
+- [Resampling trajectories](analysis/doc/trajectory_resampling.md)
+- [Validating simulations using global metrics](analysis/doc/simulation_validation.md)
+- [Comparing model performance against experimental data](analysis/doc/model_comparison.md)
 
 Predictive validation can then be performed by applying the same workflow to 
 independent experimental datasets and comparing the resulting simulations with 
