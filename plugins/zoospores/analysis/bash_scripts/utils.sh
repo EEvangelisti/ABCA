@@ -200,6 +200,15 @@ require_choice() {
     die "$name must be one of: $* (received: $value)"
 }
 
+# Wait until fewer than the requested number of background jobs are running.
+wait_for_job_slot() {
+    local max_jobs="$1"
+
+    while (( $(jobs -rp | wc -l) >= max_jobs )); do
+        wait -n
+    done
+}
+
 # Print a completion message.
 job_done() {
 cat <<EOF
