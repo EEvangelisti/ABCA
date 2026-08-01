@@ -1,4 +1,4 @@
-← **[Back to plugin documentation](../../../README.md)**
+← **[Back to plugin documentation](../../README.md)**
 
 ---
 
@@ -70,4 +70,4 @@ Hysteresis analysis completed.
 
 ---
 
-← **[Back to plugin documentation](../../../README.md)**
+← **[Back to plugin documentation](../../README.md)**

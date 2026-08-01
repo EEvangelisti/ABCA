@@ -1,4 +1,4 @@
-← **[Back to plugin documentation](../../../README.md)**
+← **[Back to plugin documentation](../../README.md)**
 
 ---
 
@@ -68,4 +68,4 @@ Trajectory overview completed.
   
 ---
 
-← **[Back to plugin documentation](../../../README.md)**
+← **[Back to plugin documentation](../../README.md)**
