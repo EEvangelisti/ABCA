@@ -131,11 +131,11 @@ These modules compare simulated and experimental trajectories after controlling
 for differences in trajectory length, allowing quantitative validation of 
 simulation outputs.
 
-| Command                         | Description                                          | Configuration file                                          |
-| ------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------- |
-| `run hysteresis <config>`       | Resample trajectories.                               | [Configuration](analysis/config/resample_trajectories.conf) |
-| `run local_parameters <config>` | Validate simulations using global metrics.           | [Configuration](analysis/config/validate_simulations.conf)  |
-| `run hmm <config>`              | Compare model performance against experimental data. | [Configuration](analysis/config/compare_models.conf)        |
+| Command                 | Description                                          | Configuration file                                          |
+| ----------------------- | ---------------------------------------------------- | ----------------------------------------------------------- |
+| `run resample <config>` | Resample trajectories.                               | [Configuration](analysis/config/resample_trajectories.conf) |
+| `run validate <config>` | Validate simulations using global metrics.           | [Configuration](analysis/config/validate_simulations.conf)  |
+| `run compare <config>`  | Compare model performance against experimental data. | [Configuration](analysis/config/compare_models.conf)        |
 
 Predictive validation can then be performed by applying the same workflow to 
 independent experimental datasets and comparing the resulting simulations with 
