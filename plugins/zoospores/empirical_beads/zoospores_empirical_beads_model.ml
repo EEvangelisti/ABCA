@@ -57,6 +57,7 @@ type params = {
   bead_min_gap : float;
   collision_response : collision_response;
   collision_slowdown : float;
+  collision_speed_factor : float;
   seed : int;
   topology : Grid.topology;
 }
@@ -642,7 +643,7 @@ let earliest_bead_hit x y dx dy beads zoospore_radius =
 let move_with_bead_collisions params beads x0 y0 heading distance =
   let rec loop iteration x y dir_x dir_y remaining travelled =
     if iteration >= 4 || remaining <= 1e-12 then
-      x, y, heading_of_vector dir_x dir_y heading, travelled
+      x, y, heading_of_vector dir_x dir_y heading, travelled, iteration > 0
     else
       let dx = remaining *. dir_x in
       let dy = remaining *. dir_y in
@@ -650,7 +651,8 @@ let move_with_bead_collisions params beads x0 y0 heading distance =
       | None ->
           x +. dx, y +. dy,
           heading_of_vector dir_x dir_y heading,
-          travelled +. remaining
+          travelled +. remaining,
+          iteration > 0
       | Some (t, bead) ->
           let pre_distance = max 0.0 (t *. remaining -. 1e-9) in
           let contact_x = x +. pre_distance *. dir_x in
@@ -662,7 +664,8 @@ let move_with_bead_collisions params beads x0 y0 heading distance =
                  according to the distance actually travelled during the step. *)
               contact_x, contact_y,
               heading_of_vector dir_x dir_y heading,
-              travelled +. pre_distance
+              travelled +. pre_distance,
+              true
           | Tangential | Both ->
               (* Remove the inward normal component. Tangential preserves the
                  full projected displacement, whereas Both additionally scales
@@ -680,7 +683,7 @@ let move_with_bead_collisions params beads x0 y0 heading distance =
                 max 0.0 (remaining -. pre_distance)
               in
               if tangent_fraction <= 1e-12 then
-                contact_x, contact_y, heading, travelled +. pre_distance
+                contact_x, contact_y, heading, travelled +. pre_distance, true
               else
                 let tx = tx0 /. tangent_fraction in
                 let ty = ty0 /. tangent_fraction in
@@ -704,7 +707,7 @@ let move_agent params grid beads ag heading speed =
   let intended_distance =
     speed *. params.empirical.Data.dt /. params.microns_per_cell
   in
-  let x1, y1, collision_heading, travelled =
+  let x1, y1, collision_heading, travelled, collided =
     move_with_bead_collisions
       params beads ag.x ag.y heading intended_distance
   in
@@ -731,8 +734,16 @@ let move_agent params grid beads ag heading speed =
           Utils.clamp 0.0 (float_of_int (Grid.rows grid) -. 1e-9) ry,
           reflected
   in
-  let actual_speed =
+  let realised_speed =
     travelled *. params.microns_per_cell /. params.empirical.Data.dt
+  in
+  (* A collision can impose an additional loss of propulsive speed, distinct
+     from the geometric truncation/projection of the current displacement.
+     The reduced speed is stored in the agent and therefore affects subsequent
+     updates through the existing acceleration bound. *)
+  let actual_speed =
+    if collided then realised_speed *. params.collision_speed_factor
+    else realised_speed
   in
   x2, y2, final_heading, actual_speed
 

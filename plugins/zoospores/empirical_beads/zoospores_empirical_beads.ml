@@ -71,6 +71,7 @@ let metadata params ~rows ~cols ~generations ~density =
     "bead_min_gap_cells", string_of_float params.bead_min_gap;
     "collision_response", Model.string_of_collision_response params.collision_response;
     "collision_slowdown", string_of_float params.collision_slowdown;
+    "collision_speed_factor", string_of_float params.collision_speed_factor;
     "distribution_speed", "full inverse empirical CDF from abca_empirical_quantiles.csv";
     "dependence_model", "stationary bivariate Gaussian VAR(1): Z(t+1)=A Z(t)+epsilon, epsilon~N(0,Q)";
     "distribution_turn", "full inverse empirical CDF of absolute turn angle";
@@ -135,6 +136,8 @@ let run ~rows ~cols ~generations ~seed ~density ~agents ~topology ~plugin_args ~
         (arg_string "COLLISION_RESPONSE" "TANGENT" plugin_args);
     collision_slowdown =
       arg_float "COLLISION_SLOWDOWN" 0.5 plugin_args;
+    collision_speed_factor =
+      arg_float "COLLISION_SPEED_FACTOR" 1.0 plugin_args;
     seed;
     topology;
   } in
@@ -151,6 +154,11 @@ let run ~rows ~cols ~generations ~seed ~density ~agents ~topology ~plugin_args ~
   if params.collision_slowdown < 0.0 || params.collision_slowdown > 1.0 then
     invalid_arg
       "Zoospore empirical beads: COLLISION_SLOWDOWN must lie in [0,1]";
+  if params.collision_speed_factor < 0.0
+     || params.collision_speed_factor > 1.0
+  then
+    invalid_arg
+      "Zoospore empirical beads: COLLISION_SPEED_FACTOR must lie in [0,1]";
   let check_probability name p =
     if p < 0.0 || p > 1.0 then
       invalid_arg
