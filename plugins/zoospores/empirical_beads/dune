@@ -1,0 +1,11 @@
+(library
+ (name abca_plugin_zoospores_empirical_beads)
+ (modules
+  zoospores_empirical_beads_utils
+  zoospores_empirical_beads_data
+  zoospores_empirical_beads_model
+  zoospores_empirical_beads)
+ (libraries
+  abca
+  abca_io
+  abca_models))
