@@ -72,6 +72,8 @@ let metadata params ~rows ~cols ~generations ~density =
     "collision_response", Model.string_of_collision_response params.collision_response;
     "collision_slowdown", string_of_float params.collision_slowdown;
     "collision_speed_factor", string_of_float params.collision_speed_factor;
+    "fast_slow_threshold_um_s", string_of_float e.fast_slow_threshold;
+    "hysteresis_half_width_um_s", string_of_float e.hysteresis_half_width;
     "distribution_speed", "full inverse empirical CDF from abca_empirical_quantiles.csv";
     "dependence_model", "stationary bivariate Gaussian VAR(1): Z(t+1)=A Z(t)+epsilon, epsilon~N(0,Q)";
     "distribution_turn", "full inverse empirical CDF of absolute turn angle";
@@ -143,6 +145,9 @@ let run ~rows ~cols ~generations ~seed ~density ~agents ~topology ~plugin_args ~
   } in
   if params.microns_per_cell <= 0.0 then
     invalid_arg "Zoospore empirical: MICRONS_PER_CELL must be positive";
+  if empirical.hysteresis_half_width < 0.0 then
+    invalid_arg
+      "Zoospore empirical: hysteresis_half_width must be non-negative";
   if params.accel_cap_multiplier <= 0.0 then
     invalid_arg "Zoospore empirical beads: ACCEL_CAP_MULTIPLIER must be positive";
   if params.bead_radius <= 0.0 then

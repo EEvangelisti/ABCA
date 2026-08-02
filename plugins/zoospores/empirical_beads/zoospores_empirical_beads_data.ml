@@ -26,6 +26,9 @@ type empirical = {
   p_slow_slow : float;
   p_slow_fast : float;
 
+  fast_slow_threshold : float;
+  hysteresis_half_width : float;
+
   (* Parameters of the stationary latent bivariate Gaussian VAR(1)
        Z_(t+1) = A Z_t + epsilon_t, epsilon_t ~ N(0,Q).
 
@@ -144,6 +147,24 @@ let optional table key default =
   match Hashtbl.find_opt table key with
   | None -> default
   | Some s -> (match finite_float s with Some x -> x | None -> default)
+
+let required_any table keys =
+  let rec find = function
+    | [] ->
+        failwith
+          ("Zoospore empirical: missing parameter; expected one of: "
+           ^ String.concat ", " keys)
+    | key :: rest ->
+        (match Hashtbl.find_opt table key with
+         | None -> find rest
+         | Some s ->
+             (match finite_float s with
+              | Some x -> x
+              | None ->
+                  failwith
+                    ("Zoospore empirical: non-finite parameter " ^ key)))
+  in
+  find keys
 
 
 let quantile_file_from_parameter_file parameter_file =
@@ -268,6 +289,15 @@ let load_empirical parameter_file quantile_file =
     p_fast_slow = required t "P_FAST_to_SLOW";
     p_slow_slow = required t "P_SLOW_to_SLOW";
     p_slow_fast = required t "P_SLOW_to_FAST";
+
+    fast_slow_threshold =
+      required_any t
+        ["fast_slow_threshold"; "FAST_SLOW_THRESHOLD";
+         "state_speed_threshold"; "otsu_speed_threshold"];
+    hysteresis_half_width =
+      required_any t
+        ["hysteresis_half_width"; "HYSTERESIS_HALF_WIDTH";
+         "hysteresis_width"];
 
     (* Exact matrices exported by extract_abca_local_parameters_var1.py.
        A governs temporal memory and cross-lag effects; Q is the covariance of

@@ -84,6 +84,19 @@ type agent = {
 let state_of_motion = function SLOW -> 1 | FAST -> 2
 let state_of_agent ag = state_of_motion ag.motion
 
+let motion_from_hysteresis empirical previous_motion speed_um_s =
+  let lower =
+    empirical.Data.fast_slow_threshold
+    -. empirical.Data.hysteresis_half_width
+  in
+  let upper =
+    empirical.Data.fast_slow_threshold
+    +. empirical.Data.hysteresis_half_width
+  in
+  if speed_um_s < lower then SLOW
+  else if speed_um_s > upper then FAST
+  else previous_motion
+
 let row_of_agent ag = int_of_float (Float.floor ag.y)
 let col_of_agent ag = int_of_float (Float.floor ag.x)
 let coord_of_agent ag = { Grid.row = row_of_agent ag; col = col_of_agent ag }
@@ -745,7 +758,7 @@ let move_agent params grid beads ag heading speed =
     if collided then realised_speed *. params.collision_speed_factor
     else realised_speed
   in
-  x2, y2, final_heading, actual_speed
+  x2, y2, final_heading, actual_speed, collided
 
 let step_agent rng params grid beads ag =
   let next_motion = transition_state rng params.empirical ag.motion in
@@ -765,8 +778,15 @@ let step_agent rng params grid beads ag =
   let proposed_heading =
     Utils.normalize_degrees (ag.heading_deg +. delta_heading)
   in
-  let x, y, heading_deg, realised_speed_um_s =
+  let x, y, heading_deg, realised_speed_um_s, collided =
     move_agent params grid beads ag proposed_heading speed_um_s
+  in
+  let final_motion =
+    if collided then
+      motion_from_hysteresis
+        params.empirical next_motion realised_speed_um_s
+    else
+      next_motion
   in
   {
     ag with
@@ -777,7 +797,7 @@ let step_agent rng params grid beads ag =
     speed_um_s = realised_speed_um_s;
     speed_z;
     turn_z;
-    motion = next_motion;
+    motion = final_motion;
   }
 
 let step_agents rng params grid beads agents =
