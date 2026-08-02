@@ -135,6 +135,7 @@ simulation outputs.
 | Command                     | Description                                          | Configuration file                                          |
 | --------------------------- | ---------------------------------------------------- | ----------------------------------------------------------- |
 | `run resample <CONFIG_DIR>` | Resample trajectories.                               | [Configuration](analysis/config/resample_trajectories.conf) |
+| `run burn_in <CONFIG_DIR>`  | Remove an initial burn-in period from trajectories.  | [Configuration](analysis/config/apply_burn_in.conf)  |
 | `run validate <CONFIG_DIR>` | Validate simulations using global metrics.           | [Configuration](analysis/config/validate_simulations.conf)  |
 | `run compare <CONFIG_DIR>`  | Compare model performance against experimental data. | [Configuration](analysis/config/compare_models.conf)        |
 
