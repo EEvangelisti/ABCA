@@ -91,9 +91,9 @@ swimming behaviour.
 
 | Command | Description |
 |-|-|
-| `run extract <config>` | Extract trajectory metrics using the [`<config>`]](analysis/doc/extract_trajectory_metrics.md) file. |
-| `run analyse <config>` | Analyse trajectory metrics using the [`<config>`]](analysis/doc/analyse_trajectory_metrics.md) file. |
-| `run plot <config>` | Plot trajectory overviews  using the [`<config>`]](analysis/doc/plot_trajectory_overview.md) file. |
+| `run extract <config>` | Extract trajectory metrics using the [`<config>`](analysis/doc/extract_trajectory_metrics.md) file. |
+| `run analyse <config>` | Analyse trajectory metrics using the [`<config>`](analysis/doc/analyse_trajectory_metrics.md) file. |
+| `run plot <config>` | Plot trajectory overviews  using the [`<config>`](analysis/doc/plot_trajectory_overview.md) file. |
 
 > [!NOTE]
 > **Batch processing.** The script 
