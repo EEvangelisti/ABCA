@@ -21,6 +21,7 @@ Available commands:
   compare
   validate
   resample
+  burn_in
 EOF
     exit 2
 }
@@ -69,6 +70,10 @@ case "$COMMAND" in
     resample)
         SCRIPT="$ROOT/resample_trajectories.sh"
         CONFIG="$CONFDIR/resample_trajectories.conf"
+        ;;
+    burn_in)
+        SCRIPT="$ROOT/apply_burn_in.sh"
+        CONFIG="$CONFDIR/apply_burn_in.conf"
         ;;
     *)
         printf 'Error: unknown command: %s\n\n' "$COMMAND" >&2
