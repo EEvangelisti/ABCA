@@ -58,6 +58,7 @@ type params = {
   collision_response : collision_response;
   collision_slowdown : float;
   collision_speed_factor : float;
+  collision_recovery_rate : float;
   seed : int;
   topology : Grid.topology;
 }
@@ -75,6 +76,11 @@ type agent = {
   turn_z : float;
 
   motion : motion_state;
+
+  (* [Some v] means that the agent is recovering from a collision and that
+     [v] is its currently realised post-collision speed. The recovery rule
+     progressively relaxes this speed toward the ordinary empirical target. *)
+  recovery_speed_um_s : float option;
 }
 
 
@@ -484,6 +490,7 @@ let initial_agents params grid beads =
          speed_z;
          turn_z;
          motion;
+         recovery_speed_um_s = None;
        })
     coords
 
@@ -571,25 +578,35 @@ let joint_latent_update rng empirical ag =
   in
   speed_z, turn_z
 
+let target_speed empirical motion speed_z =
+  Data.quantile
+    (distribution_for_state empirical motion)
+    (Data.normal_cdf speed_z)
+
 let update_speed params ag next_motion speed_z =
   let e = params.empirical in
-  let target =
-    Data.quantile
-      (distribution_for_state e next_motion)
-      (Data.normal_cdf speed_z)
+  let target = target_speed e next_motion speed_z in
+
+  (* Outside collision recovery, this is exactly the original empirical
+     acceleration update. During recovery, only a configurable fraction of
+     the gap toward the current empirical target is closed at each step. *)
+  let desired =
+    match ag.recovery_speed_um_s with
+    | None -> target
+    | Some recovery_speed ->
+        recovery_speed
+        +. params.collision_recovery_rate *. (target -. recovery_speed)
   in
 
-  (* Acceleration is not sampled independently.  It is derived from the speed
-     update and bounded only by the documented numerical guard
-       |a_t| <= ACCEL_CAP_MULTIPLIER * q90(|a|).
-     q90(|a|) comes from the Python-generated scalar parameter CSV. *)
+  (* Acceleration is not sampled independently. It remains bounded by the
+     experimentally derived numerical guard. *)
   let max_dv =
     max_acceleration e params.accel_cap_multiplier *. e.dt
   in
   let dv =
-    Utils.clamp (-.max_dv) max_dv (target -. ag.speed_um_s)
+    Utils.clamp (-.max_dv) max_dv (desired -. ag.speed_um_s)
   in
-  max 0.0 (ag.speed_um_s +. dv)
+  max 0.0 (ag.speed_um_s +. dv), target
 
 let turn_sign rng empirical =
   let positive = max 0.0 empirical.Data.positive_turn_probability in
@@ -771,15 +788,23 @@ let absolute_heading_change previous_heading current_heading =
   min delta (360.0 -. delta)
 
 let step_agent rng params grid beads ag =
-  let next_motion = transition_state rng params.empirical ag.motion in
+  (* Preserve the original random-number consumption. During recovery the
+     behavioural state is held in SLOW, but the ordinary transition draw is
+     still performed and simply ignored. *)
+  let sampled_motion =
+    transition_state rng params.empirical ag.motion
+  in
+  let next_motion =
+    match ag.recovery_speed_um_s with
+    | Some _ -> SLOW
+    | None -> sampled_motion
+  in
 
-  (* One joint VAR(1) update uses the complete A and Q matrices exported by
-     Python.  This simultaneously propagates temporal memory and cross-variable
-     dependence in a mathematically coherent stationary process. *)
+  (* The calibrated VAR(1) continues to evolve normally during recovery. *)
   let speed_z, turn_z =
     joint_latent_update rng params.empirical ag
   in
-  let speed_um_s =
+  let speed_um_s, target_speed_um_s =
     update_speed params ag next_motion speed_z
   in
   let delta_heading =
@@ -791,31 +816,64 @@ let step_agent rng params grid beads ag =
   let x, y, heading_deg, realised_speed_um_s, collided =
     move_agent params grid beads ag proposed_heading speed_um_s
   in
-  let final_motion =
-    if collided then
-      motion_from_hysteresis
-        params.empirical next_motion realised_speed_um_s
-    else
-      next_motion
+
+  let collision_motion =
+    motion_from_hysteresis
+      params.empirical next_motion realised_speed_um_s
   in
 
-  (* A collision changes the realised observables. Re-encode those realised
-     values in the same Gaussian-copula coordinates used by the calibrated
-     VAR(1), so that the next update starts from a latent state consistent
-     with the actual post-collision motion. Outside collisions, preserve the
-     original latent update exactly. *)
-  let final_speed_z, final_turn_z =
+  (* Recovery ends once the realised speed is within 5% of the current
+     empirical target (with a 1 µm/s absolute tolerance). This criterion is
+     purely numerical and does not introduce a new biological timescale. *)
+  let recovery_tolerance =
+    max 1.0 (0.05 *. max 1.0 target_speed_um_s)
+  in
+  let recovered =
+    abs_float (realised_speed_um_s -. target_speed_um_s)
+    <= recovery_tolerance
+  in
+  let recovery_speed_um_s =
     if collided then
+      Some realised_speed_um_s
+    else
+      match ag.recovery_speed_um_s with
+      | Some _ when not recovered -> Some realised_speed_um_s
+      | _ -> None
+  in
+
+  let final_motion =
+    if collided then collision_motion
+    else
+      match recovery_speed_um_s with
+      | Some _ -> SLOW
+      | None -> next_motion
+  in
+
+  (* Collision observables are immediately re-encoded in latent space. At the
+     end of recovery, speed is re-synchronised once more to prevent a latent
+     jump. During recovery itself, the calibrated VAR(1) remains free to evolve
+     and defines the target toward which speed relaxes. *)
+  let recovery_just_finished =
+    ag.recovery_speed_um_s <> None
+    && recovery_speed_um_s = None
+  in
+  let final_speed_z =
+    if collided || recovery_just_finished then
       let speed_distribution =
         distribution_for_state params.empirical final_motion
       in
+      latent_from_observed speed_distribution realised_speed_um_s
+    else
+      speed_z
+  in
+  let final_turn_z =
+    if collided then
       let realised_turn =
         absolute_heading_change ag.heading_deg heading_deg
       in
-      latent_from_observed speed_distribution realised_speed_um_s,
       latent_from_observed params.empirical.Data.abs_turn realised_turn
     else
-      speed_z, turn_z
+      turn_z
   in
   {
     ag with
@@ -827,6 +885,7 @@ let step_agent rng params grid beads ag =
     speed_z = final_speed_z;
     turn_z = final_turn_z;
     motion = final_motion;
+    recovery_speed_um_s;
   }
 
 let step_agents rng params grid beads agents =

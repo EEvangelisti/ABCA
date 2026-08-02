@@ -115,6 +115,7 @@ type params = {
           Must lie in [0,1]. *)
 
   collision_speed_factor : float;
+  collision_recovery_rate : float;
       (** Fraction of realised speed retained after any bead collision.
           Must lie in [0,1]. The reduced speed is stored in the agent and
           influences subsequent speed recovery through the acceleration cap. *)
