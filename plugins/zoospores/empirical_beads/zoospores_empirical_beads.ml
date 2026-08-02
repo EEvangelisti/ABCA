@@ -70,6 +70,7 @@ let metadata params ~rows ~cols ~generations ~density =
     "zoospore_radius_cells", string_of_float params.zoospore_radius;
     "bead_min_gap_cells", string_of_float params.bead_min_gap;
     "collision_response", Model.string_of_collision_response params.collision_response;
+    "collision_slowdown", string_of_float params.collision_slowdown;
     "distribution_speed", "full inverse empirical CDF from abca_empirical_quantiles.csv";
     "dependence_model", "stationary bivariate Gaussian VAR(1): Z(t+1)=A Z(t)+epsilon, epsilon~N(0,Q)";
     "distribution_turn", "full inverse empirical CDF of absolute turn angle";
@@ -132,6 +133,8 @@ let run ~rows ~cols ~generations ~seed ~density ~agents ~topology ~plugin_args ~
     collision_response =
       Model.parse_collision_response
         (arg_string "COLLISION_RESPONSE" "TANGENT" plugin_args);
+    collision_slowdown =
+      arg_float "COLLISION_SLOWDOWN" 0.5 plugin_args;
     seed;
     topology;
   } in
@@ -145,6 +148,9 @@ let run ~rows ~cols ~generations ~seed ~density ~agents ~topology ~plugin_args ~
     invalid_arg "Zoospore empirical beads: ZOOSPORE_RADIUS must be non-negative";
   if params.bead_min_gap < 0.0 then
     invalid_arg "Zoospore empirical beads: BEAD_MIN_GAP must be non-negative";
+  if params.collision_slowdown < 0.0 || params.collision_slowdown > 1.0 then
+    invalid_arg
+      "Zoospore empirical beads: COLLISION_SLOWDOWN must lie in [0,1]";
   let check_probability name p =
     if p < 0.0 || p > 1.0 then
       invalid_arg
@@ -191,7 +197,7 @@ let model = {
   family = Abca_models.Model.Biological;
   kind = Abca_models.Model.Agent_based_model;
   description =
-    "Data-driven zoospore model with circular bead obstacles and configurable tangential or slowdown collision response";
+    "Data-driven zoospore model with circular bead obstacles and configurable TANGENT, SLOWDOWN, or BOTH collision response";
   state_count = 3;
   to_color_index;
   run;

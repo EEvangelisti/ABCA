@@ -32,6 +32,7 @@ type bead_source =
 type collision_response =
   | Tangential
   | Slowdown
+  | Both
 
 type bead = {
   bx : float;
@@ -55,6 +56,7 @@ type params = {
   zoospore_radius : float;
   bead_min_gap : float;
   collision_response : collision_response;
+  collision_slowdown : float;
   seed : int;
   topology : Grid.topology;
 }
@@ -120,6 +122,7 @@ let parse_collision_response s =
   match String.uppercase_ascii (String.trim s) with
   | "TANGENT" | "TANGENTIAL" | "SLIDE" -> Tangential
   | "SLOWDOWN" | "SLOW" | "STOP" -> Slowdown
+  | "BOTH" | "TANGENT_SLOWDOWN" | "SLOWDOWN_TANGENT" -> Both
   | other ->
       failwith
         ("Zoospore empirical beads: unknown COLLISION_RESPONSE: " ^ other)
@@ -127,6 +130,7 @@ let parse_collision_response s =
 let string_of_collision_response = function
   | Tangential -> "tangential"
   | Slowdown -> "slowdown"
+  | Both -> "both"
 
 let split_csv line =
   String.split_on_char ',' line |> List.map String.trim
@@ -659,9 +663,10 @@ let move_with_bead_collisions params beads x0 y0 heading distance =
               contact_x, contact_y,
               heading_of_vector dir_x dir_y heading,
               travelled +. pre_distance
-          | Tangential ->
-              (* Remove the inward normal component and retain only the
-                 tangential component of the remaining displacement. *)
+          | Tangential | Both ->
+              (* Remove the inward normal component. Tangential preserves the
+                 full projected displacement, whereas Both additionally scales
+                 it by COLLISION_SLOWDOWN to represent friction at contact. *)
               let nx0 = contact_x -. bead.bx in
               let ny0 = contact_y -. bead.by in
               let n_norm = max 1e-15 (vector_norm nx0 ny0) in
@@ -679,8 +684,14 @@ let move_with_bead_collisions params beads x0 y0 heading distance =
               else
                 let tx = tx0 /. tangent_fraction in
                 let ty = ty0 /. tangent_fraction in
+                let slowdown =
+                  match params.collision_response with
+                  | Tangential -> 1.0
+                  | Both -> params.collision_slowdown
+                  | Slowdown -> assert false
+                in
                 let tangential_distance =
-                  remaining_after_contact *. tangent_fraction
+                  remaining_after_contact *. tangent_fraction *. slowdown
                 in
                 loop (iteration + 1)
                   contact_x contact_y tx ty tangential_distance
