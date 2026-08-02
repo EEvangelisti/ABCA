@@ -358,6 +358,36 @@ let quantile dist u =
   find 0
 
 
+(** Evaluate the empirical cumulative distribution corresponding to a
+    quantile table.
+
+    The quantile samples are monotone in value. Values below or above the
+    sampled range are mapped to the first or last exported probability,
+    respectively. Linear interpolation is used between adjacent samples. *)
+let cumulative_probability dist value =
+  let n = Array.length dist.values in
+  if n = 0 then
+    invalid_arg "Zoospore empirical: empty quantile distribution"
+  else if value <= dist.values.(0) then
+    dist.probs.(0)
+  else if value >= dist.values.(n - 1) then
+    dist.probs.(n - 1)
+  else
+    let rec find i =
+      if i >= n - 1 then dist.probs.(n - 1)
+      else if value <= dist.values.(i + 1) then
+        let x0 = dist.values.(i) in
+        let x1 = dist.values.(i + 1) in
+        let p0 = dist.probs.(i) in
+        let p1 = dist.probs.(i + 1) in
+        if x1 <= x0 then p1
+        else p0 +. (value -. x0) *. (p1 -. p0) /. (x1 -. x0)
+      else
+        find (i + 1)
+    in
+    Utils.clamp01 (find 0)
+
+
 
 (** Approximate the cumulative distribution function (CDF) of the
     standard normal distribution.

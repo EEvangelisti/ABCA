@@ -760,6 +760,16 @@ let move_agent params grid beads ag heading speed =
   in
   x2, y2, final_heading, actual_speed, collided
 
+let latent_from_observed distribution value =
+  Data.cumulative_probability distribution value
+  |> Data.inverse_normal_cdf
+
+let absolute_heading_change previous_heading current_heading =
+  let delta =
+    Utils.normalize_degrees (current_heading -. previous_heading)
+  in
+  min delta (360.0 -. delta)
+
 let step_agent rng params grid beads ag =
   let next_motion = transition_state rng params.empirical ag.motion in
 
@@ -788,6 +798,25 @@ let step_agent rng params grid beads ag =
     else
       next_motion
   in
+
+  (* A collision changes the realised observables. Re-encode those realised
+     values in the same Gaussian-copula coordinates used by the calibrated
+     VAR(1), so that the next update starts from a latent state consistent
+     with the actual post-collision motion. Outside collisions, preserve the
+     original latent update exactly. *)
+  let final_speed_z, final_turn_z =
+    if collided then
+      let speed_distribution =
+        distribution_for_state params.empirical final_motion
+      in
+      let realised_turn =
+        absolute_heading_change ag.heading_deg heading_deg
+      in
+      latent_from_observed speed_distribution realised_speed_um_s,
+      latent_from_observed params.empirical.Data.abs_turn realised_turn
+    else
+      speed_z, turn_z
+  in
   {
     ag with
     x;
@@ -795,8 +824,8 @@ let step_agent rng params grid beads ag =
     age = min params.max_age (ag.age + 1);
     heading_deg;
     speed_um_s = realised_speed_um_s;
-    speed_z;
-    turn_z;
+    speed_z = final_speed_z;
+    turn_z = final_turn_z;
     motion = final_motion;
   }
 

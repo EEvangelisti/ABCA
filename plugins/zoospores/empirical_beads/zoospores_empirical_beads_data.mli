@@ -95,6 +95,10 @@ val load_empirical : string -> string -> empirical
     Values outside this range are clamped before interpolation. *)
 val quantile : quantile_dist -> float -> float
 
+(** Evaluates the empirical cumulative probability associated with an
+    observed value by inverting the exported quantile table. *)
+val cumulative_probability : quantile_dist -> float -> float
+
 (** Standard normal cumulative distribution function. *)
 val normal_cdf : float -> float
 
