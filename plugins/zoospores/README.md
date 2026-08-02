@@ -49,36 +49,6 @@ Three complementary behavioural models are currently provided.
   the empirical SLOW/FAST model.
 
 
-# Collision-response modes
-
-The plugin now supports three values for `COLLISION_RESPONSE`:
-
-- `TANGENT`: remove the inward normal component and retain the complete
-  tangential projection.
-- `SLOWDOWN`: stop at the first bead contact during the current simulation
-  step.
-- `BOTH`: retain tangential motion and multiply the remaining tangential
-  displacement by `COLLISION_SLOWDOWN`.
-
-`COLLISION_SLOWDOWN` is a number in `[0,1]` and defaults to `0.5`.
-It is only used in `BOTH` mode.
-
-Examples:
-
-```text
-COLLISION_RESPONSE=TANGENT
-```
-
-```text
-COLLISION_RESPONSE=SLOWDOWN
-```
-
-```text
-COLLISION_RESPONSE=BOTH
-COLLISION_SLOWDOWN=0.25
-```
-
-
 ## Examples
 
 The following files illustrate how to run simulations.
