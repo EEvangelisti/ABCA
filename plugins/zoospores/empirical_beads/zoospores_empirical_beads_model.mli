@@ -115,10 +115,13 @@ type params = {
           Must lie in [0,1]. *)
 
   collision_speed_factor : float;
+      (** Fraction of realised speed retained immediately after a collision.
+          Must lie in [0,1]. *)
+
   collision_recovery_rate : float;
-      (** Fraction of realised speed retained after any bead collision.
-          Must lie in [0,1]. The reduced speed is stored in the agent and
-          influences subsequent speed recovery through the acceleration cap. *)
+      (** Fraction of the gap toward the empirical SLOW median recovered at
+          each subsequent step. Must lie in [0,1]. During recovery, the speed
+          component of the latent VAR(1) is suspended. *)
 
   seed : int;
       (** Seed used to initialise the pseudo-random number generator. *)
