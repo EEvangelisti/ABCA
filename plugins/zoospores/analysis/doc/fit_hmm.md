@@ -2,7 +2,7 @@
 
 ---
 
-# Fit Hmm
+# Fit hidden Markov model
 
 ## Configuration variables
 
