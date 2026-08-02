@@ -89,19 +89,20 @@ These modules extract quantitative descriptors from reconstructed trajectories
 and generate the figures and summary statistics used to characterise zoospore 
 swimming behaviour.
 
-| Command                | Description                 | Configuration file                                               |
-| ---------------------- | --------------------------- | ---------------------------------------------------------------- |
-| `run extract <config>` | Extract trajectory metrics. | [Configuration](analysis/config/extract_trajectory_metrics.conf) |
-| `run analyse <config>` | Analyse trajectory metrics. | [Configuration](analysis/config/analyse_trajectory_metrics.conf) |
-| `run plot <config>`    | Plot trajectory overviews.  | [Configuration](analysis/config/plot_trajectory_overview.conf)   |
+| Command                    | Description                 | Configuration file                                               |
+| -------------------------- | --------------------------- | ---------------------------------------------------------------- |
+| `run extract <CONFIG_DIR>` | Extract trajectory metrics. | [Configuration](analysis/config/extract_trajectory_metrics.conf) |
+| `run analyse <CONFIG_DIR>` | Analyse trajectory metrics. | [Configuration](analysis/config/analyse_trajectory_metrics.conf) |
+| `run plot <CONFIG_DIR>`    | Plot trajectory overviews.  | [Configuration](analysis/config/plot_trajectory_overview.conf)   |
 
 > [!NOTE]
-> **Batch processing.** The script 
-[`batch_analyse_trajectories.sh`](analysis/batch_analyse_trajectories.sh) is provided 
-to analyse multiple trajectory datasets in parallel. It is particularly useful 
-when processing large numbers of independent simulations. Because each analysis 
-generates its own complete set of intermediate and output files, large batch 
-analyses may require substantial disk space.
+> **Convenience wrappers.** The command `analyse_trajectories <CONFIG_DIR>` runs 
+the complete trajectory-analysis workflow (metric extraction, metric analysis, 
+and overview plotting) from a single configuration directory. The companion 
+script `batch_analyse_trajectories` performs the same workflow in parallel for 
+multiple independent datasets by generating a dedicated configuration directory 
+for each analysis. Since every dataset produces its own complete set of outputs, 
+large batch analyses may require substantial disk space.
 
 <h4 align="center">Representative outputs</h4>
 
@@ -117,11 +118,11 @@ These modules infer empirical and Hidden Markov behavioural models directly
 from the experimental data, producing parameter sets compatible with the ABCA 
 simulation framework.
 
-| Command                         | Description                         | Configuration file                                                   |
-| ------------------------------- | ----------------------------------- | -------------------------------------------------------------------- |
-| `run hysteresis <config>`       | Analyse SLOW/FAST hysteresis.       | [Configuration](analysis/config/analyse_hysteresis.conf)             |
-| `run local_parameters <config>` | Extract empirical model parameters. | [Configuration](analysis/config/extract_local_parameters.conf)       |
-| `run hmm <config>`              | Fit hidden Markov models.           | [Configuration](analysis/config/fit_and_interpret_zoospore_hmm.conf) |
+| Command                             | Description                         | Configuration file                                                   |
+| ----------------------------------- | ----------------------------------- | -------------------------------------------------------------------- |
+| `run hysteresis <CONFIG_DIR>`       | Analyse SLOW/FAST hysteresis.       | [Configuration](analysis/config/analyse_hysteresis.conf)             |
+| `run local_parameters <CONFIG_DIR>` | Extract empirical model parameters. | [Configuration](analysis/config/extract_local_parameters.conf)       |
+| `run hmm <CONFIG_DIR>`              | Fit hidden Markov models.           | [Configuration](analysis/config/fit_and_interpret_zoospore_hmm.conf) |
 
 At this stage, you can run simulations using your own input files. For examples of Bash scripts, see above.
 
@@ -131,11 +132,11 @@ These modules compare simulated and experimental trajectories after controlling
 for differences in trajectory length, allowing quantitative validation of 
 simulation outputs.
 
-| Command                 | Description                                          | Configuration file                                          |
-| ----------------------- | ---------------------------------------------------- | ----------------------------------------------------------- |
-| `run resample <config>` | Resample trajectories.                               | [Configuration](analysis/config/resample_trajectories.conf) |
-| `run validate <config>` | Validate simulations using global metrics.           | [Configuration](analysis/config/validate_simulations.conf)  |
-| `run compare <config>`  | Compare model performance against experimental data. | [Configuration](analysis/config/compare_models.conf)        |
+| Command                     | Description                                          | Configuration file                                          |
+| --------------------------- | ---------------------------------------------------- | ----------------------------------------------------------- |
+| `run resample <CONFIG_DIR>` | Resample trajectories.                               | [Configuration](analysis/config/resample_trajectories.conf) |
+| `run validate <CONFIG_DIR>` | Validate simulations using global metrics.           | [Configuration](analysis/config/validate_simulations.conf)  |
+| `run compare <CONFIG_DIR>`  | Compare model performance against experimental data. | [Configuration](analysis/config/compare_models.conf)        |
 
 Predictive validation can then be performed by applying the same workflow to 
 independent experimental datasets and comparing the resulting simulations with 
