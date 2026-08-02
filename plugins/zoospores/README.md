@@ -89,9 +89,9 @@ These modules extract quantitative descriptors from reconstructed trajectories
 and generate the figures and summary statistics used to characterise zoospore 
 swimming behaviour.
 
-- Extracting trajectory metrics: `./run extract`
-- Analysing trajectory metrics: `./run analyse`
-- Plotting trajectory overviews: `./run plot` 
+- [Extracting trajectory metrics](analysis/doc/extract_trajectory_metrics.md): `./run extract`
+- [Analysing trajectory metrics](analysis/doc/analyse_trajectory_metrics.md): `./run analyse`
+- [Plotting trajectory overviews](analysis/doc/plot_trajectory_overview.md): `./run plot` 
 
 > [!NOTE]
 > **Batch processing.** The script 
@@ -115,9 +115,9 @@ These modules infer empirical and Hidden Markov behavioural models directly
 from the experimental data, producing parameter sets compatible with the ABCA 
 simulation framework.
 
-- Analysing SLOW/FAST hysteresis: `./run hysteresis` 
-- Extracting empirical model parameters: `./run local_parameters`
-- Fitting hidden Markov models: `./run hmm`
+- [Analysing SLOW/FAST hysteresis](analysis/doc/analyse_hysteresis.md): `./run hysteresis` 
+- [Extracting empirical model parameters](analysis/doc/extract_local_parameters.md): `./run local_parameters`
+- [Fitting hidden Markov models](analysis/doc/fit_hmm.md): `./run hmm`
 
 At this stage, you can run simulations using your own input files. For examples of Bash scripts, see above.
 
@@ -127,9 +127,9 @@ These modules compare simulated and experimental trajectories after controlling
 for differences in trajectory length, allowing quantitative validation of 
 simulation outputs.
 
-- Resampling trajectories: `./run resample`
-- Validating simulations using global metrics: `./run validate`
-- Comparing model performance against experimental data: `./run compare`
+- [Resampling trajectories](analysis/doc/resample_trajectories.md): `./run resample`
+- [Validating simulations using global metrics](analysis/doc/validate_simulations.md): `./run validate`
+- [Comparing model performance against experimental data](analysis/doc/compare_models.md): `./run compare`
 
 Predictive validation can then be performed by applying the same workflow to 
 independent experimental datasets and comparing the resulting simulations with 
