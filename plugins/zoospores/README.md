@@ -28,18 +28,56 @@ to infer equivalent models from their own time-lapse microscopy datasets.
 
 ## Available models
 
-Two complementary behavioural models are currently provided.
+Three complementary behavioural models are currently provided.
 
-- **Empirical SLOW/FAST model**: a two-state empirical model describing 
-alternating SLOW and FAST swimming phases. Its parameters were estimated 
-directly from experimentally reconstructed trajectories and exported for use 
-with the ABCA simulation framework.
+- **Empirical SLOW/FAST model**: a two-state empirical model describing
+  alternating SLOW and FAST swimming phases. Its parameters were estimated
+  directly from experimentally reconstructed trajectories and exported for use
+  with the ABCA simulation framework.
 
-- **Two-state hidden Markov model (HMM)**: a probabilistic model inferred 
-independently from the same trajectory dataset. It provides an alternative 
-statistical description of zoospore behaviour and serves both to refine the 
-biological interpretation of swimming states and to independently validate 
-the empirical SLOW/FAST model.
+- **Empirical SLOW/FAST model with beads**: an extension of the empirical
+  model that incorporates static circular obstacles representing experimental
+  beads. Several collision-response mechanisms are available (tangential
+  sliding, contact slowdown, or a combination of both), allowing the model to
+  predict zoospore behaviour in geometrically constrained environments without
+  modifying the underlying behavioural parameters.
+
+- **Two-state hidden Markov model (HMM)**: a probabilistic model inferred
+  independently from the same trajectory dataset. It provides an alternative
+  statistical description of zoospore behaviour and serves both to refine the
+  biological interpretation of swimming states and to independently validate
+  the empirical SLOW/FAST model.
+
+
+# Collision-response modes
+
+The plugin now supports three values for `COLLISION_RESPONSE`:
+
+- `TANGENT`: remove the inward normal component and retain the complete
+  tangential projection.
+- `SLOWDOWN`: stop at the first bead contact during the current simulation
+  step.
+- `BOTH`: retain tangential motion and multiply the remaining tangential
+  displacement by `COLLISION_SLOWDOWN`.
+
+`COLLISION_SLOWDOWN` is a number in `[0,1]` and defaults to `0.5`.
+It is only used in `BOTH` mode.
+
+Examples:
+
+```text
+COLLISION_RESPONSE=TANGENT
+```
+
+```text
+COLLISION_RESPONSE=SLOWDOWN
+```
+
+```text
+COLLISION_RESPONSE=BOTH
+COLLISION_SLOWDOWN=0.25
+```
+
 
 ## Examples
 
