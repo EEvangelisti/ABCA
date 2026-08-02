@@ -22,20 +22,20 @@ ROOT="plugins/zoospores"
   --rows 400 \
   --cols 400 \
   --generations 200 \
-  --agents 300 \
+  --agents 2000 \
   --seed 42 \
-  --toroidal \
-  --plugin-arg INIT=CIRCLE \
-  --plugin-arg RADIUS=75 \
+  --plugin-arg INIT=FULL \
   --plugin-arg PARAMS=$ROOT/empirical/data/P_nicotianae_local_parameters.csv \
   --plugin-arg QUANTILES=$ROOT/empirical/data/P_nicotianae_empirical_quantiles.csv \
   --plugin-arg MICRONS_PER_CELL=10 \
-  --plugin-arg BEADS=RANDOM \
-  --plugin-arg BEAD_COUNT=25000 \
+  --plugin-arg BEADS=FILE \
+  --plugin-arg BEAD_MAP=$ROOT/examples/bead_map.csv \
   --plugin-arg BEAD_RADIUS=0.5 \
   --plugin-arg ZOOSPORE_RADIUS=0.5 \
   --plugin-arg BEAD_MIN_GAP=0.0 \
-  --plugin-arg COLLISION_RESPONSE=SLOWDOWN \
+  --plugin-arg COLLISION_RESPONSE=BOTH \
+  --plugin-arg COLLISION_SLOWDOWN=0.001 \
+  --plugin-arg COLLISION_SPEED_FACTOR=0.001 \
   --out $ROOT/examples/P_nicotianae_empirical_beads.bin
 
 "$ABCA" \
