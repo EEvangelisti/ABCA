@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 """
-Apply a burn-in period to TrackMate-compatible XML trajectory files.
+Apply a burn-in period to trajectory XML files.
 
-The script supports:
+Supported XML layouts:
 1. Standard TrackMate XML files, where spots are stored globally and tracks
    are defined by edges referencing spot IDs.
-2. ABCA-style TrackMate XML files, including variants where spots are embedded
-   directly inside track elements.
+2. TrackMate-like ABCA variants with Spot elements embedded in Track elements.
+3. Native ABCA trajectory XML files using:
+       <root>
+         <particle id="...">
+           <detection t="..." x="..." y="..." />
+         </particle>
+       </root>
 
 For each trajectory, observations before the burn-in threshold are removed.
 Trajectories with fewer than MIN_REMAINING_SPOTS observations afterwards are
@@ -36,11 +41,11 @@ TRACK_SPOT_COUNT_KEYS = ("NUMBER_SPOTS", "N_SPOTS", "nspots", "size")
 @dataclass
 class TrackRecord:
     element: ET.Element
-    spot_ids: list[str]
-    spot_elements: list[ET.Element]
+    observation_elements: list[ET.Element]
     edge_elements: list[ET.Element]
     embedded: bool
     track_id: str
+    observation_kind: str
 
 
 @dataclass
@@ -57,32 +62,14 @@ class FileSummary:
 
 
 def local_name(tag: str) -> str:
-    """Return an XML tag without its namespace."""
     return tag.rsplit("}", 1)[-1]
 
 
 def first_attribute(element: ET.Element, keys: Iterable[str]) -> str | None:
-    """Return the first available attribute value among candidate keys."""
     for key in keys:
         if key in element.attrib:
             return element.attrib[key]
     return None
-
-
-def spot_id(element: ET.Element) -> str | None:
-    return first_attribute(element, SPOT_ID_KEYS)
-
-
-def spot_frame(element: ET.Element) -> float:
-    raw = first_attribute(element, FRAME_KEYS)
-    if raw is None:
-        raise ValueError("spot has no FRAME attribute")
-    return float(raw)
-
-
-def spot_time(element: ET.Element) -> float | None:
-    raw = first_attribute(element, TIME_KEYS)
-    return None if raw is None else float(raw)
 
 
 def is_spot(element: ET.Element) -> bool:
@@ -97,6 +84,40 @@ def is_track(element: ET.Element) -> bool:
     return local_name(element.tag).lower() == "track"
 
 
+def is_particle(element: ET.Element) -> bool:
+    return local_name(element.tag).lower() == "particle"
+
+
+def is_detection(element: ET.Element) -> bool:
+    return local_name(element.tag).lower() == "detection"
+
+
+def observation_frame(element: ET.Element, kind: str) -> float:
+    if kind == "detection":
+        raw = element.attrib.get("t")
+        if raw is None:
+            raise ValueError("ABCA detection has no t attribute")
+        return float(raw)
+
+    raw = first_attribute(element, FRAME_KEYS)
+    if raw is None:
+        raise ValueError("TrackMate spot has no FRAME attribute")
+    return float(raw)
+
+
+def observation_time(element: ET.Element, kind: str) -> float | None:
+    if kind == "detection":
+        raw = element.attrib.get("t")
+        return None if raw is None else float(raw)
+
+    raw = first_attribute(element, TIME_KEYS)
+    return None if raw is None else float(raw)
+
+
+def spot_id(element: ET.Element) -> str | None:
+    return first_attribute(element, SPOT_ID_KEYS)
+
+
 def parent_map(root: ET.Element) -> dict[ET.Element, ET.Element]:
     return {child: parent for parent in root.iter() for child in parent}
 
@@ -106,14 +127,8 @@ def remove_element(
     parents: dict[ET.Element, ET.Element],
 ) -> None:
     parent = parents.get(element)
-    if parent is not None and element in list(parent):
+    if parent is not None:
         parent.remove(element)
-
-
-def iter_track_elements(root: ET.Element) -> Iterator[ET.Element]:
-    for element in root.iter():
-        if is_track(element):
-            yield element
 
 
 def build_spot_index(root: ET.Element) -> dict[str, ET.Element]:
@@ -131,43 +146,80 @@ def edge_endpoint(edge: ET.Element, keys: Iterable[str]) -> str | None:
     return first_attribute(edge, keys)
 
 
-def track_identifier(track: ET.Element, fallback: int) -> str:
-    return first_attribute(track, TRACK_ID_KEYS) or str(fallback)
+def track_identifier(element: ET.Element, fallback: int) -> str:
+    return first_attribute(element, TRACK_ID_KEYS) or str(fallback)
 
 
 def collect_tracks(root: ET.Element) -> tuple[list[TrackRecord], str]:
     """
-    Collect trajectories from standard TrackMate and embedded ABCA variants.
+    Collect trajectories from TrackMate, embedded-Spot ABCA variants, and
+    native ABCA particle/detection XML.
     """
+    particle_elements = [element for element in root.iter() if is_particle(element)]
+    if particle_elements:
+        records: list[TrackRecord] = []
+        for position, particle in enumerate(particle_elements, start=1):
+            detections = [
+                element for element in particle
+                if is_detection(element)
+            ]
+            if detections:
+                records.append(
+                    TrackRecord(
+                        element=particle,
+                        observation_elements=detections,
+                        edge_elements=[],
+                        embedded=True,
+                        track_id=track_identifier(particle, position),
+                        observation_kind="detection",
+                    )
+                )
+
+        if not records:
+            raise ValueError(
+                "particle elements were found, but none contained detection elements"
+            )
+        return records, "abca-particle"
+
     global_spots = build_spot_index(root)
-    records: list[TrackRecord] = []
+    records = []
     saw_edges = False
     saw_embedded = False
 
-    for position, track in enumerate(iter_track_elements(root), start=1):
+    for position, track in enumerate(
+        (element for element in root.iter() if is_track(element)),
+        start=1,
+    ):
         edges = [element for element in track.iter() if is_edge(element)]
-        ids: list[str] = []
 
         if edges:
             saw_edges = True
+            identifiers: list[str] = []
             seen: set[str] = set()
+
             for edge in edges:
-                source = edge_endpoint(edge, SOURCE_KEYS)
-                target = edge_endpoint(edge, TARGET_KEYS)
-                for identifier in (source, target):
+                for identifier in (
+                    edge_endpoint(edge, SOURCE_KEYS),
+                    edge_endpoint(edge, TARGET_KEYS),
+                ):
                     if identifier is not None and identifier not in seen:
-                        ids.append(identifier)
+                        identifiers.append(identifier)
                         seen.add(identifier)
 
-            spots = [global_spots[i] for i in ids if i in global_spots]
+            spots = [
+                global_spots[identifier]
+                for identifier in identifiers
+                if identifier in global_spots
+            ]
+
             records.append(
                 TrackRecord(
                     element=track,
-                    spot_ids=ids,
-                    spot_elements=spots,
+                    observation_elements=spots,
                     edge_elements=edges,
                     embedded=False,
                     track_id=track_identifier(track, position),
+                    observation_kind="spot",
                 )
             )
             continue
@@ -181,28 +233,24 @@ def collect_tracks(root: ET.Element) -> tuple[list[TrackRecord], str]:
             records.append(
                 TrackRecord(
                     element=track,
-                    spot_ids=[
-                        identifier
-                        for element in embedded_spots
-                        if (identifier := spot_id(element)) is not None
-                    ],
-                    spot_elements=embedded_spots,
+                    observation_elements=embedded_spots,
                     edge_elements=[],
                     embedded=True,
                     track_id=track_identifier(track, position),
+                    observation_kind="spot",
                 )
             )
 
     if saw_edges and saw_embedded:
-        xml_type = "mixed"
+        xml_type = "mixed-trackmate"
     elif saw_edges:
         xml_type = "trackmate"
     elif saw_embedded:
-        xml_type = "abca-embedded"
+        xml_type = "abca-embedded-trackmate"
     else:
         raise ValueError(
-            "no supported trajectories found: expected Track elements with "
-            "Edge references or embedded Spot elements"
+            "no supported trajectories found: expected particle/detection, "
+            "Track/Edge, or Track with embedded Spot elements"
         )
 
     return records, xml_type
@@ -218,42 +266,48 @@ def burn_in_threshold(
     return min(frames) + float(burn_in_frames)
 
 
-def update_track_metadata(track: TrackRecord, kept_spots: list[ET.Element]) -> None:
-    """Update common TrackMate summary attributes when they are present."""
-    count = len(kept_spots)
-    for key in TRACK_SPOT_COUNT_KEYS:
-        if key in track.element.attrib:
-            track.element.set(key, str(count))
-
-    frames = [spot_frame(spot) for spot in kept_spots]
-    times = [time for spot in kept_spots if (time := spot_time(spot)) is not None]
-
-    updates: dict[str, float] = {}
-    if frames:
-        updates.update(
-            {
-                "TRACK_START_FRAME": min(frames),
-                "TRACK_STOP_FRAME": max(frames),
-            }
-        )
-    if times:
-        updates.update(
-            {
-                "TRACK_START": min(times),
-                "TRACK_STOP": max(times),
-                "TRACK_DURATION": max(times) - min(times),
-            }
-        )
-
-    for key, value in updates.items():
-        if key in track.element.attrib:
-            track.element.set(key, format_number(value))
-
-
 def format_number(value: float) -> str:
     if value.is_integer():
         return str(int(value))
     return format(value, ".15g")
+
+
+def update_track_metadata(
+    track: TrackRecord,
+    kept_observations: list[ET.Element],
+) -> None:
+    if track.observation_kind == "detection":
+        return
+
+    count = len(kept_observations)
+    for key in TRACK_SPOT_COUNT_KEYS:
+        if key in track.element.attrib:
+            track.element.set(key, str(count))
+
+    frames = [
+        observation_frame(element, track.observation_kind)
+        for element in kept_observations
+    ]
+    times = [
+        time
+        for element in kept_observations
+        if (
+            time := observation_time(element, track.observation_kind)
+        ) is not None
+    ]
+
+    updates: dict[str, float] = {}
+    if frames:
+        updates["TRACK_START_FRAME"] = min(frames)
+        updates["TRACK_STOP_FRAME"] = max(frames)
+    if times:
+        updates["TRACK_START"] = min(times)
+        updates["TRACK_STOP"] = max(times)
+        updates["TRACK_DURATION"] = max(times) - min(times)
+
+    for key, value in updates.items():
+        if key in track.element.attrib:
+            track.element.set(key, format_number(value))
 
 
 def update_global_counts(root: ET.Element) -> None:
@@ -277,7 +331,6 @@ def remove_filtered_track_references(
     removed_track_ids: set[str],
     parents: dict[ET.Element, ET.Element],
 ) -> None:
-    """Remove TrackID references to trajectories discarded by the filter."""
     for element in list(root.iter()):
         if local_name(element.tag).lower() not in {
             "trackid",
@@ -288,6 +341,12 @@ def remove_filtered_track_references(
         identifier = first_attribute(element, TRACK_ID_KEYS)
         if identifier in removed_track_ids:
             remove_element(element, parents)
+
+
+def count_observations(root: ET.Element, xml_type: str) -> int:
+    if xml_type == "abca-particle":
+        return sum(1 for element in root.iter() if is_detection(element))
+    return sum(1 for element in root.iter() if is_spot(element))
 
 
 def process_xml(
@@ -303,43 +362,49 @@ def process_xml(
     parents = parent_map(root)
     tracks, xml_type = collect_tracks(root)
 
-    all_spots_before = [element for element in root.iter() if is_spot(element)]
-    removed_spots: set[ET.Element] = set()
+    observations_before = count_observations(root, xml_type)
+    removed_global_spots: set[ET.Element] = set()
     removed_track_ids: set[str] = set()
     retained_tracks = 0
 
     for track in tracks:
-        if not track.spot_elements:
-            removed_track_ids.add(track.track_id)
-            remove_element(track.element, parents)
-            continue
-
-        frames = [spot_frame(spot) for spot in track.spot_elements]
+        observations = track.observation_elements
+        frames = [
+            observation_frame(element, track.observation_kind)
+            for element in observations
+        ]
         threshold = burn_in_threshold(frames, burn_in_frames, mode)
 
-        kept_spots = [
-            spot for spot in track.spot_elements
-            if spot_frame(spot) >= threshold
+        kept = [
+            element
+            for element in observations
+            if observation_frame(element, track.observation_kind) >= threshold
         ]
-        discarded_spots = [
-            spot for spot in track.spot_elements
-            if spot_frame(spot) < threshold
+        discarded = [
+            element
+            for element in observations
+            if observation_frame(element, track.observation_kind) < threshold
         ]
 
-        if len(kept_spots) < minimum_remaining_spots:
+        if len(kept) < minimum_remaining_spots:
             removed_track_ids.add(track.track_id)
-            removed_spots.update(track.spot_elements)
+            if track.observation_kind == "spot" and not track.embedded:
+                removed_global_spots.update(observations)
             remove_element(track.element, parents)
             continue
 
         retained_tracks += 1
-        removed_spots.update(discarded_spots)
 
-        if track.edge_elements:
+        if track.observation_kind == "detection":
+            for element in discarded:
+                remove_element(element, parents)
+
+        elif track.edge_elements:
+            removed_global_spots.update(discarded)
             kept_ids = {
                 identifier
-                for spot in kept_spots
-                if (identifier := spot_id(spot)) is not None
+                for element in kept
+                if (identifier := spot_id(element)) is not None
             }
             for edge in track.edge_elements:
                 source_id = edge_endpoint(edge, SOURCE_KEYS)
@@ -347,18 +412,15 @@ def process_xml(
                 if source_id not in kept_ids or target_id not in kept_ids:
                     remove_element(edge, parents)
 
-        if track.embedded:
-            for spot in discarded_spots:
-                remove_element(spot, parents)
+        elif track.embedded:
+            for element in discarded:
+                remove_element(element, parents)
 
-        update_track_metadata(track, kept_spots)
+        update_track_metadata(track, kept)
 
-    # Remove globally stored TrackMate spots only after every track has been
-    # examined, avoiding accidental removal during graph reconstruction.
-    for spot in removed_spots:
-        remove_element(spot, parents)
+    for element in removed_global_spots:
+        remove_element(element, parents)
 
-    # Remove now-empty frame containers where applicable.
     for element in list(root.iter()):
         if local_name(element.tag).lower() == "spotsinframe":
             if not any(is_spot(child) for child in element):
@@ -372,7 +434,8 @@ def process_xml(
         ET.indent(tree, space="  ")
     tree.write(output, encoding="utf-8", xml_declaration=True)
 
-    spots_after = sum(1 for element in root.iter() if is_spot(element))
+    observations_after = count_observations(root, xml_type)
+
     return FileSummary(
         source=source,
         output=output,
@@ -380,9 +443,9 @@ def process_xml(
         tracks_before=len(tracks),
         tracks_after=retained_tracks,
         tracks_removed=len(tracks) - retained_tracks,
-        spots_before=len(all_spots_before),
-        spots_after=spots_after,
-        spots_removed=len(all_spots_before) - spots_after,
+        spots_before=observations_before,
+        spots_after=observations_after,
+        spots_removed=observations_before - observations_after,
     )
 
 
@@ -441,8 +504,8 @@ def parse_arguments() -> argparse.Namespace:
         choices=("absolute", "relative"),
         default="absolute",
         help=(
-            "absolute: remove observations with FRAME < burn-in; "
-            "relative: remove burn-in frames from each track start"
+            "absolute: remove observations with frame/t < burn-in; "
+            "relative: remove burn-in frames from each trajectory start"
         ),
     )
     parser.add_argument("--pattern", default="*.xml")
@@ -497,7 +560,7 @@ def main() -> int:
             f"[{index}/{len(sources)}] {source.name}: "
             f"{summary.xml_type}, "
             f"{summary.tracks_after}/{summary.tracks_before} tracks retained, "
-            f"{summary.spots_after}/{summary.spots_before} spots retained"
+            f"{summary.spots_after}/{summary.spots_before} observations retained"
         )
 
     write_summary(args.outdir / args.summary_filename, summaries)
