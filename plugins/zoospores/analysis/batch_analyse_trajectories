@@ -244,7 +244,7 @@ for tracks_dir in "${valid_track_dirs[@]}"; do
             OVERVIEW_DIR \
             "$overview_dir"
 
-        "$ROOT/analyse_trajectories.sh" "$confdir"
+        "$ROOT/analyse_trajectories" "$confdir"
 
         printf '[%d/%d] Completed %s -> trajectory_analysis_%s\n' \
             "$job_index" "$total" "$tracks_name" "$suffix"
