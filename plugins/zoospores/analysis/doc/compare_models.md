@@ -1,3 +1,7 @@
+← **[Back to plugin documentation](../../README.md)**
+
+---
+
 # Compare Models
 
 ## Configuration variables
@@ -21,3 +25,7 @@
 | `SIMULATION_ID_COLUMN` | Simulation id. | `simulation_id` |
 | `DELIMITER` | Delimiter. | `,` |
 | `ALLOW_MISSING_SIMULATIONS` | Allow missing. | `false` |
+
+---
+
+← **[Back to plugin documentation](../../README.md)**

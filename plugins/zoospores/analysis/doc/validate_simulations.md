@@ -1,3 +1,7 @@
+← **[Back to plugin documentation](../../README.md)**
+
+---
+
 # Validate Simulations
 
 ## Configuration variables
@@ -11,3 +15,7 @@
 | `DPI` | Figure resolution. | `300` |
 | `BINS` | Histogram bins. | `50` |
 | `UPPER_PERCENTILE` | Optional. | `empty` |
+
+---
+
+← **[Back to plugin documentation](../../README.md)**

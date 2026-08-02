@@ -1,3 +1,7 @@
+← **[Back to plugin documentation](../../README.md)**
+
+---
+
 # Resample Trajectories
 
 ## Configuration variables
@@ -9,3 +13,7 @@
 | `EMPIRICAL_LENGTHS` | Empirical lengths CSV. | `Required` |
 | `MAX_JOBS` | Maximum jobs. | `¼ of CPUs` |
 | `INITIAL_SEED` | Initial seed. | `Required` |
+
+---
+
+← **[Back to plugin documentation](../../README.md)**

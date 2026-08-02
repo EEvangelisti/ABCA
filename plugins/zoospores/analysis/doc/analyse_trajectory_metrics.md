@@ -1,3 +1,7 @@
+← **[Back to plugin documentation](../../README.md)**
+
+---
+
 # Analyse Trajectory Metrics
 
 ## Configuration variables
@@ -11,3 +15,7 @@
 | `BINS` | Histogram bins. | `50` |
 | `COUPLING_BINS` | Coupling bins. | `20` |
 | `SMOOTH_FRAC` | LOWESS fraction. | `0.20` |
+
+---
+
+← **[Back to plugin documentation](../../README.md)**

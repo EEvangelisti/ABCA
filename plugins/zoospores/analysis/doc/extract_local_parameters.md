@@ -1,3 +1,7 @@
+← **[Back to plugin documentation](../../README.md)**
+
+---
+
 # Extract Local Parameters
 
 ## Configuration variables
@@ -12,3 +16,7 @@
 | `QUANTILE_GRID_SIZE` | Quantile grid. | `1001` |
 | `ACCEL_CAP_MULTIPLIER` | Acceleration cap. | `3` |
 | `MICRONS_PER_CELL` | Scale. | `10` |
+
+---
+
+← **[Back to plugin documentation](../../README.md)**

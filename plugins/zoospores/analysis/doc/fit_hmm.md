@@ -1,3 +1,7 @@
+← **[Back to plugin documentation](../../README.md)**
+
+---
+
 # Fit Hmm
 
 ## Configuration variables
@@ -23,3 +27,7 @@
 | `QUANTILE_COUNT` | Quantiles. | `1001` |
 | `DPI` | Figure resolution. | `300` |
 | `WRITE_DECODED_ALL` | Write decoded tables. | `0` |
+
+---
+
+← **[Back to plugin documentation](../../README.md)**

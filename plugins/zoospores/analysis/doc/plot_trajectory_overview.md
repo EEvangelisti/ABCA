@@ -1,3 +1,7 @@
+← **[Back to plugin documentation](../../README.md)**
+
+---
+
 # Plot Trajectory Overview
 
 ## Configuration variables
@@ -12,3 +16,7 @@
 | `LINE_WIDTH` | Line width. | `0.55` |
 | `MAX_TRACKS_PER_DECILE` | Tracks per decile. | `500` |
 | `DPI` | Figure resolution. | `300` |
+
+---
+
+← **[Back to plugin documentation](../../README.md)**

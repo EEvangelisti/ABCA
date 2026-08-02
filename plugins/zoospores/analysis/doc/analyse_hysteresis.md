@@ -1,3 +1,7 @@
+← **[Back to plugin documentation](../../README.md)**
+
+---
+
 # Analyse Hysteresis
 
 ## Configuration variables
@@ -10,3 +14,7 @@
 | `OTSU_BINS` | Otsu bins. | `256` |
 | `HISTOGRAM_BINS` | Histogram bins. | `50` |
 | `DPI` | Figure resolution. | `300` |
+
+---
+
+← **[Back to plugin documentation](../../README.md)**

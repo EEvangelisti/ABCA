@@ -1,3 +1,7 @@
+← **[Back to plugin documentation](../../README.md)**
+
+---
+
 # Extract Trajectory Metrics
 
 ## Configuration variables
@@ -16,3 +20,7 @@
 | `LENGTH_FILTER_PERCENTILE` | Upper percentile. | `90` |
 | `LENGTH_FILTER_MAX_POINTS` | Maximum points. | `0` |
 | `FILTERED_SUBDIR` | Filtered output subdirectory. | `length_filtered` |
+
+---
+
+← **[Back to plugin documentation](../../README.md)**
