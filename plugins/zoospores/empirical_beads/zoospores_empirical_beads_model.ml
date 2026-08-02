@@ -796,19 +796,46 @@ let frame_of_agents grid beads agents =
   let frame = empty_frame grid in
   Array.iter
     (fun bead ->
-       let min_col = max 0 (int_of_float (Float.floor (bead.bx -. bead.radius))) in
-       let max_col = min (Grid.cols grid - 1) (int_of_float (Float.floor (bead.bx +. bead.radius))) in
-       let min_row = max 0 (int_of_float (Float.floor (bead.by -. bead.radius))) in
-       let max_row = min (Grid.rows grid - 1) (int_of_float (Float.floor (bead.by +. bead.radius))) in
+       let min_col =
+         max 0
+           (int_of_float (Float.floor (bead.bx -. bead.radius)))
+       in
+       let max_col =
+         min (Grid.cols grid - 1)
+           (int_of_float (Float.floor (bead.bx +. bead.radius)))
+       in
+       let min_row =
+         max 0
+           (int_of_float (Float.floor (bead.by -. bead.radius)))
+       in
+       let max_row =
+         min (Grid.rows grid - 1)
+           (int_of_float (Float.floor (bead.by +. bead.radius)))
+       in
+
        for row = min_row to max_row do
          for col = min_col to max_col do
            let x = float_of_int col +. 0.5 in
            let y = float_of_int row +. 0.5 in
+
            if point_inside_bead ~margin:0.0 x y bead then
              frame.(row).(col) <- 3
          done
-       done)
-    beads;
+       done;
+
+       (* Ensure that every bead is represented by at least one display cell,
+          even when its continuous disk contains no cell centre. *)
+       let centre_col = int_of_float (Float.floor bead.bx) in
+       let centre_row = int_of_float (Float.floor bead.by) in
+
+       if centre_row >= 0
+          && centre_row < Grid.rows grid
+          && centre_col >= 0
+          && centre_col < Grid.cols grid
+       then
+         frame.(centre_row).(centre_col) <- 3
+    )
+  beads;
   Array.iter
     (fun ag ->
        let coord = coord_of_agent ag in
