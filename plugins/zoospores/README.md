@@ -89,11 +89,11 @@ These modules extract quantitative descriptors from reconstructed trajectories
 and generate the figures and summary statistics used to characterise zoospore 
 swimming behaviour.
 
-| Command | Description |
-|-|-|
-| `run extract <config>` | Extract trajectory metrics using the [`<config>`](analysis/doc/extract_trajectory_metrics.md) file. |
-| `run analyse <config>` | Analyse trajectory metrics using the [`<config>`](analysis/doc/analyse_trajectory_metrics.md) file. |
-| `run plot <config>` | Plot trajectory overviews  using the [`<config>`](analysis/doc/plot_trajectory_overview.md) file. |
+| Command                | Description                 | Configuration file                                               |
+| ---------------------- | --------------------------- | ---------------------------------------------------------------- |
+| `run extract <config>` | Extract trajectory metrics. | [Configuration](analysis/config/extract_trajectory_metrics.conf) |
+| `run analyse <config>` | Analyse trajectory metrics. | [Configuration](analysis/config/analyse_trajectory_metrics.conf) |
+| `run plot <config>`    | Plot trajectory overviews.  | [Configuration](analysis/config/plot_trajectory_overview.conf)   |
 
 > [!NOTE]
 > **Batch processing.** The script 
@@ -117,9 +117,11 @@ These modules infer empirical and Hidden Markov behavioural models directly
 from the experimental data, producing parameter sets compatible with the ABCA 
 simulation framework.
 
-- [Analysing SLOW/FAST hysteresis](analysis/doc/analyse_hysteresis.md): `./run hysteresis` 
-- [Extracting empirical model parameters](analysis/doc/extract_local_parameters.md): `./run local_parameters`
-- [Fitting hidden Markov models](analysis/doc/fit_hmm.md): `./run hmm`
+| Command                         | Description                         | Configuration file                                                   |
+| ------------------------------- | ----------------------------------- | -------------------------------------------------------------------- |
+| `run hysteresis <config>`       | Analyse SLOW/FAST hysteresis.       | [Configuration](analysis/config/analyse_hysteresis.conf)             |
+| `run local_parameters <config>` | Extract empirical model parameters. | [Configuration](analysis/config/extract_local_parameters.conf)       |
+| `run hmm <config>`              | Fit hidden Markov models.           | [Configuration](analysis/config/fit_and_interpret_zoospore_hmm.conf) |
 
 At this stage, you can run simulations using your own input files. For examples of Bash scripts, see above.
 
