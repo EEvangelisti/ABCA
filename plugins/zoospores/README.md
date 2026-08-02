@@ -89,9 +89,11 @@ These modules extract quantitative descriptors from reconstructed trajectories
 and generate the figures and summary statistics used to characterise zoospore 
 swimming behaviour.
 
-- [Extracting trajectory metrics](analysis/doc/extract_trajectory_metrics.md): `./run extract`
-- [Analysing trajectory metrics](analysis/doc/analyse_trajectory_metrics.md): `./run analyse`
-- [Plotting trajectory overviews](analysis/doc/plot_trajectory_overview.md): `./run plot` 
+| Command | Description |
+|-|-|
+| `run extract <config>` | Extract trajectory metrics using the [`<config>`]](analysis/doc/extract_trajectory_metrics.md) file. |
+| `run analyse <config>` | Analyse trajectory metrics using the [`<config>`]](analysis/doc/analyse_trajectory_metrics.md) file. |
+| `run plot <config>` | Plot trajectory overviews  using the [`<config>`]](analysis/doc/plot_trajectory_overview.md) file. |
 
 > [!NOTE]
 > **Batch processing.** The script 
