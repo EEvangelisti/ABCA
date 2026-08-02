@@ -45,6 +45,9 @@ type empirical = {
   p_slow_slow : float;
   p_slow_fast : float;
 
+  fast_slow_threshold : float;
+  hysteresis_half_width : float;
+
   a11 : float;
   a12 : float;
   a21 : float;

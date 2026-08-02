@@ -50,6 +50,8 @@ type collision_response =
       (** Remove the inward normal component and retain tangential motion. *)
   | Slowdown
       (** Truncate the displacement at contact, reducing realised speed. *)
+  | Both
+      (** Retain tangential motion and scale it by [collision_slowdown]. *)
 
 (** Circular physical obstacle, expressed in grid-cell coordinates. *)
 type bead = {
@@ -107,6 +109,15 @@ type params = {
 
   collision_response : collision_response;
       (** Rule applied when an agent reaches a bead. *)
+
+  collision_slowdown : float;
+      (** Fraction of tangential displacement retained in [Both] mode.
+          Must lie in [0,1]. *)
+
+  collision_speed_factor : float;
+      (** Fraction of realised speed retained after any bead collision.
+          Must lie in [0,1]. The reduced speed is stored in the agent and
+          influences subsequent speed recovery through the acceleration cap. *)
 
   seed : int;
       (** Seed used to initialise the pseudo-random number generator. *)
