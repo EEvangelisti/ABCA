@@ -292,8 +292,11 @@ let load_empirical parameter_file quantile_file =
 
     fast_slow_threshold =
       required_any t
-        ["fast_slow_threshold"; "FAST_SLOW_THRESHOLD";
-         "state_speed_threshold"; "otsu_speed_threshold"];
+        ["fast_slow_speed_threshold";
+         "fast_slow_threshold";
+         "FAST_SLOW_THRESHOLD";
+         "state_speed_threshold";
+         "otsu_speed_threshold"];
     hysteresis_half_width =
       required_any t
         ["hysteresis_half_width"; "HYSTERESIS_HALF_WIDTH";
