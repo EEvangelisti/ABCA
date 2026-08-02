@@ -73,6 +73,7 @@ let metadata params ~rows ~cols ~generations ~density =
     "collision_slowdown", string_of_float params.collision_slowdown;
     "collision_speed_factor", string_of_float params.collision_speed_factor;
     "collision_recovery_rate", string_of_float params.collision_recovery_rate;
+    "collision_angular_sd_deg", string_of_float params.collision_angular_sd_deg;
     "fast_slow_threshold_um_s", string_of_float e.fast_slow_threshold;
     "hysteresis_half_width_um_s", string_of_float e.hysteresis_half_width;
     "distribution_speed", "full inverse empirical CDF from abca_empirical_quantiles.csv";
@@ -143,6 +144,8 @@ let run ~rows ~cols ~generations ~seed ~density ~agents ~topology ~plugin_args ~
       arg_float "COLLISION_SPEED_FACTOR" 1.0 plugin_args;
     collision_recovery_rate =
       arg_float "COLLISION_RECOVERY_RATE" 1.0 plugin_args;
+    collision_angular_sd_deg =
+      arg_float "COLLISION_ANGULAR_SD_DEG" 0.0 plugin_args;
     seed;
     topology;
   } in
@@ -172,6 +175,9 @@ let run ~rows ~cols ~generations ~seed ~density ~agents ~topology ~plugin_args ~
   then
     invalid_arg
       "Zoospore empirical beads: COLLISION_RECOVERY_RATE must lie in [0,1]";
+  if params.collision_angular_sd_deg < 0.0 then
+    invalid_arg
+      "Zoospore empirical beads: COLLISION_ANGULAR_SD_DEG must be non-negative";
   let check_probability name p =
     if p < 0.0 || p > 1.0 then
       invalid_arg

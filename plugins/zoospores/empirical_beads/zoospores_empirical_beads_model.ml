@@ -59,6 +59,7 @@ type params = {
   collision_slowdown : float;
   collision_speed_factor : float;
   collision_recovery_rate : float;
+  collision_angular_sd_deg : float;
   seed : int;
   topology : Grid.topology;
 }
@@ -694,7 +695,38 @@ let earliest_bead_hit x y dx dy beads zoospore_radius =
     beads;
   !best
 
-let move_with_bead_collisions params beads x0 y0 heading distance =
+let rotate_vector_degrees x y angle_deg =
+  let angle = angle_deg *. Float.pi /. 180.0 in
+  let c = cos angle in
+  let s = sin angle in
+  c *. x -. s *. y,
+  s *. x +. c *. y
+
+let outward_scattered_direction rng params nx ny tx ty =
+  (* A zero angular standard deviation preserves the former deterministic
+     tangent exactly and consumes no additional random number. *)
+  if params.collision_angular_sd_deg <= 0.0 then
+    tx, ty
+  else
+    let angle =
+      params.collision_angular_sd_deg *. standard_normal rng
+    in
+    let dx0, dy0 = rotate_vector_degrees tx ty angle in
+
+    (* A zoospore cannot leave the surface through the bead. Reflect any
+       inward component into the outward half-plane, then normalise. *)
+    let normal_component = dx0 *. nx +. dy0 *. ny in
+    let dx1, dy1 =
+      if normal_component < 0.0 then
+        dx0 -. 2.0 *. normal_component *. nx,
+        dy0 -. 2.0 *. normal_component *. ny
+      else
+        dx0, dy0
+    in
+    let norm = max 1e-15 (vector_norm dx1 dy1) in
+    dx1 /. norm, dy1 /. norm
+
+let move_with_bead_collisions rng params beads x0 y0 heading distance =
   let rec loop iteration x y dir_x dir_y remaining travelled =
     if iteration >= 4 || remaining <= 1e-12 then
       x, y, heading_of_vector dir_x dir_y heading, travelled, iteration > 0
@@ -739,8 +771,12 @@ let move_with_bead_collisions params beads x0 y0 heading distance =
               if tangent_fraction <= 1e-12 then
                 contact_x, contact_y, heading, travelled +. pre_distance, true
               else
-                let tx = tx0 /. tangent_fraction in
-                let ty = ty0 /. tangent_fraction in
+                let tangent_x = tx0 /. tangent_fraction in
+                let tangent_y = ty0 /. tangent_fraction in
+                let tx, ty =
+                  outward_scattered_direction
+                    rng params nx ny tangent_x tangent_y
+                in
                 let slowdown =
                   match params.collision_response with
                   | Tangential -> 1.0
@@ -757,13 +793,13 @@ let move_with_bead_collisions params beads x0 y0 heading distance =
   let theta = heading *. Float.pi /. 180.0 in
   loop 0 x0 y0 (cos theta) (sin theta) distance 0.0
 
-let move_agent params grid beads ag heading speed =
+let move_agent rng params grid beads ag heading speed =
   let intended_distance =
     speed *. params.empirical.Data.dt /. params.microns_per_cell
   in
   let x1, y1, collision_heading, travelled, collided =
     move_with_bead_collisions
-      params beads ag.x ag.y heading intended_distance
+      rng params beads ag.x ag.y heading intended_distance
   in
   let x2, y2, final_heading =
     match params.topology with
@@ -830,7 +866,7 @@ let step_agent rng params grid beads ag =
       Utils.normalize_degrees (ag.heading_deg +. delta_heading)
     in
     let x, y, heading_deg, realised_speed_um_s, collided =
-      move_agent params grid beads ag proposed_heading speed_um_s
+      move_agent rng params grid beads ag proposed_heading speed_um_s
     in
 
     let final_speed =
@@ -888,7 +924,7 @@ let step_agent rng params grid beads ag =
       Utils.normalize_degrees (ag.heading_deg +. delta_heading)
     in
     let x, y, heading_deg, realised_speed_um_s, collided =
-      move_agent params grid beads ag proposed_heading speed_um_s
+      move_agent rng params grid beads ag proposed_heading speed_um_s
     in
     let final_motion =
       if collided then

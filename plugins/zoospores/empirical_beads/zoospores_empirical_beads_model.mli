@@ -123,6 +123,11 @@ type params = {
           each subsequent step. Must lie in [0,1]. During recovery, the speed
           component of the latent VAR(1) is suspended. *)
 
+  collision_angular_sd_deg : float;
+      (** Standard deviation, in degrees, of the Gaussian angular deviation
+          applied around the exact obstacle tangent after collision. A value
+          of zero preserves the deterministic tangential response. *)
+
   seed : int;
       (** Seed used to initialise the pseudo-random number generator. *)
 
