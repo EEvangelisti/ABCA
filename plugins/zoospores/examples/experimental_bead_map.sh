@@ -26,7 +26,7 @@ ROWS=139
 COLS=185
 
 GENERATIONS=200
-AGENTS=2000
+AGENTS=1246
 MICRONS_PER_CELL=10
 
 REPLICATES=100
@@ -86,7 +86,7 @@ run_simulation() {
     local seed
 
     rep_label="$(printf '%03d' "$rep")"
-    rep_dir="$OUTPUT_ROOT/rep_${rep_label}"
+    rep_dir="$OUTPUT_ROOT/tracks_${rep_label}"
     output_prefix="$rep_dir/P_nicotianae_empirical_beads"
 
     # One reproducible seed per independent agent realization.
@@ -115,8 +115,13 @@ run_simulation() {
         --plugin-arg BEAD_RADIUS="$BEAD_RADIUS" \
         --plugin-arg ZOOSPORE_RADIUS="$ZOOSPORE_RADIUS" \
         --plugin-arg BEAD_MIN_GAP="$BEAD_MIN_GAP" \
-        --plugin-arg COLLISION_RESPONSE=TANGENT \
+        --plugin-arg COLLISION_RESPONSE=SLOWDOWN \
+        --plugin-arg COLLISION_SLOWDOWN=0.2 \
+        --plugin-arg COLLISION_SPEED_FACTOR=0.05 \
+        --plugin-arg COLLISION_RECOVERY_RATE=0.05 \
         --out "${output_prefix}.bin"
+
+#         --plugin-arg COLLISION_RESPONSE=TANGENT \
 
     "$ABCA" \
         --mode xml \
