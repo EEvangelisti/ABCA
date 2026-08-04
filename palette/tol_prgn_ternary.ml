@@ -22,7 +22,7 @@ let control_points =
   [|
     (0.462745, 0.164706, 0.513725);  (* #762A83 — SLOW / state 0 *)
     (0.105882, 0.470588, 0.215686);  (* #1B7837 — FAST / state 1 *)
-    (0.895000, 1.000000, 0.000000);  (* #E4FF00 — BEAD / state 2 *)
+    (0.800000, 0.800000, 0.800000);  (* #E4FF00 — BEAD / state 2 *)
   |]
 
 include Template.Make(struct
