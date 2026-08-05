@@ -70,6 +70,7 @@ let metadata params ~rows ~cols ~generations ~density =
     "zoospore_radius_cells", string_of_float params.zoospore_radius;
     "bead_min_gap_cells", string_of_float params.bead_min_gap;
     "collision_response", Model.string_of_collision_response params.collision_response;
+    "collision_rules", Model.string_of_collision_response params.collision_response;
     "collision_slowdown", string_of_float params.collision_slowdown;
     "collision_speed_factor", string_of_float params.collision_speed_factor;
     "collision_recovery_rate", string_of_float params.collision_recovery_rate;
@@ -136,8 +137,12 @@ let run ~rows ~cols ~generations ~seed ~density ~agents ~topology ~plugin_args ~
     zoospore_radius = arg_float "ZOOSPORE_RADIUS" 0.5 plugin_args;
     bead_min_gap = arg_float "BEAD_MIN_GAP" 0.0 plugin_args;
     collision_response =
-      Model.parse_collision_response
-        (arg_string "COLLISION_RESPONSE" "TANGENT" plugin_args);
+      let specification =
+        match find_arg "COLLISION_RULES" plugin_args with
+        | Some value -> value
+        | None -> arg_string "COLLISION_RESPONSE" "TANGENT" plugin_args
+      in
+      Model.parse_collision_response specification;
     collision_slowdown =
       arg_float "COLLISION_SLOWDOWN" 0.5 plugin_args;
     collision_speed_factor =
@@ -145,7 +150,7 @@ let run ~rows ~cols ~generations ~seed ~density ~agents ~topology ~plugin_args ~
     collision_recovery_rate =
       arg_float "COLLISION_RECOVERY_RATE" 1.0 plugin_args;
     collision_angular_sd_deg =
-      arg_float "COLLISION_ANGULAR_SD_DEG" 0.0 plugin_args;
+      arg_float "COLLISION_ANGULAR_SD_DEG" 45.0 plugin_args;
     seed;
     topology;
   } in
@@ -224,7 +229,7 @@ let model = {
   family = Abca_models.Model.Biological;
   kind = Abca_models.Model.Agent_based_model;
   description =
-    "Data-driven zoospore model with circular bead obstacles and configurable TANGENT, SLOWDOWN, or BOTH collision response";
+    "Data-driven zoospore model with circular bead obstacles and composable elementary collision rules: TANGENT, SLOWDOWN, REDIRECT, and REFLECT";
   state_count = 3;
   to_color_index;
   run;

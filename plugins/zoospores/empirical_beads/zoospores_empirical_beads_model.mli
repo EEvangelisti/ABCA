@@ -44,14 +44,23 @@ type bead_source =
   | Beads_from_file of string
   | Random_beads of int
 
-(** Response applied when a zoospore trajectory intersects a bead. *)
-type collision_response =
+(** Elementary rule applied when a zoospore trajectory intersects a bead. *)
+type collision_rule =
   | Tangential
-      (** Remove the inward normal component and retain tangential motion. *)
+      (** Project motion onto the local bead tangent. *)
   | Slowdown
-      (** Truncate the displacement at contact, reducing realised speed. *)
-  | Both
-      (** Retain tangential motion and scale it by [collision_slowdown]. *)
+      (** Reduce post-contact displacement and initiate transient speed recovery. *)
+  | Redirect
+      (** Apply a stochastic outward reorientation around the local tangent. *)
+  | Reflect
+      (** Apply deterministic specular reflection around the local normal. *)
+
+(** Ordered sequence of elementary collision rules.
+
+    Rules are applied from left to right. For example,
+    [TANGENT+SLOWDOWN] first redirects motion tangentially and then reduces
+    the remaining displacement. *)
+type collision_response = collision_rule list
 
 (** Circular physical obstacle, expressed in grid-cell coordinates. *)
 type bead = {
@@ -108,15 +117,15 @@ type params = {
       (** Minimum edge-to-edge gap between randomly generated beads. *)
 
   collision_response : collision_response;
-      (** Rule applied when an agent reaches a bead. *)
+      (** Ordered collision-rule sequence applied when an agent reaches a bead. *)
 
   collision_slowdown : float;
-      (** Fraction of tangential displacement retained in [Both] mode.
-          Must lie in [0,1]. *)
+      (** Fraction of post-contact displacement retained whenever [Slowdown]
+          is present in the rule sequence. Must lie in [0,1]. *)
 
   collision_speed_factor : float;
-      (** Fraction of realised speed retained immediately after a collision.
-          Must lie in [0,1]. *)
+      (** Fraction of realised speed retained immediately after a collision
+          whenever [Slowdown] is active. Must lie in [0,1]. *)
 
   collision_recovery_rate : float;
       (** Fraction of the gap toward the empirical SLOW median recovered at
@@ -125,8 +134,8 @@ type params = {
 
   collision_angular_sd_deg : float;
       (** Standard deviation, in degrees, of the Gaussian angular deviation
-          applied around the exact obstacle tangent after collision. A value
-          of zero preserves the deterministic tangential response. *)
+          used by [Redirect] around the local obstacle tangent. The resulting
+          direction is constrained to the outward half-plane. *)
 
   seed : int;
       (** Seed used to initialise the pseudo-random number generator. *)

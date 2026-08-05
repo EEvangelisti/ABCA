@@ -29,10 +29,13 @@ type bead_source =
   | Beads_from_file of string
   | Random_beads of int
 
-type collision_response =
+type collision_rule =
   | Tangential
   | Slowdown
-  | Both
+  | Redirect
+  | Reflect
+
+type collision_response = collision_rule list
 
 type bead = {
   bx : float;
@@ -139,19 +142,51 @@ let string_of_bead_source = function
   | Beads_from_file filename -> "file:" ^ filename
   | Random_beads n -> "random:" ^ string_of_int n
 
-let parse_collision_response s =
-  match String.uppercase_ascii (String.trim s) with
+let parse_collision_rule token =
+  match String.uppercase_ascii (String.trim token) with
   | "TANGENT" | "TANGENTIAL" | "SLIDE" -> Tangential
   | "SLOWDOWN" | "SLOW" | "STOP" -> Slowdown
-  | "BOTH" | "TANGENT_SLOWDOWN" | "SLOWDOWN_TANGENT" -> Both
+  | "REDIRECT" | "REORIENT" | "TURN" | "SCATTER" -> Redirect
+  | "REFLECT" | "REFLECTION" | "BOUNCE" -> Reflect
   | other ->
       failwith
-        ("Zoospore empirical beads: unknown COLLISION_RESPONSE: " ^ other)
+        ("Zoospore empirical beads: unknown collision rule: " ^ other)
 
-let string_of_collision_response = function
-  | Tangential -> "tangential"
+let split_collision_rules s =
+  let normalised =
+    String.map
+      (function ',' | ';' | '|' -> '+' | c -> c)
+      s
+  in
+  String.split_on_char '+' normalised
+  |> List.map String.trim
+  |> List.filter (fun token -> token <> "")
+
+let parse_collision_response s =
+  match String.uppercase_ascii (String.trim s) with
+  | "BOTH" | "TANGENT_SLOWDOWN" | "SLOWDOWN_TANGENT" ->
+      [Tangential; Slowdown]
+  | "NONE" | "OFF" -> []
+  | _ ->
+      let rules = split_collision_rules s |> List.map parse_collision_rule in
+      if rules = [] then
+        invalid_arg
+          "Zoospore empirical beads: COLLISION_RESPONSE must contain at least one rule";
+      rules
+
+let string_of_collision_rule = function
+  | Tangential -> "tangent"
   | Slowdown -> "slowdown"
-  | Both -> "both"
+  | Redirect -> "redirect"
+  | Reflect -> "reflect"
+
+let string_of_collision_response rules =
+  match rules with
+  | [] -> "none"
+  | _ -> String.concat "+" (List.map string_of_collision_rule rules)
+
+let has_collision_rule rule rules =
+  List.exists (( = ) rule) rules
 
 let split_csv line =
   String.split_on_char ',' line |> List.map String.trim
@@ -702,34 +737,120 @@ let rotate_vector_degrees x y angle_deg =
   c *. x -. s *. y,
   s *. x +. c *. y
 
-let outward_scattered_direction rng params nx ny tx ty =
-  (* A zero angular standard deviation preserves the former deterministic
-     tangent exactly and consumes no additional random number. *)
-  if params.collision_angular_sd_deg <= 0.0 then
-    tx, ty
-  else
-    let angle =
-      params.collision_angular_sd_deg *. standard_normal rng
-    in
-    let dx0, dy0 = rotate_vector_degrees tx ty angle in
+let normalise_vector x y =
+  let norm = vector_norm x y in
+  if norm <= 1e-15 then None else Some (x /. norm, y /. norm)
 
-    (* A zoospore cannot leave the surface through the bead. Reflect any
-       inward component into the outward half-plane, then normalise. *)
-    let normal_component = dx0 *. nx +. dy0 *. ny in
-    let dx1, dy1 =
-      if normal_component < 0.0 then
-        dx0 -. 2.0 *. normal_component *. nx,
-        dy0 -. 2.0 *. normal_component *. ny
-      else
-        dx0, dy0
-    in
-    let norm = max 1e-15 (vector_norm dx1 dy1) in
-    dx1 /. norm, dy1 /. norm
+let tangent_direction rng nx ny dir_x dir_y =
+  let normal_component = dir_x *. nx +. dir_y *. ny in
+  let tx0 = dir_x -. normal_component *. nx in
+  let ty0 = dir_y -. normal_component *. ny in
+  match normalise_vector tx0 ty0 with
+  | Some (tx, ty) -> tx, ty, vector_norm tx0 ty0
+  | None ->
+      (* Head-on impacts have no preferred tangential direction. Choose one of
+         the two local tangents reproducibly from the simulation RNG. *)
+      let sign = if Rng.bool rng then 1.0 else -1.0 in
+      -.sign *. ny, sign *. nx, 0.0
+
+let ensure_outward nx ny dx dy =
+  let normal_component = dx *. nx +. dy *. ny in
+  let dx1, dy1 =
+    if normal_component < 0.0 then
+      dx -. 2.0 *. normal_component *. nx,
+      dy -. 2.0 *. normal_component *. ny
+    else
+      dx, dy
+  in
+  match normalise_vector dx1 dy1 with
+  | Some direction -> direction
+  | None -> nx, ny
+
+let redirected_direction rng params nx ny dir_x dir_y =
+  (* REDIRECT is deliberately elementary: use the local tangent as a safe
+     reference, then add a Gaussian angular perturbation. The result is folded
+     into the outward half-plane so that the zoospore cannot be redirected
+     through the bead. *)
+  let tx, ty, _ = tangent_direction rng nx ny dir_x dir_y in
+  let angle =
+    if params.collision_angular_sd_deg <= 0.0 then 0.0
+    else params.collision_angular_sd_deg *. standard_normal rng
+  in
+  let dx, dy = rotate_vector_degrees tx ty angle in
+  ensure_outward nx ny dx dy
+
+let reflected_direction nx ny dir_x dir_y =
+  let normal_component = dir_x *. nx +. dir_y *. ny in
+  ensure_outward
+    nx ny
+    (dir_x -. 2.0 *. normal_component *. nx)
+    (dir_y -. 2.0 *. normal_component *. ny)
+
+type collision_transform = {
+  dir_x : float;
+  dir_y : float;
+  distance_factor : float;
+  direction_changed : bool;
+  slowdown_applied : bool;
+}
+
+let apply_collision_rule rng params nx ny transform = function
+  | Tangential ->
+      let tx, ty, tangent_fraction =
+        tangent_direction rng nx ny transform.dir_x transform.dir_y
+      in
+      {
+        transform with
+        dir_x = tx;
+        dir_y = ty;
+        distance_factor = transform.distance_factor *. tangent_fraction;
+        direction_changed = true;
+      }
+  | Redirect ->
+      let dx, dy =
+        redirected_direction rng params nx ny transform.dir_x transform.dir_y
+      in
+      {
+        transform with
+        dir_x = dx;
+        dir_y = dy;
+        direction_changed = true;
+      }
+  | Reflect ->
+      let dx, dy =
+        reflected_direction nx ny transform.dir_x transform.dir_y
+      in
+      {
+        transform with
+        dir_x = dx;
+        dir_y = dy;
+        direction_changed = true;
+      }
+  | Slowdown ->
+      {
+        transform with
+        distance_factor =
+          transform.distance_factor *. params.collision_slowdown;
+        slowdown_applied = true;
+      }
+
+let apply_collision_rules rng params nx ny dir_x dir_y =
+  List.fold_left
+    (apply_collision_rule rng params nx ny)
+    {
+      dir_x;
+      dir_y;
+      distance_factor = 1.0;
+      direction_changed = false;
+      slowdown_applied = false;
+    }
+    params.collision_response
 
 let move_with_bead_collisions rng params beads x0 y0 heading distance =
-  let rec loop iteration x y dir_x dir_y remaining travelled =
+  let rec loop iteration x y dir_x dir_y remaining travelled any_collision any_slowdown =
     if iteration >= 4 || remaining <= 1e-12 then
-      x, y, heading_of_vector dir_x dir_y heading, travelled, iteration > 0
+      x, y, heading_of_vector dir_x dir_y heading,
+      travelled, any_collision, any_slowdown
     else
       let dx = remaining *. dir_x in
       let dy = remaining *. dir_y in
@@ -738,66 +859,60 @@ let move_with_bead_collisions rng params beads x0 y0 heading distance =
           x +. dx, y +. dy,
           heading_of_vector dir_x dir_y heading,
           travelled +. remaining,
-          iteration > 0
+          any_collision,
+          any_slowdown
       | Some (t, bead) ->
           let pre_distance = max 0.0 (t *. remaining -. 1e-9) in
           let contact_x = x +. pre_distance *. dir_x in
           let contact_y = y +. pre_distance *. dir_y in
-          match params.collision_response with
-          | Slowdown ->
-              (* The attempted displacement is truncated at first contact.
-                 The heading is retained, but the realised speed is reduced
-                 according to the distance actually travelled during the step. *)
+          let nx0 = contact_x -. bead.bx in
+          let ny0 = contact_y -. bead.by in
+          let n_norm = max 1e-15 (vector_norm nx0 ny0) in
+          let nx = nx0 /. n_norm in
+          let ny = ny0 /. n_norm in
+          let transformed =
+            apply_collision_rules rng params nx ny dir_x dir_y
+          in
+          let remaining_after_contact =
+            max 0.0 (remaining -. pre_distance)
+          in
+          if not transformed.direction_changed then
+            (* A slowdown-only rule cannot continue in the incident direction,
+               because that direction points through the bead. The current step
+               therefore ends at contact; the post-collision speed reduction and
+               recovery affect subsequent steps. *)
+            contact_x, contact_y,
+            heading_of_vector dir_x dir_y heading,
+            travelled +. pre_distance,
+            true,
+            transformed.slowdown_applied
+          else
+            let redirected_distance =
+              remaining_after_contact *. transformed.distance_factor
+            in
+            if redirected_distance <= 1e-12 then
               contact_x, contact_y,
-              heading_of_vector dir_x dir_y heading,
+              heading_of_vector transformed.dir_x transformed.dir_y heading,
               travelled +. pre_distance,
-              true
-          | Tangential | Both ->
-              (* Remove the inward normal component. Tangential preserves the
-                 full projected displacement, whereas Both additionally scales
-                 it by COLLISION_SLOWDOWN to represent friction at contact. *)
-              let nx0 = contact_x -. bead.bx in
-              let ny0 = contact_y -. bead.by in
-              let n_norm = max 1e-15 (vector_norm nx0 ny0) in
-              let nx = nx0 /. n_norm in
-              let ny = ny0 /. n_norm in
-              let normal_component = dir_x *. nx +. dir_y *. ny in
-              let tx0 = dir_x -. normal_component *. nx in
-              let ty0 = dir_y -. normal_component *. ny in
-              let tangent_fraction = vector_norm tx0 ty0 in
-              let remaining_after_contact =
-                max 0.0 (remaining -. pre_distance)
-              in
-              if tangent_fraction <= 1e-12 then
-                contact_x, contact_y, heading, travelled +. pre_distance, true
-              else
-                let tangent_x = tx0 /. tangent_fraction in
-                let tangent_y = ty0 /. tangent_fraction in
-                let tx, ty =
-                  outward_scattered_direction
-                    rng params nx ny tangent_x tangent_y
-                in
-                let slowdown =
-                  match params.collision_response with
-                  | Tangential -> 1.0
-                  | Both -> params.collision_slowdown
-                  | Slowdown -> assert false
-                in
-                let tangential_distance =
-                  remaining_after_contact *. tangent_fraction *. slowdown
-                in
-                loop (iteration + 1)
-                  contact_x contact_y tx ty tangential_distance
-                  (travelled +. pre_distance)
+              true,
+              transformed.slowdown_applied
+            else
+              loop (iteration + 1)
+                contact_x contact_y
+                transformed.dir_x transformed.dir_y
+                redirected_distance
+                (travelled +. pre_distance)
+                true
+                (any_slowdown || transformed.slowdown_applied)
   in
   let theta = heading *. Float.pi /. 180.0 in
-  loop 0 x0 y0 (cos theta) (sin theta) distance 0.0
+  loop 0 x0 y0 (cos theta) (sin theta) distance 0.0 false false
 
 let move_agent rng params grid beads ag heading speed =
   let intended_distance =
     speed *. params.empirical.Data.dt /. params.microns_per_cell
   in
-  let x1, y1, collision_heading, travelled, collided =
+  let x1, y1, collision_heading, travelled, collided, slowdown_applied =
     move_with_bead_collisions
       rng params beads ag.x ag.y heading intended_distance
   in
@@ -832,10 +947,12 @@ let move_agent rng params grid beads ag heading speed =
      The reduced speed is stored in the agent and therefore affects subsequent
      updates through the existing acceleration bound. *)
   let actual_speed =
-    if collided then realised_speed *. params.collision_speed_factor
-    else realised_speed
+    if slowdown_applied then
+      realised_speed *. params.collision_speed_factor
+    else
+      realised_speed
   in
-  x2, y2, final_heading, actual_speed, collided
+  x2, y2, final_heading, actual_speed, collided, slowdown_applied
 
 let latent_from_observed distribution value =
   Data.cumulative_probability distribution value
@@ -865,7 +982,7 @@ let step_agent rng params grid beads ag =
     let proposed_heading =
       Utils.normalize_degrees (ag.heading_deg +. delta_heading)
     in
-    let x, y, heading_deg, realised_speed_um_s, collided =
+    let x, y, heading_deg, realised_speed_um_s, collided, slowdown_applied =
       move_agent rng params grid beads ag proposed_heading speed_um_s
     in
 
@@ -904,7 +1021,7 @@ let step_agent rng params grid beads ag =
       speed_z = final_speed_z;
       turn_z = final_turn_z;
       motion = SLOW;
-      recovering_from_collision = not recovered;
+      recovering_from_collision = slowdown_applied || not recovered;
     }
   end else begin
     (* Outside recovery, execute the original empirical model exactly. *)
@@ -923,7 +1040,7 @@ let step_agent rng params grid beads ag =
     let proposed_heading =
       Utils.normalize_degrees (ag.heading_deg +. delta_heading)
     in
-    let x, y, heading_deg, realised_speed_um_s, collided =
+    let x, y, heading_deg, realised_speed_um_s, collided, slowdown_applied =
       move_agent rng params grid beads ag proposed_heading speed_um_s
     in
     let final_motion =
@@ -956,7 +1073,7 @@ let step_agent rng params grid beads ag =
       speed_z = final_speed_z;
       turn_z = final_turn_z;
       motion = final_motion;
-      recovering_from_collision = collided;
+      recovering_from_collision = slowdown_applied;
     }
   end
 
