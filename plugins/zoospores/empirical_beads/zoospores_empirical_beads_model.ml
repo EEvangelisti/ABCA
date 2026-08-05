@@ -30,6 +30,7 @@ type bead_source =
   | Random_beads of int
 
 type collision_rule =
+  | Stop_at_contact
   | Tangential
   | Slowdown
   | Redirect
@@ -144,10 +145,15 @@ let string_of_bead_source = function
 
 let parse_collision_rule token =
   match String.uppercase_ascii (String.trim token) with
+  | "STOP_AT_CONTACT" | "STOP-CONTACT" | "HALT_AT_CONTACT" ->
+      Stop_at_contact
   | "TANGENT" | "TANGENTIAL" | "SLIDE" -> Tangential
-  | "SLOWDOWN" | "SLOW" | "STOP" -> Slowdown
+  | "SLOWDOWN" | "SLOW" -> Slowdown
   | "REDIRECT" | "REORIENT" | "TURN" | "SCATTER" -> Redirect
   | "REFLECT" | "REFLECTION" | "BOUNCE" -> Reflect
+  | "NONE" | "OFF" ->
+      invalid_arg
+        "Zoospore empirical beads: NONE is not a physical collision rule; use BEADS=NONE for a simulation without beads, or COLLISION_RULES=STOP_AT_CONTACT to end the current step at contact"
   | other ->
       failwith
         ("Zoospore empirical beads: unknown collision rule: " ^ other)
@@ -166,7 +172,9 @@ let parse_collision_response s =
   match String.uppercase_ascii (String.trim s) with
   | "BOTH" | "TANGENT_SLOWDOWN" | "SLOWDOWN_TANGENT" ->
       [Tangential; Slowdown]
-  | "NONE" | "OFF" -> []
+  | "NONE" | "OFF" ->
+      invalid_arg
+        "Zoospore empirical beads: NONE is not a physical collision response; use BEADS=NONE for a simulation without beads, or COLLISION_RULES=STOP_AT_CONTACT"
   | _ ->
       let rules = split_collision_rules s |> List.map parse_collision_rule in
       if rules = [] then
@@ -175,6 +183,7 @@ let parse_collision_response s =
       rules
 
 let string_of_collision_rule = function
+  | Stop_at_contact -> "stop_at_contact"
   | Tangential -> "tangent"
   | Slowdown -> "slowdown"
   | Redirect -> "redirect"
@@ -789,9 +798,12 @@ type collision_transform = {
   distance_factor : float;
   direction_changed : bool;
   slowdown_applied : bool;
+  stop_at_contact : bool;
 }
 
 let apply_collision_rule rng params nx ny transform = function
+  | Stop_at_contact ->
+      { transform with stop_at_contact = true }
   | Tangential ->
       let tx, ty, tangent_fraction =
         tangent_direction rng nx ny transform.dir_x transform.dir_y
@@ -840,14 +852,17 @@ let apply_collision_rules rng params nx ny dir_x dir_y =
       distance_factor = 1.0;
       direction_changed = false;
       slowdown_applied = false;
+      stop_at_contact = false;
     }
     params.collision_response
 
 let move_with_bead_collisions rng params beads x0 y0 heading distance =
-  let rec loop iteration x y dir_x dir_y remaining travelled any_collision any_slowdown =
+  let rec loop
+      iteration x y dir_x dir_y remaining travelled
+      any_collision any_slowdown any_stop_at_contact =
     if iteration >= 4 || remaining <= 1e-12 then
       x, y, heading_of_vector dir_x dir_y heading,
-      travelled, any_collision, any_slowdown
+      travelled, any_collision, any_slowdown, any_stop_at_contact
     else
       let dx = remaining *. dir_x in
       let dy = remaining *. dir_y in
@@ -857,7 +872,8 @@ let move_with_bead_collisions rng params beads x0 y0 heading distance =
           heading_of_vector dir_x dir_y heading,
           travelled +. remaining,
           any_collision,
-          any_slowdown
+          any_slowdown,
+          any_stop_at_contact
       | Some (t, bead) ->
           let pre_distance = max 0.0 (t *. remaining -. 1e-9) in
           let contact_x = x +. pre_distance *. dir_x in
@@ -873,16 +889,19 @@ let move_with_bead_collisions rng params beads x0 y0 heading distance =
           let remaining_after_contact =
             max 0.0 (remaining -. pre_distance)
           in
-          if not transformed.direction_changed then
-            (* A slowdown-only rule cannot continue in the incident direction,
-               because that direction points through the bead. The current step
-               therefore ends at contact; the post-collision speed reduction and
-               recovery affect subsequent steps. *)
+          if transformed.stop_at_contact
+             || not transformed.direction_changed then
+            (* STOP_AT_CONTACT ends only the current displacement at contact.
+               The agent remains active. When STOP_AT_CONTACT is used alone,
+               the internal locomotion state is preserved for the next step.
+               SLOWDOWN used on its own also ends the current displacement,
+               but additionally reduces propulsive speed and initiates recovery. *)
             contact_x, contact_y,
             heading_of_vector dir_x dir_y heading,
             travelled +. pre_distance,
             true,
-            transformed.slowdown_applied
+            transformed.slowdown_applied,
+            transformed.stop_at_contact
           else
             let redirected_distance =
               remaining_after_contact *. transformed.distance_factor
@@ -892,24 +911,32 @@ let move_with_bead_collisions rng params beads x0 y0 heading distance =
               heading_of_vector transformed.dir_x transformed.dir_y heading,
               travelled +. pre_distance,
               true,
-              transformed.slowdown_applied
+              transformed.slowdown_applied,
+              transformed.stop_at_contact
             else
-              loop (iteration + 1)
-                contact_x contact_y
-                transformed.dir_x transformed.dir_y
+              loop
+                (iteration + 1)
+                contact_x
+                contact_y
+                transformed.dir_x
+                transformed.dir_y
                 redirected_distance
                 (travelled +. pre_distance)
                 true
                 (any_slowdown || transformed.slowdown_applied)
+                (any_stop_at_contact || transformed.stop_at_contact)
   in
   let theta = heading *. Float.pi /. 180.0 in
-  loop 0 x0 y0 (cos theta) (sin theta) distance 0.0 false false
+  loop
+    0 x0 y0 (cos theta) (sin theta) distance 0.0
+    false false false
 
 let move_agent rng params grid beads ag heading speed =
   let intended_distance =
     speed *. params.empirical.Data.dt /. params.microns_per_cell
   in
-  let x1, y1, collision_heading, travelled, collided, slowdown_applied =
+  let x1, y1, collision_heading, travelled, collided,
+      slowdown_applied, stop_at_contact_applied =
     move_with_bead_collisions
       rng params beads ag.x ag.y heading intended_distance
   in
@@ -946,10 +973,15 @@ let move_agent rng params grid beads ag heading speed =
   let actual_speed =
     if slowdown_applied then
       realised_speed *. params.collision_speed_factor
+    else if stop_at_contact_applied then
+      (* STOP_AT_CONTACT truncates only the current spatial displacement.
+         It does not alter the agent's internal propulsive speed. *)
+      speed
     else
       realised_speed
   in
-  x2, y2, final_heading, actual_speed, collided, slowdown_applied
+  x2, y2, final_heading, actual_speed, collided,
+  slowdown_applied, stop_at_contact_applied
 
 let latent_from_observed distribution value =
   Data.cumulative_probability distribution value
@@ -979,19 +1011,23 @@ let step_agent rng params grid beads ag =
     let proposed_heading =
       Utils.normalize_degrees (ag.heading_deg +. delta_heading)
     in
-    let x, y, heading_deg, realised_speed_um_s, collided, slowdown_applied =
+    let x, y, heading_deg, realised_speed_um_s, collided,
+        slowdown_applied, stop_at_contact_applied =
       move_agent rng params grid beads ag proposed_heading speed_um_s
     in
 
-    let final_speed =
-      if collided then realised_speed_um_s
-      else realised_speed_um_s
+    let stop_only =
+      stop_at_contact_applied && not slowdown_applied
     in
+    let collision_altered_kinematics =
+      collided && not stop_only
+    in
+    let final_speed = realised_speed_um_s in
     let final_speed_z =
       latent_from_observed params.empirical.Data.slow_speed final_speed
     in
     let final_turn_z =
-      if collided then
+      if collision_altered_kinematics then
         let realised_turn =
           absolute_heading_change ag.heading_deg heading_deg
         in
@@ -1004,7 +1040,7 @@ let step_agent rng params grid beads ag =
       max 1.0 (0.05 *. max 1.0 recovery_target)
     in
     let recovered =
-      (not collided)
+      (not collision_altered_kinematics)
       && abs_float (final_speed -. recovery_target) <= tolerance
     in
 
@@ -1037,18 +1073,25 @@ let step_agent rng params grid beads ag =
     let proposed_heading =
       Utils.normalize_degrees (ag.heading_deg +. delta_heading)
     in
-    let x, y, heading_deg, realised_speed_um_s, collided, slowdown_applied =
+    let x, y, heading_deg, realised_speed_um_s, collided,
+        slowdown_applied, stop_at_contact_applied =
       move_agent rng params grid beads ag proposed_heading speed_um_s
     in
+    let stop_only =
+      stop_at_contact_applied && not slowdown_applied
+    in
+    let collision_altered_kinematics =
+      collided && not stop_only
+    in
     let final_motion =
-      if collided then
+      if collision_altered_kinematics then
         motion_from_hysteresis
           params.empirical next_motion realised_speed_um_s
       else
         next_motion
     in
     let final_speed_z, final_turn_z =
-      if collided then
+      if collision_altered_kinematics then
         let speed_distribution =
           distribution_for_state params.empirical final_motion
         in

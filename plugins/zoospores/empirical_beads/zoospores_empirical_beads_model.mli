@@ -46,6 +46,10 @@ type bead_source =
 
 (** Elementary rule applied when a zoospore trajectory intersects a bead. *)
 type collision_rule =
+  | Stop_at_contact
+      (** End only the current displacement at the first bead-contact point.
+          The zoospore remains active and resumes normal movement at the next
+          simulation step. *)
   | Tangential
       (** Project motion onto the local bead tangent. *)
   | Slowdown
@@ -59,7 +63,8 @@ type collision_rule =
 
     Rules are applied from left to right. For example,
     [TANGENT+SLOWDOWN] first redirects motion tangentially and then reduces
-    the remaining displacement. *)
+    the remaining displacement. [STOP_AT_CONTACT] always terminates the current
+    displacement at the first contact point, but does not deactivate the agent. *)
 type collision_response = collision_rule list
 
 (** Circular physical obstacle, expressed in grid-cell coordinates. *)
