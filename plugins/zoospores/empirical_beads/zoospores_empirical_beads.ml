@@ -137,12 +137,11 @@ let run ~rows ~cols ~generations ~seed ~density ~agents ~topology ~plugin_args ~
     zoospore_radius = arg_float "ZOOSPORE_RADIUS" 0.5 plugin_args;
     bead_min_gap = arg_float "BEAD_MIN_GAP" 0.0 plugin_args;
     collision_response =
-      let specification =
+      (let specification =
         match find_arg "COLLISION_RULES" plugin_args with
         | Some value -> value
         | None -> arg_string "COLLISION_RESPONSE" "TANGENT" plugin_args
-      in
-      Model.parse_collision_response specification;
+      in Model.parse_collision_response specification);
     collision_slowdown =
       arg_float "COLLISION_SLOWDOWN" 0.5 plugin_args;
     collision_speed_factor =

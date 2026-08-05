@@ -185,9 +185,6 @@ let string_of_collision_response rules =
   | [] -> "none"
   | _ -> String.concat "+" (List.map string_of_collision_rule rules)
 
-let has_collision_rule rule rules =
-  List.exists (( = ) rule) rules
-
 let split_csv line =
   String.split_on_char ',' line |> List.map String.trim
 
