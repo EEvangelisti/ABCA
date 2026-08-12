@@ -62,6 +62,8 @@ The following files illustrate how to run simulations.
 | [`P_nicotianae_empirical.gif`](examples/P_nicotianae_empirical.gif) | Zoospore simulation using the empirical model   |
 | [`P_nicotianae_hmm.gif`](examples/P_nicotianae_hmm.gif)             | Zoospore simulation using the two-state HMM     |
 
+Examples of simulations and animated GIFs can be found [on Zenodo](https://doi.org/10.5281/zenodo.21898773).
+
 ## Workflow for building new behavioural models
 
 A typical analysis workflow consists of three stages: trajectory analysis, 
