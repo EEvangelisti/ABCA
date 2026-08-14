@@ -33,7 +33,6 @@ If you use this plugin in your research, please cite:
 Le Berre J, Attard A, Evangelisti E (2026). Data-driven inference of local behavioural rules predicts emergent properties of *Phytophthora* zoospore dispersal. *bioRxiv* 2026.08.12.744352
 
 
-
 ## Available models
 
 Three complementary behavioural models are currently provided.
@@ -55,6 +54,8 @@ Three complementary behavioural models are currently provided.
   statistical description of zoospore behaviour and serves both to refine the
   biological interpretation of swimming states and to independently validate
   the empirical SLOW/FAST model.
+
+Examples of simulations can be found on [Zenodo](https://doi.org/10.5281/zenodo.21898773).
 
 
 ## Examples
