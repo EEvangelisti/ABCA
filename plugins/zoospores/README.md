@@ -29,7 +29,7 @@ to infer equivalent models from their own time-lapse microscopy datasets.
 ## Reference manuscript
 
 Details about this plugin can be found in [this bioRxiv manuscript](https://doi.org/10.64898/2026.08.12.744352).
-If you happen to use the zoospore plugin, please cite:
+If you use this plugin in your research, please cite:
 Le Berre J, Attard A, Evangelisti E (2026). Data-driven inference of local behavioural rules predicts emergent properties of *Phytophthora* zoospore dispersal. *bioRxiv* 2026.08.12.744352
 
 
