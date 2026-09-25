@@ -1,0 +1,17 @@
+python3 extract_initial_speeds.py trajectories_Trackmate.xml initial_training_speeds.csv
+
+ABCA-AI initial-speed extraction
+--------------------------------
+Input:              trajectories_Trackmate.xml
+Output:             initial_training_speeds.csv
+Frame interval:     0.0700506 s
+Particles:          130,727
+Eligible (>=10):    67,643
+TRAIN tracks:       40,747
+VALIDATION tracks:  13,587
+TEST tracks:        13,309
+Initial speeds:     40,747
+Expected:           40,747  [OK]
+
+Extraction completed successfully.
+
