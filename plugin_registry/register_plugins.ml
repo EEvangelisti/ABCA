@@ -23,7 +23,8 @@ let initialize () =
     Abca_plugin_zoospores_hmm.Zoospores_hmm.models;
     Abca_plugin_zoospores_hmm_beads.Zoospores_hmm_beads.models;
     Abca_plugin_zoospores_empirical.Zoospores_empirical.models;
-    Abca_plugin_zoospores_empirical_beads.Zoospores_empirical_beads.models
+    Abca_plugin_zoospores_empirical_beads.Zoospores_empirical_beads.models;
+    Abca_plugin_zoospores_AI.Zoospores_AI.models;
   ]
   
 
