@@ -197,9 +197,27 @@ module Action =
 
     let xml selected_model =
       ensure_input ();
-      selected_model.Abca_models.Model.export_xml
-        ~input:!input
-        ~output:!xml;
+      let module Binary_codec = struct
+        type t = int
+        let to_int32 = Int32.of_int
+        let of_int32 = Int32.to_int
+      end in
+      let archive =
+        Abca_io.Binary.load ~filename:!input ~codec:(module Binary_codec)
+      in
+      let is_toroidal =
+        List.assoc_opt "boundary"
+          (Abca_io.Metadata.to_list archive.header.metadata)
+        = Some "toroidal"
+      in
+      if is_toroidal && Array.length archive.agents > 0 then
+        Abca_io.Xml.save_agent_trace_trackmate
+          ~periodic_box:(archive.header.cols, archive.header.rows)
+          ~filename:!xml archive.agents
+      else
+        selected_model.Abca_models.Model.export_xml
+          ~input:!input
+          ~output:!xml;
       Printf.printf "Exported XML -> %s\n%!" !xml
 
 
@@ -236,7 +254,7 @@ module Action =
         let of_int32 = Int32.to_int
       end in
       let open Abca_io.Binary in
-      let { agents; _ } =
+      let { agents; header; _ } =
         load
           ~filename:!input
           ~codec:(module Binary_codec)
@@ -246,7 +264,14 @@ module Action =
         agents;
       Printf.printf "Exported agent trajectories -> %s\n%!" !csv;
       if !tracking_xml <> "" then begin
+        let periodic_box =
+          if List.assoc_opt "boundary"
+               (Abca_io.Metadata.to_list header.metadata) = Some "toroidal"
+          then Some (header.cols, header.rows)
+          else None
+        in
         Abca_io.Xml.save_agent_trace_trackmate
+          ?periodic_box
           ~filename:!tracking_xml
           agents;
 
