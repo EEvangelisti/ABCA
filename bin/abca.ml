@@ -86,6 +86,27 @@ let export_agent_trace_csv ~filename (agents : Abca_io.Agent_trace.t) =
          agents)
 
 
+(* Older archives keep their metadata as one JSON string under [raw_json],
+   whereas newer plugins write individual metadata entries. Only the
+   topology flag is needed here; the binary header supplies box dimensions. *)
+let raw_json_string_field key json =
+  let rec search = function
+    | field :: separator :: value :: rest ->
+        if field = key && String.contains separator ':' then Some value
+        else search (separator :: value :: rest)
+    | _ -> None
+  in
+  search (String.split_on_char '"' json)
+
+let toroidal_metadata metadata =
+  let fields = Abca_io.Metadata.to_list metadata in
+  List.assoc_opt "boundary" fields = Some "toroidal"
+  || List.assoc_opt "topology" fields = Some "toroidal"
+  || (match List.assoc_opt "raw_json" fields with
+      | None -> false
+      | Some json -> raw_json_string_field "topology" json = Some "toroidal")
+
+
 module Settings =
   struct
     let list_models = ref false
@@ -205,11 +226,7 @@ module Action =
       let archive =
         Abca_io.Binary.load ~filename:!input ~codec:(module Binary_codec)
       in
-      let is_toroidal =
-        List.assoc_opt "boundary"
-          (Abca_io.Metadata.to_list archive.header.metadata)
-        = Some "toroidal"
-      in
+      let is_toroidal = toroidal_metadata archive.header.metadata in
       if is_toroidal && Array.length archive.agents > 0 then
         Abca_io.Xml.save_agent_trace_trackmate
           ~periodic_box:(archive.header.cols, archive.header.rows)
@@ -265,8 +282,7 @@ module Action =
       Printf.printf "Exported agent trajectories -> %s\n%!" !csv;
       if !tracking_xml <> "" then begin
         let periodic_box =
-          if List.assoc_opt "boundary"
-               (Abca_io.Metadata.to_list header.metadata) = Some "toroidal"
+          if toroidal_metadata header.metadata
           then Some (header.cols, header.rows)
           else None
         in
