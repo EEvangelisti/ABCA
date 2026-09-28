@@ -118,7 +118,18 @@ let sort_and_deduplicate_trajectory records =
  *     particle
  *       detection with attributes t, x and y
  *)
-let save_agent_trace_trackmate ~filename (agents : Agent_trace.t) =
+(* Reconstruct the nearest periodic displacement between consecutive wrapped
+   positions. This is unambiguous only when each true step is shorter than
+   half the box size along each axis. The archive cannot reveal extra laps. *)
+let nearest_periodic_delta period delta =
+  delta -. period *. floor (delta /. period +. 0.5)
+
+let save_agent_trace_trackmate ?periodic_box ~filename (agents : Agent_trace.t) =
+  Option.iter
+    (fun (cols, rows) ->
+       if cols <= 0 || rows <= 0 then
+         invalid_arg "Xml.save_agent_trace_trackmate: invalid periodic box")
+    periodic_box;
   let trajectories = Hashtbl.create 257 in
 
   Array.iter
@@ -155,13 +166,24 @@ let save_agent_trace_trackmate ~filename (agents : Agent_trace.t) =
                useful for inspecting files manually. *)
             fprintf oc "  <particle id=\"%d\">\n" agent_id;
 
+            let previous = ref None in
             List.iter
               (fun record ->
+                 let x, y =
+                   match periodic_box, !previous with
+                   | None, _ -> record.Agent_trace.x, record.Agent_trace.y
+                   | Some _, None -> record.Agent_trace.x, record.Agent_trace.y
+                   | Some (cols, rows), Some (px, py, ux, uy) ->
+                       ux +. nearest_periodic_delta (float cols)
+                         (record.Agent_trace.x -. px),
+                       uy +. nearest_periodic_delta (float rows)
+                         (record.Agent_trace.y -. py)
+                 in
+                 previous := Some (record.Agent_trace.x, record.Agent_trace.y, x, y);
                  fprintf oc
                    "    <detection t=\"%d\" x=\"%.17g\" y=\"%.17g\" />\n"
                    record.Agent_trace.frame
-                   record.Agent_trace.x
-                   record.Agent_trace.y)
+                   x y)
               records;
 
             output_string oc "  </particle>\n")

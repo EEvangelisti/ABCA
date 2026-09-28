@@ -33,9 +33,15 @@ val save_frames :
     Raises [Invalid_argument] if any frame has an invalid shape. *)
 
 val save_agent_trace_trackmate :
+  ?periodic_box:(int * int) ->
   filename:string ->
   Agent_trace.t ->
   unit
 (** Saves an agent trace as a simple particle-tracking XML file.
     The output uses [particle] elements containing [detection] elements
-    with [t], [x], and [y] attributes, suitable for trajectory-analysis scripts. *)
+    with [t], [x], and [y] attributes, suitable for trajectory-analysis scripts.
+    With [periodic_box=(cols,rows)], coordinates are unwrapped independently
+    for each agent using the nearest displacement between successive frames.
+    This is reliable only when each true displacement is less than half the
+    box width on each axis per recorded step; the wrapped archive cannot
+    recover larger steps or multiple crossings exactly. *)
