@@ -1,0 +1,58 @@
+ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers
+  built with gcc 14 (Debian 14.2.0-19)
+  configuration: --prefix=/usr --extra-version=0+deb13u1 --toolchain=hardened --libdir=/usr/lib/x86_64-linux-gnu --incdir=/usr/include/x86_64-linux-gnu --arch=amd64 --enable-gpl --disable-stripping --disable-libmfx --disable-omx --enable-gnutls --enable-libaom --enable-libass --enable-libbs2b --enable-libcdio --enable-libcodec2 --enable-libdav1d --enable-libflite --enable-libfontconfig --enable-libfreetype --enable-libfribidi --enable-libglslang --enable-libgme --enable-libgsm --enable-libharfbuzz --enable-libmp3lame --enable-libmysofa --enable-libopenjpeg --enable-libopenmpt --enable-libopus --enable-librubberband --enable-libshine --enable-libsnappy --enable-libsoxr --enable-libspeex --enable-libtheora --enable-libtwolame --enable-libvidstab --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx265 --enable-libxml2 --enable-libxvid --enable-libzimg --enable-openal --enable-opencl --enable-opengl --disable-sndio --enable-libvpl --enable-libdc1394 --enable-libdrm --enable-libiec61883 --enable-chromaprint --enable-frei0r --enable-ladspa --enable-libbluray --enable-libcaca --enable-libdvdnav --enable-libdvdread --enable-libjack --enable-libpulse --enable-librabbitmq --enable-librist --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libx264 --enable-libzmq --enable-libzvbi --enable-lv2 --enable-sdl2 --enable-libplacebo --enable-librav1e --enable-pocketsphinx --enable-librsvg --enable-libjxl --enable-shared
+  libavutil      59. 39.100 / 59. 39.100
+  libavcodec     61. 19.101 / 61. 19.101
+  libavformat    61.  7.103 / 61.  7.103
+  libavdevice    61.  3.100 / 61.  3.100
+  libavfilter    10.  5.100 / 10.  5.100
+  libswscale      8.  3.100 /  8.  3.100
+  libswresample   5.  3.100 /  5.  3.100
+  libpostproc    58.  3.100 / 58.  3.100
+Input #0, image2, from 'plugins/zoospores_multimodel/examples/2026-09-29_230005_zoospores-multimodel/frames/zoospores-multimodel_%06d.png':
+  Duration: 00:00:06.73, start: 0.000000, bitrate: N/A
+  Stream #0:0: Video: png, rgb24(pc, gbr/unknown/unknown), 1200x1200, 15 fps, 15 tbr, 15 tbn
+Stream mapping:
+  Stream #0:0 -> #0:0 (png (native) -> png (native))
+Press [q] to stop, [?] for help
+[Parsed_palettegen_0 @ 0x7fdea4004500] 3(+1) colors generated out of 3 colors; ratio=1.000000
+Output #0, image2, to 'plugins/zoospores_multimodel/examples/2026-09-29_230005_zoospores-multimodel/frames/palette.png':
+  Metadata:
+    encoder         : Lavf61.7.103
+  Stream #0:0: Video: png, rgba(pc, gbr/unknown/unknown, progressive), 16x16 [SAR 1:1 DAR 1:1], q=2-31, 200 kb/s, 15 fps, 15 tbn
+      Metadata:
+        encoder         : Lavc61.19.101 png
+[image2 @ 0x558419ae7e40] The specified filename 'plugins/zoospores_multimodel/examples/2026-09-29_230005_zoospores-multimodel/frames/palette.png' does not contain an image sequence pattern or a pattern is invalid.
+[image2 @ 0x558419ae7e40] Use a pattern such as %03d for an image sequence or use the -update option (with -frames:v 1 if needed) to write a single image.
+[out#0/image2 @ 0x558419bac440] video:0KiB audio:0KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown
+frame=    1 fps=0.0 q=-0.0 Lsize=N/A time=00:00:00.06 bitrate=N/A speed=0.194x    
+ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers
+  built with gcc 14 (Debian 14.2.0-19)
+  configuration: --prefix=/usr --extra-version=0+deb13u1 --toolchain=hardened --libdir=/usr/lib/x86_64-linux-gnu --incdir=/usr/include/x86_64-linux-gnu --arch=amd64 --enable-gpl --disable-stripping --disable-libmfx --disable-omx --enable-gnutls --enable-libaom --enable-libass --enable-libbs2b --enable-libcdio --enable-libcodec2 --enable-libdav1d --enable-libflite --enable-libfontconfig --enable-libfreetype --enable-libfribidi --enable-libglslang --enable-libgme --enable-libgsm --enable-libharfbuzz --enable-libmp3lame --enable-libmysofa --enable-libopenjpeg --enable-libopenmpt --enable-libopus --enable-librubberband --enable-libshine --enable-libsnappy --enable-libsoxr --enable-libspeex --enable-libtheora --enable-libtwolame --enable-libvidstab --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx265 --enable-libxml2 --enable-libxvid --enable-libzimg --enable-openal --enable-opencl --enable-opengl --disable-sndio --enable-libvpl --enable-libdc1394 --enable-libdrm --enable-libiec61883 --enable-chromaprint --enable-frei0r --enable-ladspa --enable-libbluray --enable-libcaca --enable-libdvdnav --enable-libdvdread --enable-libjack --enable-libpulse --enable-librabbitmq --enable-librist --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libx264 --enable-libzmq --enable-libzvbi --enable-lv2 --enable-sdl2 --enable-libplacebo --enable-librav1e --enable-pocketsphinx --enable-librsvg --enable-libjxl --enable-shared
+  libavutil      59. 39.100 / 59. 39.100
+  libavcodec     61. 19.101 / 61. 19.101
+  libavformat    61.  7.103 / 61.  7.103
+  libavdevice    61.  3.100 / 61.  3.100
+  libavfilter    10.  5.100 / 10.  5.100
+  libswscale      8.  3.100 /  8.  3.100
+  libswresample   5.  3.100 /  5.  3.100
+  libpostproc    58.  3.100 / 58.  3.100
+Input #0, image2, from 'plugins/zoospores_multimodel/examples/2026-09-29_230005_zoospores-multimodel/frames/zoospores-multimodel_%06d.png':
+  Duration: 00:00:06.73, start: 0.000000, bitrate: N/A
+  Stream #0:0: Video: png, rgb24(pc, gbr/unknown/unknown), 1200x1200, 15 fps, 15 tbr, 15 tbn
+Input #1, png_pipe, from 'plugins/zoospores_multimodel/examples/2026-09-29_230005_zoospores-multimodel/frames/palette.png':
+  Duration: N/A, bitrate: N/A
+  Stream #1:0: Video: png, rgba(pc, gbr/unknown/unknown), 16x16 [SAR 1:1 DAR 1:1], 25 fps, 25 tbr, 25 tbn
+Stream mapping:
+  Stream #0:0 (png) -> paletteuse
+  Stream #1:0 (png) -> paletteuse
+  paletteuse:default -> Stream #0:0 (gif)
+Press [q] to stop, [?] for help
+Output #0, gif, to 'plugins/zoospores_multimodel/examples/2026-09-29_230005_zoospores-multimodel/Zoospores_c7_semimarkov2.gif':
+  Metadata:
+    encoder         : Lavf61.7.103
+  Stream #0:0: Video: gif, pal8(pc, gbr/unknown/unknown, progressive), 1200x1200, q=2-31, 200 kb/s, 15 fps, 100 tbn
+      Metadata:
+        encoder         : Lavc61.19.101 gif
+frame=   18 fps=0.0 q=-0.0 size=     107KiB time=00:00:01.20 bitrate= 727.7kbits/s speed= 2.4x    frame=   38 fps= 38 q=-0.0 size=     256KiB time=00:00:02.53 bitrate= 827.8kbits/s speed=2.53x    frame=   57 fps= 38 q=-0.0 size=     256KiB time=00:00:03.80 bitrate= 551.9kbits/s speed=2.53x    frame=   77 fps= 38 q=-0.0 size=     512KiB time=00:00:05.13 bitrate= 817.1kbits/s speed=2.57x    frame=   96 fps= 38 q=-0.0 size=     768KiB time=00:00:06.40 bitrate= 983.0kbits/s speed=2.56x    [out#0/gif @ 0x5597cc7bbf00] video:837KiB audio:0KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: 0.002333%
+frame=  101 fps= 39 q=-0.0 Lsize=     837KiB time=00:00:06.73 bitrate=1018.4kbits/s speed=2.58x    
