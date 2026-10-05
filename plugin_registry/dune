@@ -11,5 +11,4 @@
   abca_plugin_zoospores_hmm_beads
   abca_plugin_zoospores_empirical
   abca_plugin_zoospores_empirical_beads
-  abca_plugin_zoospores_AI
-  abca_plugin_zoospores_multimodel))
+  abca_plugin_zoospores_AI))
