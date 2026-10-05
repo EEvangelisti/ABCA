@@ -1,8 +1,0 @@
-(library
- (name abca_plugin_zoospores_multimodel)
- (modules
-  zoospores_multimodel)
- (libraries
-  abca
-  abca_io
-  abca_models))
