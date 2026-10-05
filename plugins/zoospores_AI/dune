@@ -1,7 +1,8 @@
 (library
- (name abca_plugin_zoospores_IA)
+ (name abca_plugin_zoospores_AI)
  (modules
-  zoospores_IA)
+  schema_validation
+  zoospores_AI)
  (libraries
   abca
   abca_io
