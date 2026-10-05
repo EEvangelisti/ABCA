@@ -1,0 +1,8 @@
+(library
+ (name abca_plugin_zoospores_IA)
+ (modules
+  zoospores_IA)
+ (libraries
+  abca
+  abca_io
+  abca_models))
