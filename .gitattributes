@@ -1,0 +1,2 @@
+plugins/zoospores_AI/canonical_fit/empirical_local_transitions.txt filter=lfs diff=lfs merge=lfs -text
+plugins/zoospores_AI/canonical_fit/empirical_whole_trajectories.txt filter=lfs diff=lfs merge=lfs -text
