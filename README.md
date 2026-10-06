@@ -8,10 +8,18 @@ It provides a common simulation engine together with a modular plugin system, al
 
 ## Installation
 
-Clone the repository, for example with:
+The empirical model assets used by the AI-derived zoospore plugins are stored using Git LFS.
+Make sure Git LFS is installed before cloning the repository:
 
 ```bash
+git lfs install
 git clone git@github.com:EEvangelisti/ABCA.git
+```
+
+If the repository was cloned before Git LFS was installed, retrieve the large assets with:
+
+```bash
+git lfs pull
 ```
 
 Compile the project with [dune](https://github.com/ocaml/dune):
