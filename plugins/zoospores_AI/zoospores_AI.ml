@@ -264,11 +264,24 @@ let load_toml filename : table =
                acc := (name, []) :: !acc
              end
              else begin
-               if !section = "" then
-                 failwith "parameter file: key outside section";
                let k, v = split_once '=' line in
                if k = "" then failwith "parameter file: empty key";
-               add k (unquote v)
+               if !section = "" then begin
+                 (* The fitting pipeline writes one TOML document-level
+                    metadata key before the first section. Keep it outside
+                    the section schema, but validate it explicitly. *)
+                 if k = "schema_version" then begin
+                   let v = unquote v in
+                   if v <> "canonical-portfolio-parameters-1.0" then
+                     failwith
+                       ("parameter file: unsupported schema_version " ^ v)
+                 end
+                 else
+                   failwith
+                     ("parameter file: unsupported top-level key " ^ k)
+               end
+               else
+                 add k (unquote v)
              end
          done
        with End_of_file -> ());
