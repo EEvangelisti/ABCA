@@ -1,88 +1,125 @@
 (*
-   Schema validation for the reconciled canonical zoospore-model portfolio.
+   Model-local schema validation for the reconciled zoospore AI portfolio.
 
-   This module defines the exact set of parameter-file sections and keys that
-   are accepted by the canonical ABCA plugin.
+   Important design choice:
+   ------------------------
+   The parameter TOML contains sections for all canonical models, but an ABCA
+   invocation executes only one registered model. Therefore validation is
+   intentionally restricted to:
 
-   Validation is intentionally strict:
-   - unknown sections are rejected;
-   - unknown keys are rejected;
-   - every required section must be present;
-   - every required key must be present.
+     1. [common]
+     2. [model.<selected model>]
 
-   Type, range, domain, and enum validation are handled later by the main
-   plugin when values are parsed for a specific canonical model. This module
-   therefore validates the *shape* of the TOML parameter file rather than the
-   numerical meaning of each value.
+   Sections belonging to other canonical models are ignored for that run.
 
-   The module is included from the main plugin with:
+   Variant-dependent sections are validated conditionally. In particular,
+   CAN-HET-SPEED requires different keys for the RUN2 and RUN3 formulations.
+   CAN-SPEED-TURN also checks that its declared formula is one of the two
+   reconciled alternatives, although both alternatives use the same key set.
 
-       include Schema_validation
-
-   so [schema] and [validate_schema] become directly available in the plugin.
+   Numerical domains and enum semantics are checked later by the main plugin
+   when values are parsed. This module validates section/key structure and the
+   variant-dependent presence of required parameters.
 *)
 
+let schema_section tbl name =
+  match List.assoc_opt name tbl with
+  | Some sec -> sec
+  | None ->
+      failwith
+        ("missing required parameter section [" ^ name ^ "]")
 
-(* -------------------------------------------------------------------------- *)
-(* Accepted parameter-file schema                                             *)
-(* -------------------------------------------------------------------------- *)
+let schema_value sec section_name key =
+  match List.assoc_opt key sec with
+  | Some v -> v
+  | None ->
+      failwith
+        ("missing required parameter '" ^ section_name ^ "." ^ key ^ "'")
 
-(*
-   Each entry associates one TOML section with the complete set of keys that
-   section must contain.
+let check_exact_keys ~section_name ~required ~allowed sec =
+  List.iter
+    (fun key ->
+      if not (List.mem_assoc key sec) then
+        failwith
+          ("missing required parameter '"
+          ^ section_name ^ "." ^ key ^ "'"))
+    required;
 
-   The schema mirrors the external parameter contract shared by the fitting
-   pipeline and the executable canonical-model plugin.
-*)
-let schema =
+  List.iter
+    (fun (key, _) ->
+      if not (List.mem key allowed) then
+        failwith
+          ("unknown parameter '"
+          ^ section_name ^ "." ^ key ^ "'"))
+    sec
+
+let check_formula ~section_name sec allowed =
+  let formula = schema_value sec section_name "formula" in
+  if not (List.mem formula allowed) then
+    failwith
+      ("parameter '"
+      ^ section_name
+      ^ ".formula' must be one of: "
+      ^ String.concat ", " allowed);
+  formula
+
+let common_required =
   [
-    ( "common",
-      [
-        "dt_sec";
-        "agents";
-        "initial_position";
-        "initial_heading";
-        "boundary";
-        "record_initial_frame";
-      ] );
+    "dt_sec";
+    "agents";
+    "initial_position";
+    "initial_heading";
+    "boundary";
+    "record_initial_frame";
+  ]
 
-    ( "model.CAN-IID",
-      [
-        "step_mean_um";
-        "step_sd_um";
-      ] );
+let validate_common tbl =
+  let section_name = "common" in
+  let sec = schema_section tbl section_name in
+  check_exact_keys
+    ~section_name
+    ~required:common_required
+    ~allowed:common_required
+    sec
 
-    ( "model.CAN-BALLISTIC",
-      [
-        "step_mean_um";
-        "step_sd_um";
-      ] );
+let model_keys model_name sec =
+  match model_name with
+  | "CAN-IID" ->
+      [ "step_mean_um"; "step_sd_um" ]
 
-    ( "model.CAN-PCRW",
+  | "CAN-BALLISTIC" ->
+      [ "step_mean_um"; "step_sd_um" ]
+
+  | "CAN-PCRW" ->
       [
         "step_mean_um";
         "step_sd_um";
         "turn_sd_rad";
         "innovation_law";
-      ] );
+      ]
 
-    ( "model.CAN-TURN-AR1",
+  | "CAN-TURN-AR1" ->
       [
         "step_mean_um";
         "step_sd_um";
         "turn_sd_rad";
         "turn_memory";
         "initial_turn";
-      ] );
+      ]
 
-    ( "model.CAN-VELOCITY-OU",
+  | "CAN-VELOCITY-OU" ->
       [
         "velocity_rho";
         "velocity_noise_um";
         "initial_velocity";
-      ] );
+      ]
 
-    ( "model.CAN-SPEED-TURN",
+  | "CAN-SPEED-TURN" ->
+      ignore
+        (check_formula
+           ~section_name:"model.CAN-SPEED-TURN"
+           sec
+           [ "RUN2_additive_rad"; "RUN3_multiplicative" ]);
       [
         "formula";
         "step_mean_um";
@@ -90,9 +127,9 @@ let schema =
         "turn_sd_rad";
         "coupling";
         "turn_scale_floor";
-      ] );
+      ]
 
-    ( "model.CAN-SWITCH-PAUSE",
+  | "CAN-SWITCH-PAUSE" ->
       [
         "p_move_stay";
         "p_pause_stay";
@@ -100,9 +137,9 @@ let schema =
         "step_sd_um";
         "turn_sd_rad";
         "pause_emission";
-      ] );
+      ]
 
-    ( "model.CAN-SWITCH-TURN",
+  | "CAN-SWITCH-TURN" ->
       [
         "switch_prob";
         "run_turn_sd_rad";
@@ -110,9 +147,9 @@ let schema =
         "step_mean_um";
         "step_sd_um";
         "transition_form";
-      ] );
+      ]
 
-    ( "model.CAN-SWITCH-SPEED",
+  | "CAN-SWITCH-SPEED" ->
       [
         "switch_prob";
         "slow_factor";
@@ -121,118 +158,70 @@ let schema =
         "step_sd_um";
         "turn_sd_rad";
         "transition_form";
-      ] );
+      ]
 
-    ( "model.CAN-HET-SPEED",
-      [
-        "formula";
-        "step_mean_um";
-        "step_sd_um";
-        "turn_sd_rad";
-        "hetero_sd_um";
-        "hetero_cv";
-        "hetero_multiplier_min";
-        "step_min_um";
-      ] );
+  | "CAN-HET-SPEED" ->
+      let formula =
+        check_formula
+          ~section_name:"model.CAN-HET-SPEED"
+          sec
+          [ "RUN2_additive_fixed"; "RUN3_multiplicative" ]
+      in
+      if formula = "RUN2_additive_fixed" then
+        [
+          "formula";
+          "step_mean_um";
+          "turn_sd_rad";
+          "hetero_sd_um";
+        ]
+      else
+        [
+          "formula";
+          "step_mean_um";
+          "step_sd_um";
+          "turn_sd_rad";
+          "hetero_cv";
+          "hetero_multiplier_min";
+          "step_min_um";
+        ]
 
-    ( "model.CAN-REVERSAL",
+  | "CAN-REVERSAL" ->
       [
         "step_mean_um";
         "step_sd_um";
         "turn_sd_rad";
         "reversal_prob";
         "reversal_angle_rad";
-      ] );
+      ]
 
-    ( "model.CAN-EMP-LOCAL",
+  | "CAN-EMP-LOCAL" ->
       [
         "training_transition_table_uri";
         "training_transition_table_sha256";
         "conditioning";
-      ] );
+      ]
 
-    ( "model.CAN-EMP-WHOLE",
+  | "CAN-EMP-WHOLE" ->
       [
         "training_trajectory_library_uri";
         "training_trajectory_library_sha256";
         "orientation_policy";
         "post_sequence_policy";
-      ] );
-  ]
+      ]
 
+  | x ->
+      failwith ("schema validation: unknown canonical model " ^ x)
 
-(* -------------------------------------------------------------------------- *)
-(* Structural schema validation                                               *)
-(* -------------------------------------------------------------------------- *)
+let validate_model_section tbl model_name =
+  let section_name = "model." ^ model_name in
+  let sec = schema_section tbl section_name in
+  let keys = model_keys model_name sec in
+  check_exact_keys
+    ~section_name
+    ~required:keys
+    ~allowed:keys
+    sec
 
-(*
-   Validate a parsed TOML table against [schema].
-
-   The input [tbl] has the representation used by the main plugin:
-
-       (section_name * (key * raw_value) list) list
-
-   Validation proceeds in two passes:
-
-   1. Reject anything not explicitly declared by the schema.
-      This prevents unnoticed spelling mistakes, obsolete parameters, or
-      accidental carry-over from exploratory model implementations.
-
-   2. Require every declared section and every declared key.
-      This prevents silent use of unspecified defaults.
-
-   Duplicate sections and duplicate keys are already rejected by the TOML
-   parser before this function is called.
-*)
-let validate_schema tbl =
-  let allowed_sections =
-    List.map fst schema
-  in
-
-  (* Pass 1: reject unknown sections and unknown keys. *)
-  List.iter
-    (fun (name, entries) ->
-      if not (List.mem name allowed_sections) then
-        failwith
-          ("parameter file: unknown section [" ^ name ^ "]");
-
-      let allowed_keys =
-        List.assoc name schema
-      in
-
-      List.iter
-        (fun (key, _) ->
-          if not (List.mem key allowed_keys) then
-            failwith
-              ("parameter file: unknown key "
-              ^ name
-              ^ "."
-              ^ key))
-        entries)
-    tbl;
-
-  (* Pass 2: require every section and every key declared by the schema. *)
-  List.iter
-    (fun (name, required_keys) ->
-      let entries =
-        match List.assoc_opt name tbl with
-        | Some entries ->
-            entries
-        | None ->
-            failwith
-              ("missing required parameter section ["
-              ^ name
-              ^ "]")
-      in
-
-      List.iter
-        (fun key ->
-          if not (List.mem_assoc key entries) then
-            failwith
-              ("missing required parameter '"
-              ^ name
-              ^ "."
-              ^ key
-              ^ "'"))
-        required_keys)
-    schema
+let validate_schema_for_model tbl model_name =
+  validate_common tbl;
+  validate_model_section tbl model_name

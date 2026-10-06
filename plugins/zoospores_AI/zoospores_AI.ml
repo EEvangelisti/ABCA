@@ -869,7 +869,7 @@ let run_for
   let path = parameter_file plugin_args in
   let init = initialisation plugin_args in
   let tbl = load_toml path in
-  validate_schema tbl;
+  validate_schema_for_model tbl d.name;
 
   let common = load_common tbl in
   let p = prepare d tbl in
