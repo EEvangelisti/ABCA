@@ -815,7 +815,7 @@ let prepare d tbl =
           as_enum s "orientation_policy"
             [ "laboratory"; "random_rotation" ],
           as_enum s "post_sequence_policy"
-            [ "stop"; "zero_steps"; "reject_length_mismatch" ] )
+            [ "stop"; "zero_steps"; "fixed_window" ] )
 
 
 (* -------------------------------------------------------------------------- *)
@@ -930,21 +930,39 @@ let run_for
 
     let whole_seq, whole_rot =
       match p with
-      | Whole (lib, orientation, policy) ->
-          let seq = lib.(Rng.int rng (Array.length lib)) in
-          if
-            policy = "reject_length_mismatch"
-            && Array.length seq <> generations
-          then
+      | Whole (lib, orientation, _) ->
+
+          let eligible =
+            Array.to_list lib
+            |> List.filter (fun seq -> Array.length seq >= generations)
+            |> Array.of_list
+          in
+
+          if Array.length eligible = 0 then
             failwith
-              "CAN-EMP-WHOLE source length does not match generations";
+              "CAN-EMP-WHOLE: no source trajectory is long enough";
+
+          let source =
+            eligible.(Rng.int rng (Array.length eligible))
+          in
+
+          let max_start = Array.length source - generations in
+          let start =
+            if max_start = 0 then 0
+            else Rng.int rng (max_start + 1)
+          in
+
+          let seq = Array.sub source start generations in
+
           let rot =
             if orientation = "random_rotation" then
               Rng.float rng (2. *. pi)
             else
               0.
           in
+
           (Some seq, rot)
+
       | _ -> (None, 0.)
     in
 
