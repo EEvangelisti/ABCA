@@ -342,7 +342,11 @@ let require_open key lo hi x =
 (* -------------------------------------------------------------------------- *)
 
 let find_arg key args =
-  List.assoc_opt (String.uppercase_ascii key) args
+  let key = String.uppercase_ascii key in
+  List.find_map
+    (fun (k, v) ->
+      if String.uppercase_ascii k = key then Some v else None)
+    args
 
 let parameter_file args =
   match find_arg "PARAMETER_FILE" args with
@@ -351,14 +355,51 @@ let parameter_file args =
       failwith
         "required --plugin-arg PARAMETER_FILE=<path> is missing"
 
+type init_mode =
+  | Init_center
+  | Init_circle of float
+
+let initialisation args =
+  let mode =
+    match find_arg "INIT" args with
+    | None -> "CENTER"
+    | Some x -> String.uppercase_ascii (trim x)
+  in
+  match mode with
+  | "CENTER" ->
+      (match find_arg "RADIUS" args with
+      | None -> Init_center
+      | Some _ ->
+          failwith
+            "RADIUS is only valid with --plugin-arg INIT=CIRCLE")
+  | "DISK" | "CIRCLE" ->
+      let radius =
+        match find_arg "RADIUS" args with
+        | None ->
+            failwith
+              "INIT=DISK/CIRCLE requires --plugin-arg RADIUS=<positive radius>"
+        | Some x ->
+            (try float_of_string (trim x)
+             with Failure _ ->
+               failwith "RADIUS must be a floating-point value")
+      in
+      if not (finite radius) || radius <= 0. then
+        failwith "RADIUS must be finite and > 0";
+      Init_circle radius
+  | x ->
+      failwith
+        ("unsupported INIT=" ^ x ^ "; expected CENTER, DISK or CIRCLE")
+
 let reject_unknown_args args =
+  let allowed = [ "PARAMETER_FILE"; "INIT"; "RADIUS" ] in
   List.iter
     (fun (k, _) ->
-      if String.uppercase_ascii k <> "PARAMETER_FILE" then
+      let ku = String.uppercase_ascii k in
+      if not (List.mem ku allowed) then
         failwith
           ("unknown plugin argument "
           ^ k
-          ^ "; only PARAMETER_FILE is accepted"))
+          ^ "; accepted arguments are PARAMETER_FILE, INIT and RADIUS"))
     args
 
 
@@ -546,8 +587,8 @@ let load_common tbl =
     }
   in
   require_pos "dt_sec" c.dt;
-  if c.agents <> 1 then
-    failwith "common.agents must equal 1";
+  if c.agents <= 0 then
+    failwith "common.agents must be > 0";
   if not c.record_initial then
     failwith "common.record_initial_frame must equal true";
   c
@@ -595,6 +636,21 @@ type prepared =
   | Rev of float * float * float * float
   | Local of (float * float) array
   | Whole of (float * float) array array * string * string
+
+type agent_state = {
+  id : int;
+  mutable x : float;
+  mutable y : float;
+  mutable heading : float;
+  mutable vx : float;
+  mutable vy : float;
+  mutable prev_turn : float;
+  mutable hidden_state : bool;
+  mutable hits : int;
+  trajectory_effect : float;
+  whole_seq : (float * float) array option;
+  whole_rot : float;
+}
 
 let prepare d tbl =
   let s = model_section tbl d in
@@ -758,9 +814,12 @@ let prepare d tbl =
    settings are loaded once, model-specific parameters are prepared once, and
    only the local movement update differs inside the time loop.
 
-   One ABCA agent is used per run by design. This makes trajectory length,
-   initialisation, seed and model identity explicit and simplifies matched
-   trajectory-level validation.
+   A run may contain any positive number of independent ABCA agents.
+   Each agent carries its own dynamical state and, where applicable, its own
+   trajectory-level random effect or empirical whole-trajectory draw.
+   Initial positions can be placed at the domain centre or sampled uniformly
+   over a disk using INIT=DISK (or the legacy alias INIT=CIRCLE) together with
+   RADIUS=<value>.
 *)
 let run_for
     d
@@ -787,79 +846,118 @@ let run_for
       "canonical portfolio requires bounded recursive specular reflection; \
        do not use --toroidal";
 
+  let n_agents =
+    match agents with
+    | Some n when n > 0 -> n
+    | Some _ -> failwith "--agents must be > 0"
+    | None -> failwith "canonical portfolio requires an explicit --agents value"
+  in
+
   let path = parameter_file plugin_args in
+  let init = initialisation plugin_args in
   let tbl = load_toml path in
   validate_schema tbl;
 
   let common = load_common tbl in
-  if agents <> Some common.agents then
-    failwith "canonical portfolio requires --agents 1";
-
   let p = prepare d tbl in
   let rng = Rng.create seed in
 
-  (* Shared initial condition: domain centre and uniformly random heading. *)
-  let x = ref (float_of_int cols /. 2.) in
-  let y = ref (float_of_int rows /. 2.) in
-  let heading = ref (Rng.float rng (2. *. pi)) in
-  let vx = ref 0. in
-  let vy = ref 0. in
-  let prev_turn = ref 0. in
-  let state = ref false in
-  let hits = ref 0 in
-
-  (* Optional stationary initialisation for models with explicit memory. *)
-  (match p with
-  | Ar1 (_, _, sd, _, "stationary_draw") ->
-      prev_turn := sd *. normal rng
-  | Ou (r, n, "stationary_draw") ->
-      let sd = n /. sqrt (1. -. (r *. r)) in
-      vx := sd *. normal rng;
-      vy := sd *. normal rng
-  | _ -> ());
-
   (*
-     Draw trajectory-level random effects exactly once. This distinguishes
-     persistent between-trajectory heterogeneity from temporal state switching.
+     [common.agents] is retained in the parameter file as part of the frozen
+     single-trajectory specification used during reconciliation/fitting.
+     Production simulations may request any positive number of independent
+     ABCA agents through --agents; the actual value is recorded in metadata.
   *)
-  let trajectory_effect =
-    match p with
-    | Hetero2 (m, h, _) ->
-        max 0. (m +. (h *. normal rng))
-    | Hetero3 (_, _, _, cv, gmin, _) ->
-        max gmin (1. +. (cv *. normal rng))
-    | _ -> 1.
+
+  let domain_cx = float_of_int cols /. 2. in
+  let domain_cy = float_of_int rows /. 2. in
+
+  (match init with
+  | Init_center -> ()
+  | Init_circle radius ->
+      let max_radius = 0.5 *. float_of_int (min rows cols) in
+      if radius >= max_radius then
+        failwith
+          (Printf.sprintf
+             "RADIUS=%g does not fit strictly inside the %dx%d bounded domain"
+             radius cols rows));
+
+  let initial_xy () =
+    match init with
+    | Init_center -> (domain_cx, domain_cy)
+    | Init_circle radius ->
+        (* sqrt(U) gives a uniform spatial density over disk area. *)
+        let r = radius *. sqrt (Rng.float rng 1.0) in
+        let a = Rng.float rng (2. *. pi) in
+        (domain_cx +. (r *. cos a), domain_cy +. (r *. sin a))
   in
 
-  (*
-     Whole-trajectory empirical bootstrap:
-     select one fitted displacement sequence once per simulated trajectory.
-     Optional random rotation removes laboratory-frame orientation while
-     preserving the complete within-trajectory displacement sequence.
-  *)
-  let whole_seq, whole_rot =
-    match p with
-    | Whole (lib, orientation, policy) ->
-        let seq = lib.(Rng.int rng (Array.length lib)) in
-        if
-          policy = "reject_length_mismatch"
-          && Array.length seq <> generations
-        then
-          failwith
-            "CAN-EMP-WHOLE source length does not match generations";
-        let rot =
-          if orientation = "random_rotation" then
-            Rng.float rng (2. *. pi)
-          else
-            0.
-        in
-        (Some seq, rot)
-    | _ -> (None, 0.)
+  let initialise_agent id =
+    let x0, y0 = initial_xy () in
+    let heading0 = Rng.float rng (2. *. pi) in
+
+    let prev_turn0, vx0, vy0 =
+      match p with
+      | Ar1 (_, _, sd, _, "stationary_draw") ->
+          (sd *. normal rng, 0., 0.)
+      | Ou (r, n, "stationary_draw") ->
+          let sd = n /. sqrt (1. -. (r *. r)) in
+          (0., sd *. normal rng, sd *. normal rng)
+      | _ -> (0., 0., 0.)
+    in
+
+    let trajectory_effect =
+      match p with
+      | Hetero2 (m, h, _) ->
+          max 0. (m +. (h *. normal rng))
+      | Hetero3 (_, _, _, cv, gmin, _) ->
+          max gmin (1. +. (cv *. normal rng))
+      | _ -> 1.
+    in
+
+    let whole_seq, whole_rot =
+      match p with
+      | Whole (lib, orientation, policy) ->
+          let seq = lib.(Rng.int rng (Array.length lib)) in
+          if
+            policy = "reject_length_mismatch"
+            && Array.length seq <> generations
+          then
+            failwith
+              "CAN-EMP-WHOLE source length does not match generations";
+          let rot =
+            if orientation = "random_rotation" then
+              Rng.float rng (2. *. pi)
+            else
+              0.
+          in
+          (Some seq, rot)
+      | _ -> (None, 0.)
+    in
+
+    {
+      id;
+      x = x0;
+      y = y0;
+      heading = heading0;
+      vx = vx0;
+      vy = vy0;
+      prev_turn = prev_turn0;
+      hidden_state = false;
+      hits = 0;
+      trajectory_effect;
+      whole_seq;
+      whole_rot;
+    }
   in
 
+  let states = Array.init n_agents initialise_agent in
+  let n_frames = generations + 1 in
+
+  (* Records are stored contiguously by agent, then by frame. *)
   let records =
     Array.make
-      (generations + 1)
+      (n_agents * n_frames)
       {
         Abca_io.Agent_trace.frame = 0;
         id = 0;
@@ -873,296 +971,227 @@ let run_for
       }
   in
 
-  let store frame st =
-    records.(frame) <-
+  let record_index id frame = (id * n_frames) + frame in
+
+  let store a frame st =
+    records.(record_index a.id frame) <-
       {
         Abca_io.Agent_trace.frame = frame;
-        id = 0;
-        x = !x;
-        y = !y;
-        row =
-          clamp 0 (rows - 1)
-            (int_of_float (floor !y));
-        col =
-          clamp 0 (cols - 1)
-            (int_of_float (floor !x));
-        angle =
-          int_of_float
-            (180. *. !heading /. pi);
+        id = a.id;
+        x = a.x;
+        y = a.y;
+        row = clamp 0 (rows - 1) (int_of_float (floor a.y));
+        col = clamp 0 (cols - 1) (int_of_float (floor a.x));
+        angle = int_of_float (180. *. a.heading /. pi);
         age = frame;
         state = st;
       }
   in
 
-  store 0 0;
-
-  (* Shared heading-based movement primitive used by most canonical classes. *)
-  let move speed turn =
-    heading := wrap_angle (!heading +. turn);
-    vx := speed *. cos !heading;
-    vy := speed *. sin !heading;
+  let move a speed turn =
+    a.heading <- wrap_angle (a.heading +. turn);
+    a.vx <- speed *. cos a.heading;
+    a.vy <- speed *. sin a.heading;
 
     let xx, yy, hh, vxx, vyy, n =
       apply_boundary
         rows
         cols
-        (!x +. !vx)
-        (!y +. !vy)
-        !heading
-        !vx
-        !vy
+        (a.x +. a.vx)
+        (a.y +. a.vy)
+        a.heading
+        a.vx
+        a.vy
     in
-    x := xx;
-    y := yy;
-    heading := hh;
-    vx := vxx;
-    vy := vyy;
-    hits := !hits + n
+    a.x <- xx;
+    a.y <- yy;
+    a.heading <- hh;
+    a.vx <- vxx;
+    a.vy <- vyy;
+    a.hits <- a.hits + n
   in
 
-  for frame = 1 to generations do
-    let st =
-      match p with
-      | Basic (m, sd, t) ->
-          (*
-             CAN-IID redraws heading independently at every update.
-             CAN-BALLISTIC keeps the current heading.
-             CAN-PCRW adds a Gaussian angular innovation.
-          *)
-          if d.kind = Iid then
-            heading := Rng.float rng (2. *. pi);
-          let speed = max 0. (m +. (sd *. normal rng)) in
-          if d.kind = Iid then
-            move speed 0.
+  let update_agent a frame =
+    match p with
+    | Basic (m, sd, t) ->
+        if d.kind = Iid then
+          a.heading <- Rng.float rng (2. *. pi);
+        let speed = max 0. (m +. (sd *. normal rng)) in
+        if d.kind = Iid then
+          move a speed 0.
+        else
+          move a speed
+            (if d.kind = Ballistic then 0. else t *. normal rng);
+        0
+
+    | Ar1 (m, sd, t, r, _) ->
+        let speed = max 0. (m +. (sd *. normal rng)) in
+        let turn =
+          (r *. a.prev_turn)
+          +. (sqrt (1. -. (r *. r)) *. t *. normal rng)
+        in
+        a.prev_turn <- turn;
+        move a speed turn;
+        0
+
+    | Ou (r, n, _) ->
+        let nvx = (r *. a.vx) +. (n *. normal rng) in
+        let nvy = (r *. a.vy) +. (n *. normal rng) in
+        let speed = sqrt ((nvx *. nvx) +. (nvy *. nvy)) in
+        let h = if speed = 0. then a.heading else atan2 nvy nvx in
+        a.heading <- h;
+        a.vx <- nvx;
+        a.vy <- nvy;
+
+        let xx, yy, hh, vxx, vyy, k =
+          apply_boundary
+            rows
+            cols
+            (a.x +. nvx)
+            (a.y +. nvy)
+            h
+            nvx
+            nvy
+        in
+        a.x <- xx;
+        a.y <- yy;
+        a.heading <- hh;
+        a.vx <- vxx;
+        a.vy <- vyy;
+        a.hits <- a.hits + k;
+        0
+
+    | Coupled (form, m, sd, t, c, floorv) ->
+        let speed = max 0. (m +. (sd *. normal rng)) in
+        let scale =
+          if form = "RUN2_additive_rad" then
+            max floorv (t +. (c *. (speed -. m)))
           else
-            move speed
-              (if d.kind = Ballistic then 0. else t *. normal rng);
-          0
+            t
+            *. max floorv
+                 (1. +. (c *. (m -. speed) /. m))
+        in
+        move a speed (scale *. normal rng);
+        0
 
-      | Ar1 (m, sd, t, r, _) ->
-          (* Turning angle carries stationary first-order autoregressive memory. *)
-          let speed = max 0. (m +. (sd *. normal rng)) in
-          let a =
-            (r *. !prev_turn)
-            +. (sqrt (1. -. (r *. r)) *. t *. normal rng)
-          in
-          prev_turn := a;
-          move speed a;
-          0
+    | Pause (pm, pp, m, sd, t, emission) ->
+        let u = Rng.float rng 1. in
+        a.hidden_state <-
+          if a.hidden_state then
+            u < pp
+          else
+            not (u < pm);
 
-      | Ou (r, n, _) ->
-          (*
-             Cartesian velocity, rather than turning angle, carries persistence.
-             Each velocity component follows a first-order mean-reverting process.
-          *)
-          let nvx = (r *. !vx) +. (n *. normal rng) in
-          let nvy = (r *. !vy) +. (n *. normal rng) in
-          let speed = sqrt ((nvx *. nvx) +. (nvy *. nvy)) in
-          let h =
-            if speed = 0. then !heading else atan2 nvy nvx
+        if a.hidden_state then begin
+          if emission = "low_speed" then
+            failwith
+              "CAN-SWITCH-PAUSE low_speed emission is unresolved in \
+               frozen equation; select exact_zero"
+        end
+        else
+          move a
+            (max 0. (m +. (sd *. normal rng)))
+            (t *. normal rng);
+
+        if a.hidden_state then 1 else 0
+
+    | Turn_switch (q, tr, te, m, sd) ->
+        if Rng.float rng 1. < q then
+          a.hidden_state <- not a.hidden_state;
+
+        let turn =
+          (if a.hidden_state then te else tr) *. normal rng
+        in
+        let speed = max 0. (m +. (sd *. normal rng)) in
+        move a speed turn;
+        if a.hidden_state then 1 else 0
+
+    | Speed_switch (q, sf, smin, m, sd, t) ->
+        if Rng.float rng 1. < q then
+          a.hidden_state <- not a.hidden_state;
+
+        let speed =
+          max smin (m +. (sd *. normal rng))
+          *. if a.hidden_state then sf else 1.
+        in
+        move a speed (t *. normal rng);
+        if a.hidden_state then 1 else 0
+
+    | Hetero2 (_, _, t) ->
+        move a a.trajectory_effect (t *. normal rng);
+        0
+
+    | Hetero3 (m, sd, smin, _, _, t) ->
+        move a
+          (a.trajectory_effect *. max smin (m +. (sd *. normal rng)))
+          (t *. normal rng);
+        0
+
+    | Rev (m, sd, t, pr) ->
+        let speed = max 0. (m +. (sd *. normal rng)) in
+        let turn =
+          (t *. normal rng)
+          +. if Rng.float rng 1. < pr then pi else 0.
+        in
+        move a speed turn;
+        0
+
+    | Local table ->
+        let speed, turn =
+          table.(Rng.int rng (Array.length table))
+        in
+        move a speed turn;
+        0
+
+    | Whole (_, _, policy) ->
+        let seq = Option.get a.whole_seq in
+        if frame - 1 < Array.length seq then begin
+          let dx, dy = seq.(frame - 1) in
+          let c = cos a.whole_rot in
+          let s = sin a.whole_rot in
+          let dx', dy' =
+            ((dx *. c) -. (dy *. s), (dx *. s) +. (dy *. c))
           in
-          heading := h;
-          vx := nvx;
-          vy := nvy;
+          let speed = sqrt ((dx' *. dx') +. (dy' *. dy')) in
+          let h = if speed = 0. then a.heading else atan2 dy' dx' in
+          a.heading <- h;
+          a.vx <- dx';
+          a.vy <- dy';
 
           let xx, yy, hh, vxx, vyy, k =
             apply_boundary
               rows
               cols
-              (!x +. nvx)
-              (!y +. nvy)
+              (a.x +. dx')
+              (a.y +. dy')
               h
-              nvx
-              nvy
+              dx'
+              dy'
           in
-          x := xx;
-          y := yy;
-          heading := hh;
-          vx := vxx;
-          vy := vyy;
-          hits := !hits + k;
-          0
+          a.x <- xx;
+          a.y <- yy;
+          a.heading <- hh;
+          a.vx <- vxx;
+          a.vy <- vyy;
+          a.hits <- a.hits + k
+        end
+        else if policy = "stop" then
+          ()
+        else
+          ();
+        0
+  in
 
-      | Coupled (form, m, sd, t, c, floorv) ->
-          (*
-             Turning variability depends instantaneously on the sampled speed.
+  Array.iter (fun a -> store a 0 0) states;
 
-             RUN2_additive_rad:
-               sigma_A(s) = max(floor, sigma_A + c * (s - mu))
-
-             RUN3_multiplicative:
-               sigma_A(s) =
-                 sigma_A * max(floor, 1 + c * (mu - s) / mu)
-          *)
-          let speed = max 0. (m +. (sd *. normal rng)) in
-          let scale =
-            if form = "RUN2_additive_rad" then
-              max floorv (t +. (c *. (speed -. m)))
-            else
-              t
-              *. max floorv
-                   (1. +. (c *. (m -. speed) /. m))
-          in
-          move speed (scale *. normal rng);
-          0
-
-      | Pause (pm, pp, m, sd, t, emission) ->
-          (*
-             Hidden state controls whether the trajectory moves or pauses.
-             [state = false] denotes move; [state = true] denotes pause.
-          *)
-          let u = Rng.float rng 1. in
-          state :=
-            if !state then
-              u < pp
-            else
-              not (u < pm);
-
-          if !state then begin
-            if emission = "low_speed" then
-              failwith
-                "CAN-SWITCH-PAUSE low_speed emission is unresolved in \
-                 frozen equation; select exact_zero"
-          end
-          else
-            move
-              (max 0. (m +. (sd *. normal rng)))
-              (t *. normal rng);
-
-          if !state then 1 else 0
-
-      | Turn_switch (q, tr, te, m, sd) ->
-          (*
-             Symmetric two-state switching controls turning dispersion:
-             run state = narrow angular distribution;
-             reorientation state = broad angular distribution.
-          *)
-          if Rng.float rng 1. < q then
-            state := not !state;
-
-          let a =
-            (if !state then te else tr) *. normal rng
-          in
-          let speed = max 0. (m +. (sd *. normal rng)) in
-          move speed a;
-          if !state then 1 else 0
-
-      | Speed_switch (q, sf, smin, m, sd, t) ->
-          (*
-             Symmetric two-state switching controls speed:
-             fast state uses the base speed law;
-             slow state multiplies it by [slow_factor].
-          *)
-          if Rng.float rng 1. < q then
-            state := not !state;
-
-          let speed =
-            max smin (m +. (sd *. normal rng))
-            *. if !state then sf else 1.
-          in
-          move speed (t *. normal rng);
-          if !state then 1 else 0
-
-      | Hetero2 (_, _, t) ->
-          (*
-             RUN2 heterogeneity:
-             one additive trajectory-specific speed is drawn at initialisation
-             and remains fixed throughout the entire trajectory.
-          *)
-          move trajectory_effect (t *. normal rng);
-          0
-
-      | Hetero3 (m, sd, smin, _, _, t) ->
-          (*
-             RUN3 heterogeneity:
-             one multiplicative trajectory effect scales a per-step speed law.
-          *)
-          move
-            (trajectory_effect
-             *. max smin (m +. (sd *. normal rng)))
-            (t *. normal rng);
-          0
-
-      | Rev (m, sd, t, pr) ->
-          (*
-             A standard persistent walk is augmented with discrete pi-radian
-             reversal events occurring with probability [reversal_prob].
-          *)
-          let speed = max 0. (m +. (sd *. normal rng)) in
-          let a =
-            (t *. normal rng)
-            +. if Rng.float rng 1. < pr then pi else 0.
-          in
-          move speed a;
-          0
-
-      | Local table ->
-          (*
-             Non-parametric local benchmark:
-             independently sample a fitted (step length, relative turn) pair.
-          *)
-          let speed, a =
-            table.(Rng.int rng (Array.length table))
-          in
-          move speed a;
-          0
-
-      | Whole (_, _, policy) ->
-          (*
-             Non-parametric whole-trajectory benchmark:
-             replay one complete fitted displacement sequence, optionally after
-             a single rigid rotation of the entire trajectory.
-          *)
-          let seq = Option.get whole_seq in
-
-          if frame - 1 < Array.length seq then begin
-            let dx, dy = seq.(frame - 1) in
-            let c = cos whole_rot in
-            let s = sin whole_rot in
-            let dx', dy' =
-              ( (dx *. c) -. (dy *. s),
-                (dx *. s) +. (dy *. c) )
-            in
-            let sp =
-              sqrt ((dx' *. dx') +. (dy' *. dy'))
-            in
-            let h =
-              if sp = 0. then !heading else atan2 dy' dx'
-            in
-
-            heading := h;
-            vx := dx';
-            vy := dy';
-
-            let xx, yy, hh, vxx, vyy, k =
-              apply_boundary
-                rows
-                cols
-                (!x +. dx')
-                (!y +. dy')
-                h
-                dx'
-                dy'
-            in
-            x := xx;
-            y := yy;
-            heading := hh;
-            vx := vxx;
-            vy := vyy;
-            hits := !hits + k
-          end
-          else if policy = "stop" then
-            ()
-          else
-            ();
-
-          0
-    in
-
-    store frame st
+  for frame = 1 to generations do
+    Array.iter
+      (fun a ->
+        let st = update_agent a frame in
+        store a frame st)
+      states
   done;
 
-  (* Fail loudly if any model generated invalid numerical coordinates. *)
   Array.iter
     (fun r ->
       if
@@ -1173,16 +1202,9 @@ let run_for
         failwith "non-finite trajectory")
     records;
 
-  (*
-     ABCA binary archives store both:
-     - the full agent trace;
-     - a frame-by-frame grid occupancy representation.
-
-     The latter is populated here with one occupied cell per simulated position.
-  *)
   let frames =
     Array.init
-      (generations + 1)
+      n_frames
       (fun _ ->
         Array.init rows (fun _ -> Array.make cols 0))
   in
@@ -1192,7 +1214,16 @@ let run_for
       frames.(r.Abca_io.Agent_trace.frame).(r.row).(r.col) <- 1)
     records;
 
-  (* Reproducibility metadata are embedded directly into every simulation file. *)
+  let total_hits =
+    Array.fold_left (fun acc a -> acc + a.hits) 0 states
+  in
+
+  let init_name, init_radius =
+    match init with
+    | Init_center -> ("CENTER", "NA")
+    | Init_circle r -> ("DISK", string_of_float r)
+  in
+
   let metadata =
     Abca_io.Metadata.of_list
       [
@@ -1205,11 +1236,15 @@ let run_for
         ("position_units", "micron");
         ("time_units", "second");
         ("boundary", common.boundary);
-        ("boundary_hits", string_of_int !hits);
+        ("boundary_hits", string_of_int total_hits);
         ("parameter_file", path);
         ("parameter_file_sha256", sha256_file path);
+        ("parameter_file_agents", string_of_int common.agents);
+        ("agents", string_of_int n_agents);
+        ("initialisation", init_name);
+        ("initialisation_radius", init_radius);
         ("generations_semantics", "n_observations_minus_1");
-        ("trajectory_records", string_of_int (generations + 1));
+        ("trajectory_records", string_of_int (n_agents * n_frames));
       ]
   in
 
