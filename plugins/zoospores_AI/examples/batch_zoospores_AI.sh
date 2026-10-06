@@ -43,7 +43,7 @@ for SEED in $(seq 1 "$N_RUNS"); do
     (
         echo "[$SEED/$N_RUNS] Running $MODEL..."
 
-        "$ABCA" \
+        OCAMLRUNPARAM=b "$ABCA" \
             --mode run \
             --model "$MODEL" \
             --rows 800 \
