@@ -51,35 +51,7 @@ The current distribution includes the following plugins:
 | [`larger_than_life`](plugins/larger_than_life/README.md) | CA   | Larger-than-Life cellular automata                                              |
 | [`life`](plugins/life/README.md)                         | CA   | Life-like cellular automata                                                     |
 | [`weighted_life`](plugins/weighted_life/README.md)       | CA   | Weighted Life cellular automata                                                 |
-| [`zoospores`](plugins/zoospores/README.md)               | ABCA | Agent-based models of *Phytophthora* zoospore swimming                          |
+| [`zoospores`](plugins/zoospores/README.md)               | ABCA | Agent-based models (ABMs) of *Phytophthora* zoospore swimming                   |
+| [`zoospores_AI`](plugins/zoospores_AI/README.md)         | ABCA | AI-generated ABMs of *Phytophthora* zoospore swimming                           |
 
 
-## Agentic-AI discovered zoospore models
-
-A separate set of *Phytophthora* zoospore movement models was generated through
-independent agentic-AI model-discovery campaigns and subsequently reconciled into
-a common canonical model portfolio. These models are associated with a separate
-study currently in preparation and are kept distinct from the
-`zoospores` plugin described above.
-
-The reconciled portfolio comprises 13 canonical model classes:
-
-| Canonical model | Family | Generative principle |
-| --- | --- | --- |
-| `CAN-IID` | Simple / null | Independent step lengths with a newly sampled isotropic heading at each update. |
-| `CAN-BALLISTIC` | Simple / null | Motion with a constant heading and stochastic step length. |
-| `CAN-PCRW` | Persistent motion | Persistent correlated random walk driven by stochastic step lengths and turning-angle innovations. |
-| `CAN-TURN-AR1` | Persistent motion | Persistent walk in which successive turning angles follow a first-order autoregressive process. |
-| `CAN-VELOCITY-OU` | Persistent motion | Cartesian velocity follows a mean-reverting autoregressive process. |
-| `CAN-SPEED-TURN` | Persistent motion | Turning variability depends on instantaneous movement speed. |
-| `CAN-SWITCH-PAUSE` | State switching | Hidden-state model switching between movement and pause states. |
-| `CAN-SWITCH-TURN` | State switching | Hidden-state model switching between low- and high-turning regimes. |
-| `CAN-SWITCH-SPEED` | State switching | Hidden-state model switching between fast and slow movement regimes. |
-| `CAN-HET-SPEED` | Individual heterogeneity | A trajectory-specific random effect introduces persistent between-track differences in speed. |
-| `CAN-REVERSAL` | Event-based motion | Persistent movement supplemented by explicit approximately 180° reversal events. |
-| `CAN-EMP-LOCAL` | Empirical / resampling | Local movement updates are sampled from empirical step-length/turning-angle transitions. |
-| `CAN-EMP-WHOLE` | Empirical / resampling | Complete empirical displacement sequences are resampled as whole trajectories. |
-
-All canonical models are exposed through a common ABCA plugin and use external
-parameter files so that model fitting can be performed independently of the
-simulation code.
