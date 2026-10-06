@@ -1,0 +1,105 @@
+{
+  "source_xml": "/home/edouard/Software/ABCA/plugins/zoospores_AI/p3-1_processed_Edouard_Tracks.xml",
+  "source_xml_sha256": "52a38062febad1f8932b1aabbdbd5f0807ab6f89bab57b1d4cdd4158a9c8ca6b",
+  "dt_sec": 0.0700506,
+  "n_tracks": 95234,
+  "n_positions": 2726995,
+  "n_steps": 2631761,
+  "n_turns": 2536527,
+  "speed_turn_variant": "RUN2",
+  "heterogeneity_variant": "RUN3",
+  "models": {
+    "CAN-IID": {
+      "step_mean_um": 13.576513572551567,
+      "step_sd_um": 5.295008344566566
+    },
+    "CAN-BALLISTIC": {
+      "step_mean_um": 13.576513572551567,
+      "step_sd_um": 5.295008344566566
+    },
+    "CAN-PCRW": {
+      "step_mean_um": 13.576513572551567,
+      "step_sd_um": 5.295008344566566,
+      "turn_sd_rad": 0.7062609018472972,
+      "innovation_law": "gaussian"
+    },
+    "CAN-TURN-AR1": {
+      "step_mean_um": 13.576513572551567,
+      "step_sd_um": 5.295008344566566,
+      "turn_sd_rad": 0.7062609018472972,
+      "turn_memory": 0.007239841071584054,
+      "initial_turn": "stationary_draw"
+    },
+    "CAN-VELOCITY-OU": {
+      "velocity_rho": 0.8740973993410491,
+      "velocity_noise_um": 5.006206207978014,
+      "initial_velocity": "stationary_draw"
+    },
+    "CAN-SPEED-TURN": {
+      "formula": "RUN2_additive_rad",
+      "step_mean_um": 13.576513572551567,
+      "step_sd_um": 5.295008344566566,
+      "turn_sd_rad": 0.6742716007175824,
+      "coupling": -0.010289935500955917,
+      "turn_scale_floor": 0.07062609018472973
+    },
+    "CAN-SWITCH-PAUSE": {
+      "p_move_stay": 0.9740132181847898,
+      "p_pause_stay": 0.9254185413555226,
+      "step_mean_um": 13.576513572551567,
+      "step_sd_um": 5.295008344566566,
+      "turn_sd_rad": 0.7062609018472972,
+      "pause_emission": "exact_zero"
+    },
+    "CAN-SWITCH-TURN": {
+      "switch_prob": 0.0879870320398374,
+      "run_turn_sd_rad": 0.1233524975570674,
+      "reorient_turn_sd_rad": 1.3394763486278798,
+      "step_mean_um": 13.576513572551567,
+      "step_sd_um": 5.295008344566566,
+      "transition_form": "symmetric_flip"
+    },
+    "CAN-SWITCH-SPEED": {
+      "switch_prob": 0.013698954712921495,
+      "slow_factor": 0.47171468300998054,
+      "step_min_um": 0.0,
+      "step_mean_um": 14.805029465308698,
+      "step_sd_um": 4.829955338182999,
+      "turn_sd_rad": 0.7062609018472972,
+      "transition_form": "symmetric_flip"
+    },
+    "CAN-HET-SPEED": {
+      "formula": "RUN3_multiplicative",
+      "step_mean_um": 13.576513572551567,
+      "step_sd_um": 3.8998885492461763,
+      "turn_sd_rad": 0.7062609018472972,
+      "hetero_cv": 0.2710224082739864,
+      "hetero_multiplier_min": 1e-06,
+      "step_min_um": 0.0
+    },
+    "CAN-REVERSAL": {
+      "step_mean_um": 13.576513572551567,
+      "step_sd_um": 5.295008344566566,
+      "turn_sd_rad": 0.3904332334530985,
+      "reversal_prob": 0.06107293684021277,
+      "reversal_angle_rad": 3.141592653589793
+    },
+    "CAN-EMP-LOCAL": {
+      "training_transition_table_uri": "/home/edouard/Software/ABCA/plugins/zoospores_AI/canonical_fit/empirical_local_transitions.txt",
+      "training_transition_table_sha256": "4a922e01de7a9a4acffb8bd867e49e6b70e7ad12f0c1837d8a154c24cab7c993",
+      "conditioning": "iid_adjacent_pair"
+    },
+    "CAN-EMP-WHOLE": {
+      "training_trajectory_library_uri": "/home/edouard/Software/ABCA/plugins/zoospores_AI/canonical_fit/empirical_whole_trajectories.txt",
+      "training_trajectory_library_sha256": "e6ef92470dd103e9bdfc8e49ccc84d0a1f9fe9ec7279e4901373e2dc67e1aefe",
+      "orientation_policy": "random_rotation",
+      "post_sequence_policy": "reject_length_mismatch"
+    }
+  },
+  "artifacts": {
+    "parameters": "/home/edouard/Software/ABCA/plugins/zoospores_AI/canonical_fit/canonical_parameters.toml",
+    "parameters_sha256": "f5122c99731efe1a0bd4945d688797271b8127068021a8495fb0e42bae5b0d8c",
+    "emp_local_sha256": "4a922e01de7a9a4acffb8bd867e49e6b70e7ad12f0c1837d8a154c24cab7c993",
+    "emp_whole_sha256": "e6ef92470dd103e9bdfc8e49ccc84d0a1f9fe9ec7279e4901373e2dc67e1aefe"
+  }
+}
