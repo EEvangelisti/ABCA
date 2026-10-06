@@ -529,7 +529,7 @@ let load_transitions path sha =
   check_sha path sha;
   let a =
     Array.of_list
-      (List.map parse_pair (read_data_lines path))
+      (List.rev_map parse_pair (read_data_lines path) |> List.rev)
   in
   if Array.length a = 0 then
     failwith "empty transition table";
