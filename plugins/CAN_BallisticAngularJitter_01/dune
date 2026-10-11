@@ -1,0 +1,9 @@
+(library
+ (name abca_plugin_CAN_BallisticAngularJitter_01)
+ (modules
+  schema_validation
+  zoospores_BallisticAngularJitter_01)
+ (libraries
+  abca
+  abca_io
+  abca_models))

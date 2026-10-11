@@ -1,0 +1,14 @@
+schema_version = "canonical-portfolio-parameters-1.0"
+
+[common]
+dt_sec = 0.0700506
+agents = 1
+initial_position = "domain_center"
+initial_heading = "uniform_0_2pi"
+boundary = "specular_reflect_recursive"
+record_initial_frame = true
+
+[model.C3-CAN-BALLISTIC-ANGULAR-JITTER-01]
+step_mean_um = 13.943062982176572
+step_sd_um = 5.084535951824635
+sigma_theta_rad_per_step = 0.2
