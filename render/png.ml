@@ -51,7 +51,7 @@ let clear cr ~w ~h color =
 let create_canvas ~width ~height ~background ~antialias =
   let surface = Cairo.Image.create Cairo.Image.RGB24 ~w:width ~h:height in
   let cr = Cairo.create surface in
-  Cairo.set_antialias cr (if antialias then Cairo.ANTIALIAS_BEST else Cairo.ANTIALIAS_NONE);
+  Cairo.set_antialias cr (if antialias then Cairo.ANTIALIAS_DEFAULT else Cairo.ANTIALIAS_NONE);
   clear cr ~w:width ~h:height background;
   (surface, cr)
 
