@@ -1,58 +1,60 @@
-(*
- * ABCA (Agent-Based Cellular Automata)
- * A modular simulation framework for discrete spatial systems,
- * ranging from classical cellular automata to biologically inspired
- * agent-based models.
- *
- * Copyright (c) 2026 Edouard Evangelisti
- *
- * Distributed under the MIT License.
- * This software is provided "as is", without warranty of any kind.
- * See the LICENSE file for details.
- *)
-
+(* ABCA - PNG rendering utilities. MIT License, (c) 2026 Edouard Evangelisti. *)
 type color = float * float * float
-(** RGB color with components in the range [[0.0, 1.0]]. *)
+(** RGB components in [0,1]. *)
 
-type palette = {
-  background : color;
-  colors     : color array;
-}
-(** Rendering palette.
-    [background] is used to clear the image before drawing.
-    [colors] maps color indices returned by [to_color_index] to RGB values. *)
-
+type palette = { background : color; colors : color array }
 val default_palette : palette
-(** Default black-and-white rendering palette. *)
+
+type point_style = {
+  radius : float;        (** Dot radius in output pixels. *)
+  alpha : float;         (** Opacity in [0,1]. *)
+  antialias : bool;      (** Smooth circular dots. *)
+  multiplicity : bool;   (** Count grids: combine opacity for overlapping agents. *)
+}
+val default_point_style : point_style
 
 val save_frame :
-  filename:string ->
-  cell_size:int ->
-  ?background:color ->
-  palette:palette ->
-  to_color_index:('state -> int option) ->
-  'state array array ->
-  unit
-(** Renders a simulation frame as a PNG image.
-    Each cell is drawn as a square of size [cell_size] pixels.
-    If provided, [background] overrides the palette background.
-    Cells whose color index equals [skip_index] are omitted.
-    Raises [Invalid_argument] if the frame is empty, irregular, [cell_size]
-    is not positive, or a color index is outside the palette. *)
+  filename:string -> cell_size:int -> ?background:color ->
+  palette:palette -> to_color_index:('state -> int option) ->
+  'state array array -> unit
+(** Backwards-compatible dual export: writes the original square-cell PNG
+    at [filename], plus an antialiased dot image at [*_points.png].
+    No change to existing callers is needed. *)
 
 val save_frames :
-  dirname:string ->
-  prefix:string ->
-  every:int ->
-  cell_size:int ->
-  ?background:color ->
-  palette:palette ->
-  to_color_index:('state -> int option) ->
-  'state array array array ->
-  unit
-(** Renders a sequence of frames as numbered PNG images.
-    Images are written as ["<prefix>_000000.png"], ["<prefix>_000001.png"], etc.
-    Only every [every]-th frame is exported.
-    The output directory is created if necessary.
-    Raises [Invalid_argument] if [every] or [cell_size] is not positive,
-    or if any frame is invalid. *)
+  dirname:string -> prefix:string -> every:int -> cell_size:int ->
+  ?background:color -> palette:palette ->
+  to_color_index:('state -> int option) -> 'state array array array -> unit
+(** Backwards-compatible dual export for every selected frame.
+    Each numbered square PNG gets a matching [_points.png] file. *)
+
+val save_point_frame :
+  filename:string -> cell_size:int -> ?background:color ->
+  palette:palette -> to_color_index:('state -> int option) ->
+  ?style:point_style -> 'state array array -> unit
+(** One smooth circular dot per nonempty grid cell. Does not infer agent
+    multiplicity from a generic cell state. *)
+
+val save_point_frames :
+  dirname:string -> prefix:string -> every:int -> cell_size:int ->
+  ?background:color -> palette:palette ->
+  to_color_index:('state -> int option) -> ?style:point_style ->
+  'state array array array -> unit
+(** Numbered smooth-dot snapshots of generic grid frames. *)
+
+val save_count_frame :
+  filename:string -> cell_size:int -> ?background:color ->
+  ?color:color -> ?style:point_style -> int array array -> unit
+(** Draw count grids. A cell with n agents is one dot whose opacity is
+    1-(1-alpha)^n when [style.multiplicity=true]. Counts must be >=0.
+    This preserves density visually but does not resolve distinct positions
+    inside the same cell. *)
+
+val save_xy_points :
+  filename:string -> rows:int -> cols:int -> cell_size:int ->
+  ?background:color -> ?color:color -> ?style:point_style ->
+  (float * float) array -> unit
+(** Draw one dot per agent at continuous coordinates in GRID CELL units.
+    Coordinates are multiplied by [cell_size]; points outside the domain
+    are omitted. For micrometre coordinates, divide by micrometres/cell
+    before calling. Use this for a Matplotlib-scatter-like rendering. *)
