@@ -341,7 +341,7 @@ module Action =
         ~step:!every ();
       Printf.printf "Plot directory -> %s\n%!" plot_dir
 
-    let render selected_model =
+    let rec render selected_model =
       match String.lowercase_ascii !render_kind with
       | "plot" -> render_plot selected_model
       | "raster" -> render_raster selected_model
