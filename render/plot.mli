@@ -9,4 +9,6 @@ val render_xml :
   ?first:int -> ?last:int -> ?step:int ->
   xml:string -> unit -> unit
 (** Generate one plot per XML generation. Raises Failure if Python fails.
+    XML coordinates are plotted unchanged; microns_per_cell scales the
+    domain dimensions (rows/cols), not the detection coordinates.
     Explicit dimensions are recommended for comparable spatial scales. *)
