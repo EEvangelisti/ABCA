@@ -32,11 +32,11 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('xml', type=Path, help='ABCA XML input')
     ap.add_argument('-o', '--outdir', type=Path, default=None)
-    ap.add_argument('--width', type=float, default=None, help='Domain width in µm')
-    ap.add_argument('--height', type=float, default=None, help='Domain height in µm')
+    ap.add_argument('--width', type=float, default=None, help='Physical domain width in µm (overrides --cols * scale)')
+    ap.add_argument('--height', type=float, default=None, help='Physical domain height in µm (overrides --rows * scale)')
     ap.add_argument('--rows', type=float, default=None, help='Grid rows (requires --microns-per-cell)')
     ap.add_argument('--cols', type=float, default=None, help='Grid columns (requires --microns-per-cell)')
-    ap.add_argument('--microns-per-cell', type=float, default=None)
+    ap.add_argument('--microns-per-cell', type=float, default=None, help='µm per XML coordinate unit; applied to both positions and domain (default: 1)')
     ap.add_argument('--format', choices=['png', 'svg', 'pdf'], default='png')
     ap.add_argument('--dpi', type=int, default=180)
     ap.add_argument('--size', type=float, default=6)
@@ -52,9 +52,11 @@ def main():
         ap.error('No <detection t="..." x="..." y="..."> elements found')
     xs = [x for xy in frames.values() for x in xy[0]]
     ys = [y for xy in frames.values() for y in xy[1]]
-    scale = args.microns_per_cell
-    width = args.width if args.width is not None else (args.cols * scale if args.cols is not None and scale is not None else max(xs))
-    height = args.height if args.height is not None else (args.rows * scale if args.rows is not None and scale is not None else max(ys))
+    scale = args.microns_per_cell if args.microns_per_cell is not None else 1.0
+    if scale <= 0:
+        ap.error('--microns-per-cell must be positive')
+    width = args.width if args.width is not None else (args.cols * scale if args.cols is not None else max(xs) * scale)
+    height = args.height if args.height is not None else (args.rows * scale if args.rows is not None else max(ys) * scale)
     if width <= 0 or height <= 0:
         ap.error('Domain dimensions must be positive')
     outdir = args.outdir or args.xml.with_suffix('')
@@ -63,6 +65,8 @@ def main():
     times = times[::args.step]
     for t in times:
         x, y = frames[t]
+        x = [v * scale for v in x]
+        y = [v * scale for v in y]
         fig, ax = plt.subplots(figsize=(5.5, 5.5))
         ax.scatter(x, y, s=args.size, alpha=args.alpha, linewidths=0)
         ax.set(xlim=(0, width), ylim=(0, height), xlabel='x (µm)', ylabel='y (µm)', title=f'Generation {t} | n={len(x)}')
