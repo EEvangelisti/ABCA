@@ -41,6 +41,15 @@ ROOT="plugins/zoospores"
 
 "$ABCA" \
   --mode render \
+  --render plot \
+  --render-root $ROOT/examples \
+  --model zoospores-hmm \
+  --input $ROOT/examples/P_nicotianae_hmm.bin \
+  --palette tol-prgn-binary \
+  --background white
+
+"$ABCA" \
+  --mode render \
   --render-root $ROOT/examples \
   --model zoospores-hmm \
   --input $ROOT/examples/P_nicotianae_hmm.bin \
