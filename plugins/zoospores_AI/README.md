@@ -89,7 +89,7 @@ The main files used by this plugin are:
 | `canonical_fit/canonical_parameters.toml` | Fitted parameters and structural choices for all canonical models. |
 | `canonical_fit/empirical_local_transitions.txt` | Empirical local transition library used by `CAN-EMP-LOCAL`. |
 | `canonical_fit/empirical_whole_trajectories.txt` | Whole-trajectory displacement library used by `CAN-EMP-WHOLE`. |
-| `[FITTING SCRIPT PATH PLACEHOLDER]` | Python fitting pipeline used to regenerate the canonical parameter set and empirical libraries from TrackMate XML trajectories. |
+| `fit_canonical_portfolio_trackmate_particles.py` | Python fitting pipeline used to regenerate the canonical parameter set and empirical libraries from TrackMate XML trajectories. |
 
 The two empirical libraries are large derived fitting artefacts and are stored using **Git LFS**.
 
