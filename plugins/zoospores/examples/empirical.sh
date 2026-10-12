@@ -44,8 +44,7 @@ ROOT="plugins/zoospores"
   --render-root $ROOT/examples \
   --model zoospores-empirical \
   --input $ROOT/examples/P_nicotianae_empirical.bin \
-  --palette tol-prgn-binary \
-  --background white
+  --microns-per-cell 10
 
 "$ABCA" \
   --mode render \
