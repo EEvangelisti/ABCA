@@ -40,6 +40,14 @@ ROOT="plugins/zoospores"
 
 "$ABCA" \
   --mode render \
+  --render plot \
+  --render-root $ROOT/examples \
+  --model zoospores-empirical \
+  --input $ROOT/examples/P_nicotianae_empirical.bin \
+  --microns-per-cell 10
+
+"$ABCA" \
+  --mode render \
   --render-root $ROOT/examples \
   --model zoospores-empirical \
   --input $ROOT/examples/P_nicotianae_empirical.bin \

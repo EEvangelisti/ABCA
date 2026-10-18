@@ -19,14 +19,14 @@ ROOT="plugins/zoospores"
 "$ABCA" \
   --mode run \
   --model zoospores-hmm \
-  --rows 400 \
-  --cols 400 \
+  --rows 200 \
+  --cols 200 \
   --generations 100 \
-  --agents 2000 \
-  --seed 42 \
+  --agents 1000 \
+  --seed 37 \
   --toroidal \
   --plugin-arg INIT=CIRCLE \
-  --plugin-arg RADIUS=75 \
+  --plugin-arg RADIUS=50 \
   --plugin-arg TRANSITIONS=$ROOT/hmm/data/P_nicotianae_hmm_transition_matrix.tsv \
   --plugin-arg START_PROBABILITIES=$ROOT/hmm/data/P_nicotianae_hmm_start_probabilities.tsv \
   --plugin-arg STATE_QUANTILES=$ROOT/hmm/data/P_nicotianae_hmm_state_quantiles.tsv \
@@ -38,6 +38,14 @@ ROOT="plugins/zoospores"
   --model zoospores-hmm \
   --input $ROOT/examples/P_nicotianae_hmm.bin \
   --xml $ROOT/examples/P_nicotianae_hmm.xml
+
+"$ABCA" \
+  --mode render \
+  --render plot \
+  --render-root $ROOT/examples \
+  --model zoospores-hmm \
+  --input $ROOT/examples/P_nicotianae_hmm.bin \
+  --microns-per-cell 10
 
 "$ABCA" \
   --mode render \
